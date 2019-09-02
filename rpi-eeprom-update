@@ -1,0 +1,396 @@
+#!/bin/sh
+
+# Raspberry Pi4 boot EEPROM updater.
+
+set -e
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
+if [ -f /etc/default/rpi-eeprom-update ]; then
+   . /etc/default/rpi-eeprom-update
+fi
+
+FIRMWARE_ROOT=${FIRMWARE_ROOT:-/lib/firmware/raspberrypi/bootloader}
+# May be used to select beta releases instead of the default critical
+# updates.
+FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-critical}
+FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}}
+FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
+USE_FLASHROM=${USE_FLASHROM:-0}
+RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/recovery.bin}
+BOOTFS=${BOOTFS:-/boot}
+
+EXIT_SUCCESS=0
+EXIT_UPDATE_REQUIRED=1
+EXIT_FAILED=2
+EXIT_EEPROM_FROZEN=3
+# Reserved
+# EXIT_PREVIOUS_UPDATE_FAILED=4
+
+OVERWRITE_CONFIG=0
+# Maximum safe SPI speed for EEPROM access 16000, slower is ok.
+SPI_SPEED=16000
+# Timestamp for first release which doesn't have a timestamp field
+FIRST_VERSION=1557513636
+EEPROM_SIZE=524288
+
+# Simple bootloader which is able to load start.elf in the event of a power
+# cut. This runs SDRAM at low speed and may have reduced functionality but
+# should be enough to run flashrom again.
+
+TMP_EEPROM_IMAGE=""
+TMP_BOOTFS_MNT=""
+
+cleanup() {
+   if [ -f "${TMP_EEPROM_IMAGE}" ]; then
+      rm -f "${TMP_EEPROM_IMAGE}"
+   fi
+   if [ -f "${TMP_EEPROM_CONFIG}" ]; then
+      rm -f "${TMP_EEPROM_CONFIG}"
+   fi
+   if [ -d "${TMP_BOOTFS_MNT}" ]; then
+      umount "${TMP_BOOTFS_MNT}"
+      rmdir "${TMP_BOOTFS_MNT}"
+   fi
+   TMP_BOOTFS_MNT=
+   TMP_EEPROM_IMAGE=
+   TMP_EEPROM_CONFIG=
+}
+trap cleanup EXIT
+
+die() {
+   echo "$@" >&2
+   exit ${EXIT_FAILED}
+}
+
+prepareImage()
+{
+   eeprom_image="$1"
+
+   [ -f "${eeprom_image}" ] || die "EEPROM image \'${eeprom_image}\' not found"
+   TMP_EEPROM_IMAGE="$(mktemp)"
+   TMP_EEPROM_CONFIG="$(mktemp)"
+
+   mkdir -p "${FIRMWARE_BACKUP_DIR}"
+
+   # Backup the configuration of the currently loaded bootloader
+   vcgencmd bootloader_config > "${TMP_EEPROM_CONFIG}"
+   backup="${FIRMWARE_BACKUP_DIR}/pieeprom-backup-$(date +%Y%m%d-%H%M%S).conf"
+   cp -f "${TMP_EEPROM_CONFIG}" "${backup}"
+
+   if [ "$(wc -l "${TMP_EEPROM_CONFIG}" | awk '{print $1}')" -lt 3 ]; then
+      # Don't propagate empty EEPROM config files and also prevent the initial
+      # bootloader config with WAKE_ON_GPIO=0 propgating to newer versions by
+      # accident.
+      OVERWRITE_CONFIG=1
+   fi
+
+   cp -f "${eeprom_image}" "${TMP_EEPROM_IMAGE}"
+
+   if [ "${OVERWRITE_CONFIG}" = 0 ]; then
+      "${script_dir}/rpi-eeprom-config" \
+         --out "${TMP_EEPROM_IMAGE}" \
+         --config "${TMP_EEPROM_CONFIG}" "${eeprom_image}"
+   fi
+}
+
+applyRecoveryUpdate()
+{
+   eeprom_image="$1"
+   [ -f "${eeprom_image}" ] || die "${eeprom_image} not found"
+   TMP_EEPROM_IMAGE="$(mktemp)"
+
+   findBootFS
+   prepareImage "${eeprom_image}"
+
+   # If recovery.bin encounters pieeprom.upd then it will select it in
+   # preference to pieeprom.bin. The .upd file also causes recovery.bin
+   # to rename itself to recovery.000 and reboot if the update is successful.
+   # The rename causes the ROM to ignore this file and use the newly flashed
+   # EEPROM image instead.
+   cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
+      || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
+
+   cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" \
+      || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
+}
+
+applyUpdate() {
+   eeprom_image="$1"
+
+   [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
+
+   if [ "${USE_FLASHROM}" = 0 ]; then
+      applyRecoveryUpdate "${eeprom_image}"
+      return
+   fi
+
+   # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
+   # LDO first to avoid sending noise to analog audio.
+   /opt/vc/bin/vcmailbox 0x00030056 4 4 0 > /dev/null || true
+   dtparam audio=off
+
+   # Switch the SPI pins to boot EEPROM
+   dtoverlay spi-gpio40-45
+   modprobe spidev
+   modprobe spi-bcm2835
+
+   prepareImage "${eeprom_image}"
+
+   echo "Applying update ${eeprom_image}"
+   flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=${SPI_SPEED}" -w "${TMP_EEPROM_IMAGE}" || die "flashrom EEPROM update failed"
+
+   dtparam -R spi-gpio40-45
+   dtparam audio=on
+   /opt/vc/bin/vcmailbox 0x00030056 4 4 1 > /dev/null || true
+}
+
+# Use the version reported by the loaded EEPROM instead of attempting to retrieve
+# this via flashrom to avoid unnecessary audio glitches.
+CURRENT_VERSION=
+getCurrentVersion() {
+   if vcgencmd bootloader_version | grep -q timestamp; then
+      CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
+      if [ "${CURRENT_VERSION}" = "0" ]; then
+         # If a timestamp of zero is returned then it's new firmware but an
+         # old bootloader. Assume bootloader v0
+         CURRENT_VERSION="${FIRST_VERSION}"
+      fi
+   else
+      # New bootloader / old firmware ? Try to parse the date
+      CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)")
+   fi
+
+   # Failed to parse the version. Default to the initial production release.
+   if [ -z "${CURRENT_VERSION}" ]; then
+      CURRENT_VERSION="${FIRST_VERSION}"
+   fi
+}
+
+# Set to the latest critical firmware version
+CRITICAL_UPDATE_IMAGE=""
+CRITICAL_UPDATE_VERSION=0
+getLatestCriticalUpdate() {
+   CRITICAL_UPDATE_VERSION=0
+   match=".*/pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin"
+   latest="$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
+   if [ -f "${latest}" ]; then
+      CRITICAL_UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
+      CRITICAL_UPDATE_IMAGE="${latest}"
+   fi
+}
+
+checkDependencies() {
+   if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
+      die "Bootloader critical updates directory ${FIRMWARE_IMAGE_DIR} not found."
+   fi
+
+   if vcgencmd bootloader_config | grep -qi "Command not registered"; then
+      die "vcgencmd: bootloader_config. not supported. Please update VC firmware"
+   fi
+
+   if ! flashrom --version > /dev/null 2>&1; then
+      [ "${USE_FLASHROM}" = 0 ] || die "flashrom not found."
+   fi
+
+   if [ "${USE_FLASHROM}" = 0 ]; then
+      [ -f "${RECOVERY_BIN}" ] || die "${RECOVERY_BIN} not found"
+   fi
+}
+
+usage() {
+cat <<EOF
+rpi-eeprom-update [options]... [FILE]
+   Checks whether there Raspberry Pi bootloader EEPROM is up to date and
+   optionally updates the EEPROM.
+
+   A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
+   before applying the update.
+
+   -a Install the latest critical update if necessary.
+   -d Use the default bootloader config instead of migrating the current settings.
+   -f Install the given file instead of the latest critical update.
+      Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
+      firmware updates.
+      WARNING: This command should only be run from console mode in order to
+      avoid conflicts/deadlock with dtoverlay/dtparam settings.
+   -h Display help text and exit
+   -j Write status information using JSON notation
+   -m Write status information to the given file when run without -a or -f
+
+   To extract the configuration file from an EEPROM image.
+   rpi-eeprom-config pieeprom.bin --out bootconf.txt
+
+   To update the configuration file in an EEPROM image.
+   rpi-eeprom-config pieeprom.bin --config bootconf.txt --out pieeprom-new.bin
+
+   To flash the new image
+   sudo rpi-eeprom-update -d -f ./pieeprom-new.bin
+
+   The syntax is the same as config.txt but section filters etc are not supported. See
+   online documentation for the list of paramters.
+
+   The official documentation for the Raspberry Pi bootloader EEPROM is available here:-
+   https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
+
+EOF
+  exit ${EXIT_SUCCESS}
+}
+
+printVersions()
+{
+   cur="$1"
+   new="$2"
+   echo "CURRENT: $(date -u "-d@${cur}") (${cur})"
+   echo " LATEST: $(date -u "-d@${new}") (${new})"
+}
+
+findBootFS()
+{
+   # recovery.bin is loaded by the ROM from the boot partition, this is normally
+   # ${BOOTFS} but on NOOBS this is /dev/mmcblk0p1 with volume label RECOVERY
+   # If ${BOOTFS} is not writable OR is not on /dev/mmcblk0 then error because the ROM
+   # can only load recovery.bin from the on-board SD-CARD slot or the EEPROM.
+
+   # To skip installing the safe mode recovery.bin use the -s option
+   if blkid | grep -qE "/dev/mmcblk0p1.*LABEL_FATBOOT.*RECOVERY.*TYPE.*vfat"; then
+      TMP_BOOTFS_MNT="$(mktemp -d)"
+      mount /dev/mmcblk0p1 "${TMP_BOOTFS_MNT}"
+      BOOTFS="${TMP_BOOTFS_MNT}"
+   fi
+
+   # If BOOTFS is not a directory or doesn't contain any .elf files then
+   # it's probably not the boot partition so assume that it cannot be used for a
+   # safe mode recovery
+   [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
+   [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ] || die "BOOTFS: \"${BOOTFS}\" contains no .elf files"
+}
+
+checkAndApply()
+{
+   getCurrentVersion
+   getLatestCriticalUpdate
+
+   if [ "${CRITICAL_UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
+      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      echo "*** INSTALLING REQUIRED UPDATE ***"
+      applyUpdate "${CRITICAL_UPDATE_IMAGE}"
+      echo "Bootloader EEPROM update pending. Please reboot to apply the update."
+   else
+      echo "Bootloader EEPROM is up to date. $(date -d@${CURRENT_VERSION})"
+   fi
+}
+
+fileUpdate()
+{
+   echo "*** INSTALLING ${1} ***"
+   [ -f "${1}" ] || die "\"${1}\" not found"
+   applyUpdate "$1"
+   echo "Bootloader EEPROM update complete. Please reboot."
+}
+
+removePreviousUpdates()
+{
+   if [ "$(id -u)" = "0" ]; then
+      findBootFS
+
+      # Remove any stale recovery.bin files or EEPROM images
+      # N.B. recovery.bin is normally ignored by the ROM if is not a valid
+      # executable but it's best to not have the file at all.
+      rm -f "${BOOTFS}/recovery.bin"
+      rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd"
+      # Case insensitive for FAT bootfs
+      find "${BOOTFS}" -maxdepth 1 -type f -iname "recovery.*" -regex ".*\.[0-9][0-9][0-9]$" -exec rm -f {} \;
+   fi
+}
+
+checkVersion()
+{
+   getCurrentVersion
+   getLatestCriticalUpdate
+   if [ "${CRITICAL_UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
+      echo "*** UPDATE REQUIRED ***"
+      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      write_status_info EXIT_UPDATE_REQUIRED "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      exit ${EXIT_UPDATE_REQUIRED}
+   else
+      echo "Bootloader EEPROM is up to date"
+      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      write_status_info EXIT_SUCCESS "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      exit ${EXIT_SUCCESS}
+   fi
+}
+
+write_status_info()
+{
+   [ -z "${MACHINE_OUTPUT}" ] && return 0
+
+   exit_code="${1}"
+   cur=${2}
+   new=${3}
+
+    if [ "${JSON_OUTPUT}" = "no" ]; then
+      cat > "${MACHINE_OUTPUT}" <<EOF
+EXITCODE="${exit_code}"
+CURRENT_TS=${cur}
+LATEST_TS=${new}
+EOF
+   else
+      cat > "${MACHINE_OUTPUT}" <<EOF
+{
+  "EXITCODE": "${exit_code}",
+  "CURRENT_TS": ${cur},
+  "LATEST_TS": ${new}
+}
+EOF
+   fi
+   return 0
+}
+
+AUTO_UPDATE=""
+FILE_UPDATE=""
+MACHINE_OUTPUT=""
+JSON_OUTPUT="no"
+
+CPU_VER="$(grep Revision /proc/cpuinfo | awk '{print $3}' | cut -c3)"
+
+if [ "${CPU_VER}" != "3" ]; then
+   # Not a BCM2711, no EEPROMs to update.
+   exit 0
+fi
+
+checkDependencies
+
+while getopts adhf:m:j option; do
+   case "${option}" in
+   a) AUTO_UPDATE=1
+      ;;
+   d) OVERWRITE_CONFIG=1
+      ;;
+   f) FILE_UPDATE="${OPTARG}"
+      ;;
+   j) JSON_OUTPUT="yes"
+      ;;
+   m) MACHINE_OUTPUT="${OPTARG}"
+      ;;
+   h) usage
+      ;;
+   *) echo "Unknown argument \"${option}\""
+      usage
+      ;;
+   esac
+done
+
+removePreviousUpdates
+if [ -n "${AUTO_UPDATE}" ]; then
+   if vcgencmd bootloader_config | grep FREEZE_VERSION=1; then
+      echo "EEPROM version is frozen. Skipping update"
+      exit ${EXIT_EEPROM_FROZEN}
+   else
+      checkAndApply
+   fi
+elif [ -n "${FILE_UPDATE}" ]; then
+   fileUpdate "${FILE_UPDATE}"
+else
+   checkVersion
+fi
