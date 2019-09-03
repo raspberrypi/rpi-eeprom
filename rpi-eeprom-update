@@ -201,7 +201,7 @@ checkDependencies() {
 usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
-   Checks whether there Raspberry Pi bootloader EEPROM is up to date and
+   Checks whether the Raspberry Pi bootloader EEPROM is up-to-date and
    optionally updates the EEPROM.
 
    A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
