@@ -201,8 +201,24 @@ checkDependencies() {
 usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
-   Checks whether the Raspberry Pi bootloader EEPROM is up-to-date and
-   optionally updates the EEPROM.
+   Checks whether there Raspberry Pi bootloader EEPROM is up to date and
+   optionally updates the EEPROM at the next reboot.
+
+   The default update mechanism writes recovery.bin and pieeprom.upd to the
+   boot partition on the sd-card. At the next reboot the ROM runs recovery.bin
+   which flashes pieeprom.upd to the EEPROM. If the EEPROM update was successful
+   recovery.bin renames itself to recovery.000 to prevent it from running a
+   second time then resets the system. The system should then boot normally.
+
+   If /boot does not correspond to the boot partition on the sd-card and this
+   is not a NOOBS system then the mount point for BOOTFS should be defined
+   in /etc/default/rpi-eeprom-update
+
+   For reference, the flashrom update mechanism may be enabled by defining
+   USE_FLASHROM=1 in /etc/default/rpi-eeprom-update. This not recommended
+   because the SPI pins are muxed with audio and other device drivers may
+   be using SPI (e.g. HATs). This is also not safe in the event of a power
+   failure during the update of the EEPROM.
 
    A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
    before applying the update.
@@ -286,7 +302,7 @@ fileUpdate()
    echo "*** INSTALLING ${1} ***"
    [ -f "${1}" ] || die "\"${1}\" not found"
    applyUpdate "$1"
-   echo "Bootloader EEPROM update complete. Please reboot."
+   echo "Bootloader EEPROM update pending. Please reboot to apply the update."
 }
 
 removePreviousUpdates()
@@ -352,7 +368,7 @@ FILE_UPDATE=""
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 
-CPU_VER="$(grep Revision /proc/cpuinfo | awk '{print $3}' | cut -c3)"
+CPU_VER="$(vcgencmd otp_dump | grep 30: | cut -c8)"
 
 if [ "${CPU_VER}" != "3" ]; then
    # Not a BCM2711, no EEPROMs to update.
