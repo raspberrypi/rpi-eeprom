@@ -193,7 +193,7 @@ checkDependencies() {
    fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
-      die "vcgencmd: 'bootloader_config` command not supported. Please update VC firmware"
+      die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware"
    fi
 
    if ! flashrom --version > /dev/null 2>&1; then
