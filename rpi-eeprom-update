@@ -193,7 +193,7 @@ checkDependencies() {
    fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
-      die "vcgencmd: bootloader_config. not supported. Please update VC firmware"
+      die "vcgencmd: 'bootloader_config` command not supported. Please update VC firmware"
    fi
 
    if ! flashrom --version > /dev/null 2>&1; then
@@ -201,14 +201,14 @@ checkDependencies() {
    fi
 
    if [ "${USE_FLASHROM}" = 0 ]; then
-      [ -f "${RECOVERY_BIN}" ] || die "${RECOVERY_BIN} not found"
+      [ -f "${RECOVERY_BIN}" ] || die "${RECOVERY_BIN} not found."
    fi
 }
 
 usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
-   Checks whether there Raspberry Pi bootloader EEPROM is up to date and
+   Checks whether the Raspberry Pi bootloader EEPROM is up-to-date and
    optionally updates the EEPROM at the next reboot.
 
    The default update mechanism writes recovery.bin and pieeprom.upd to the
@@ -230,9 +230,9 @@ rpi-eeprom-update [options]... [FILE]
    A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
    before applying the update.
 
-   -a Install the latest critical update if necessary.
-   -d Use the default bootloader config instead of migrating the current settings.
-   -f Install the given file instead of the latest critical update.
+   -a Install the latest update if necessary
+   -d Use the default bootloader config instead of migrating the current settings
+   -f Install the given file instead of the latest critical update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
       WARNING: This command should only be run from console mode in order to
@@ -241,10 +241,10 @@ rpi-eeprom-update [options]... [FILE]
    -j Write status information using JSON notation
    -m Write status information to the given file when run without -a or -f
 
-   To extract the configuration file from an EEPROM image.
+   To extract the configuration file from an EEPROM image
    rpi-eeprom-config pieeprom.bin --out bootconf.txt
 
-   To update the configuration file in an EEPROM image.
+   To update the configuration file in an EEPROM image
    rpi-eeprom-config pieeprom.bin --config bootconf.txt --out pieeprom-new.bin
 
    To flash the new image
@@ -253,7 +253,7 @@ rpi-eeprom-update [options]... [FILE]
    The syntax is the same as config.txt but section filters etc are not supported. See
    online documentation for the list of paramters.
 
-   The official documentation for the Raspberry Pi bootloader EEPROM is available here:-
+   The official documentation for the Raspberry Pi bootloader EEPROM is available at
    https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
 
 EOF
