@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2019-09-10 - Git f626c772 - (BETA)
+   * Configure ethernet RGMII pins at power on. This is a minor change which
+     which may improve reliability of ethernet for some users.
+
 ## 2019-09-05 - Git d8189ed4 - (BETA)
    * Update SDRAM setup to reduce power consumption.
 
