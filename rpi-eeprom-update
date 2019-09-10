@@ -168,15 +168,15 @@ getCurrentVersion() {
 }
 
 # Set to the latest critical firmware version
-CRITICAL_UPDATE_IMAGE=""
-CRITICAL_UPDATE_VERSION=0
-getLatestCriticalUpdate() {
-   CRITICAL_UPDATE_VERSION=0
+UPDATE_IMAGE=""
+UPDATE_VERSION=0
+getUpdateVersion() {
+   UPDATE_VERSION=0
    match=".*/pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin"
    latest="$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
    if [ -f "${latest}" ]; then
-      CRITICAL_UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
-      CRITICAL_UPDATE_IMAGE="${latest}"
+      UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
+      UPDATE_IMAGE="${latest}"
    fi
 }
 
@@ -189,7 +189,7 @@ checkDependencies() {
    fi
 
    if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
-      die "Bootloader critical updates directory ${FIRMWARE_IMAGE_DIR} not found."
+      die "Bootloader updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
@@ -251,7 +251,7 @@ rpi-eeprom-update [options]... [FILE]
    sudo rpi-eeprom-update -d -f ./pieeprom-new.bin
 
    The syntax is the same as config.txt but section filters etc are not supported. See
-   online documentation for the list of paramters.
+   online documentation for the list of parameters.
 
    The official documentation for the Raspberry Pi bootloader EEPROM is available at
    https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
@@ -292,12 +292,12 @@ findBootFS()
 checkAndApply()
 {
    getCurrentVersion
-   getLatestCriticalUpdate
+   getUpdateVersion
 
-   if [ "${CRITICAL_UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
-      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+   if [ "${UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
+      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
       echo "*** INSTALLING REQUIRED UPDATE ***"
-      applyUpdate "${CRITICAL_UPDATE_IMAGE}"
+      applyUpdate "${UPDATE_IMAGE}"
       echo "Bootloader EEPROM update pending. Please reboot to apply the update."
    else
       echo "Bootloader EEPROM is up to date. $(date -d@${CURRENT_VERSION})"
@@ -330,16 +330,16 @@ removePreviousUpdates()
 checkVersion()
 {
    getCurrentVersion
-   getLatestCriticalUpdate
-   if [ "${CRITICAL_UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
+   getLatestVersion
+   if [ "${UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
       echo "*** UPDATE REQUIRED ***"
-      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
-      write_status_info EXIT_UPDATE_REQUIRED "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
+      write_status_info EXIT_UPDATE_REQUIRED "${CURRENT_VERSION}" "${UPDATE_VERSION}"
       exit ${EXIT_UPDATE_REQUIRED}
    else
       echo "Bootloader EEPROM is up to date"
-      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
-      write_status_info EXIT_SUCCESS "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
+      write_status_info EXIT_SUCCESS "${CURRENT_VERSION}" "${UPDATE_VERSION}"
       exit ${EXIT_SUCCESS}
    fi
 }
