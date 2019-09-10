@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for Raspberry Pi EEPROM updates
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/bin/rpi-eeprom-update -a
+
+[Install]
+WantedBy=multi-user.target

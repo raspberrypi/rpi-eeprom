@@ -1,0 +1,42 @@
+rpi-eeprom (0.3-1) buster; urgency=medium
+
+  * rpi-eeprom-update: Fix CPU detection and improve documentation
+    - Use vcgencmd otp_dump to get the board-revision because the format
+      is predictable
+    - Change the -f completion message to indicate that the update is
+      scheduled rather than complete
+    - Add some notes to help about the update mechanism
+  * Add release notes
+  * rpi-eeprom-update: fix typos in usage
+  * firmware: Add pieeprom-2019-09-06.bin to beta releases
+    - Add the new EEPROM with SDRAM changes for power saving
+  * firmware: Add pieeprom-2019-09-10.bin to beta releases
+    - Minor update to always configure RGMII pins to a good state at power on.
+      Previously the pins would have been left in the default reset state
+      (input)
+  * rpi-eeprom-update: -h should not require vcgencmd
+    - More the checkDependencies call to after the options parsing so that
+      -h can be run for help2man
+  * Update packaging for new upstream format
+
+ -- Serge Schneider <serge@raspberrypi.org>  Tue, 10 Sep 2019 13:21:33 +0100
+
+rpi-eeprom (0.2-1) buster; urgency=medium
+
+  * Select release type via defaults
+
+ -- Serge Schneider <serge@raspberrypi.org>  Fri, 30 Aug 2019 14:53:18 +0100
+
+rpi-eeprom (0.1-2) buster; urgency=medium
+
+  * Update dependencies
+    - Move flashrom to 'Recommends'
+    - Add versioned raspberrypi-bootloader dependency
+
+ -- Serge Schneider <serge@raspberrypi.org>  Wed, 28 Aug 2019 14:58:13 +0100
+
+rpi-eeprom (0.1-1) buster; urgency=medium
+
+  * Initial release
+
+ -- Serge Schneider <serge@raspberrypi.org>  Mon, 22 Jul 2019 14:01:36 +0100
