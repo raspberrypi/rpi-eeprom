@@ -181,6 +181,13 @@ getLatestCriticalUpdate() {
 }
 
 checkDependencies() {
+   CPU_VER="$(vcgencmd otp_dump | grep 30: | cut -c8)"
+
+   if [ "${CPU_VER}" != "3" ]; then
+      # Not a BCM2711, no EEPROMs to update.
+      exit ${EXIT_SUCCESS}
+   fi
+
    if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
       die "Bootloader critical updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
@@ -368,15 +375,6 @@ FILE_UPDATE=""
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 
-CPU_VER="$(vcgencmd otp_dump | grep 30: | cut -c8)"
-
-if [ "${CPU_VER}" != "3" ]; then
-   # Not a BCM2711, no EEPROMs to update.
-   exit 0
-fi
-
-checkDependencies
-
 while getopts adhf:m:j option; do
    case "${option}" in
    a) AUTO_UPDATE=1
@@ -397,6 +395,7 @@ while getopts adhf:m:j option; do
    esac
 done
 
+checkDependencies
 removePreviousUpdates
 if [ -n "${AUTO_UPDATE}" ]; then
    if vcgencmd bootloader_config | grep FREEZE_VERSION=1; then
