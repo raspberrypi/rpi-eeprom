@@ -1,0 +1,9 @@
+.debhelper/
+debhelper-build-stamp
+files
+rpi-eeprom/
+rpi-eeprom-images/
+*.debhelper.log
+*.debhelper
+*.substvars
+*.1

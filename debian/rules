@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+#export DH_VERBOSE = 1
+
+include /usr/share/dpkg/pkg-info.mk
+
+%:
+	dh $@
+
+override_dh_installsystemd:
+	dh_installsystemd --name=rpi-eeprom-update
+
+override_dh_auto_build: debian/rpi-eeprom-update.1 debian/rpi-eeprom-config.1
+
+override_dh_install:
+	mkdir -p debian/rpi-eeprom/var/lib/raspberrypi/bootloader/backup/
+	dh_install
+
+debian/rpi-eeprom-update.1:
+	help2man -N --version-string="${DEB_VERSION_UPSTREAM}" --help-option="-h" \
+		--name="Checks whether the Raspberry Pi bootloader EEPROM is \
+up-to-date and updates the EEPROM" \
+		--output=$@ ./rpi-eeprom-update
+
+debian/rpi-eeprom-config.1:
+	help2man -N --version-string="${DEB_VERSION_UPSTREAM}" --help-option="-h" \
+		--name="Extracts and updates Raspberry Pi bootloader EEPROM \
+configuration" \
+		--output=$@ ./rpi-eeprom-config
