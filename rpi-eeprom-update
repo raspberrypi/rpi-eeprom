@@ -232,7 +232,7 @@ rpi-eeprom-update [options]... [FILE]
 
    -a Install the latest update if necessary
    -d Use the default bootloader config instead of migrating the current settings
-   -f Install the given file instead of the latest critical update
+   -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
       WARNING: This command should only be run from console mode in order to
