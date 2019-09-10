@@ -330,7 +330,7 @@ removePreviousUpdates()
 checkVersion()
 {
    getCurrentVersion
-   getLatestVersion
+   getUpdateVersion
    if [ "${UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
       echo "*** UPDATE REQUIRED ***"
       printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
