@@ -167,7 +167,7 @@ getCurrentVersion() {
    fi
 }
 
-# Set to the latest critical firmware version
+# Find latest applicable update version
 UPDATE_IMAGE=""
 UPDATE_VERSION=0
 getUpdateVersion() {
