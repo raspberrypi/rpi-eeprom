@@ -241,13 +241,14 @@ rpi-eeprom-update [options]... [FILE]
    -j Write status information using JSON notation
    -m Write status information to the given file when run without -a or -f
 
-   To extract the configuration file from an EEPROM image
+
+   To extract the configuration file from an EEPROM image: 
    rpi-eeprom-config pieeprom.bin --out bootconf.txt
 
-   To update the configuration file in an EEPROM image
+   To update the configuration file in an EEPROM image: 
    rpi-eeprom-config pieeprom.bin --config bootconf.txt --out pieeprom-new.bin
 
-   To flash the new image
+   To flash the new image: 
    sudo rpi-eeprom-update -d -f ./pieeprom-new.bin
 
    The syntax is the same as config.txt but section filters etc are not supported. See
