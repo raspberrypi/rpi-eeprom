@@ -167,16 +167,16 @@ getCurrentVersion() {
    fi
 }
 
-# Set to the latest critical firmware version
-CRITICAL_UPDATE_IMAGE=""
-CRITICAL_UPDATE_VERSION=0
-getLatestCriticalUpdate() {
-   CRITICAL_UPDATE_VERSION=0
+# Find latest applicable update version
+UPDATE_IMAGE=""
+UPDATE_VERSION=0
+getUpdateVersion() {
+   UPDATE_VERSION=0
    match=".*/pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin"
    latest="$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
    if [ -f "${latest}" ]; then
-      CRITICAL_UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
-      CRITICAL_UPDATE_IMAGE="${latest}"
+      UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
+      UPDATE_IMAGE="${latest}"
    fi
 }
 
@@ -189,11 +189,11 @@ checkDependencies() {
    fi
 
    if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
-      die "Bootloader critical updates directory ${FIRMWARE_IMAGE_DIR} not found."
+      die "Bootloader updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
-      die "vcgencmd: bootloader_config. not supported. Please update VC firmware"
+      die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware"
    fi
 
    if ! flashrom --version > /dev/null 2>&1; then
@@ -201,14 +201,14 @@ checkDependencies() {
    fi
 
    if [ "${USE_FLASHROM}" = 0 ]; then
-      [ -f "${RECOVERY_BIN}" ] || die "${RECOVERY_BIN} not found"
+      [ -f "${RECOVERY_BIN}" ] || die "${RECOVERY_BIN} not found."
    fi
 }
 
 usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
-   Checks whether there Raspberry Pi bootloader EEPROM is up to date and
+   Checks whether the Raspberry Pi bootloader EEPROM is up-to-date and
    optionally updates the EEPROM at the next reboot.
 
    The default update mechanism writes recovery.bin and pieeprom.upd to the
@@ -230,9 +230,9 @@ rpi-eeprom-update [options]... [FILE]
    A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
    before applying the update.
 
-   -a Install the latest critical update if necessary.
-   -d Use the default bootloader config instead of migrating the current settings.
-   -f Install the given file instead of the latest critical update.
+   -a Install the latest update if necessary
+   -d Use the default bootloader config instead of migrating the current settings
+   -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
       WARNING: This command should only be run from console mode in order to
@@ -241,19 +241,20 @@ rpi-eeprom-update [options]... [FILE]
    -j Write status information using JSON notation
    -m Write status information to the given file when run without -a or -f
 
-   To extract the configuration file from an EEPROM image.
+
+   To extract the configuration file from an EEPROM image: 
    rpi-eeprom-config pieeprom.bin --out bootconf.txt
 
-   To update the configuration file in an EEPROM image.
+   To update the configuration file in an EEPROM image: 
    rpi-eeprom-config pieeprom.bin --config bootconf.txt --out pieeprom-new.bin
 
-   To flash the new image
+   To flash the new image: 
    sudo rpi-eeprom-update -d -f ./pieeprom-new.bin
 
    The syntax is the same as config.txt but section filters etc are not supported. See
-   online documentation for the list of paramters.
+   online documentation for the list of parameters.
 
-   The official documentation for the Raspberry Pi bootloader EEPROM is available here:-
+   The official documentation for the Raspberry Pi bootloader EEPROM is available at
    https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
 
 EOF
@@ -292,12 +293,12 @@ findBootFS()
 checkAndApply()
 {
    getCurrentVersion
-   getLatestCriticalUpdate
+   getUpdateVersion
 
-   if [ "${CRITICAL_UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
-      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+   if [ "${UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
+      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
       echo "*** INSTALLING REQUIRED UPDATE ***"
-      applyUpdate "${CRITICAL_UPDATE_IMAGE}"
+      applyUpdate "${UPDATE_IMAGE}"
       echo "Bootloader EEPROM update pending. Please reboot to apply the update."
    else
       echo "Bootloader EEPROM is up to date. $(date -d@${CURRENT_VERSION})"
@@ -330,16 +331,16 @@ removePreviousUpdates()
 checkVersion()
 {
    getCurrentVersion
-   getLatestCriticalUpdate
-   if [ "${CRITICAL_UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
+   getUpdateVersion
+   if [ "${UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
       echo "*** UPDATE REQUIRED ***"
-      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
-      write_status_info EXIT_UPDATE_REQUIRED "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
+      write_status_info EXIT_UPDATE_REQUIRED "${CURRENT_VERSION}" "${UPDATE_VERSION}"
       exit ${EXIT_UPDATE_REQUIRED}
    else
       echo "Bootloader EEPROM is up to date"
-      printVersions "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
-      write_status_info EXIT_SUCCESS "${CURRENT_VERSION}" "${CRITICAL_UPDATE_VERSION}"
+      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
+      write_status_info EXIT_SUCCESS "${CURRENT_VERSION}" "${UPDATE_VERSION}"
       exit ${EXIT_SUCCESS}
    fi
 }
