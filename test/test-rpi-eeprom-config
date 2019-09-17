@@ -1,0 +1,75 @@
+#!/bin/sh
+
+set -e
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+die() {
+   echo "$@" >&2
+   exit 1
+}
+
+TMP_CONFIG=""
+TMP_EEPROM=""
+cleanup() {
+   rm -f "${TMP_CONFIG}" -f "${TMP_EEPROM}"
+   TMP_CONFIG=""
+   TMP_EEPROM=""
+}
+trap cleanup EXIT
+
+check_loopback()
+{
+   echo "check_update $1 $2"
+
+   image="${script_dir}/$1"
+   conf="${script_dir}/$2"
+
+   # Check that the production config file can be read correctly
+   expected_md5="$(md5sum "${conf}" | awk '{print $1}')"
+   actual_md5="$("${script_dir}/../rpi-eeprom-config" "${image}" | md5sum | awk '{print $1}')"
+   [ "${actual_md5}" = "${expected_md5}" ] || die "Config-read: checksum mismatch"
+
+   # Check that overwriting the config section produces an identical binary
+   TMP_EEPROM=$(mktemp)
+   "${script_dir}/../rpi-eeprom-config" \
+      "${image}" \
+      --config "${conf}" \
+      --out "${TMP_EEPROM}"
+
+   expected_md5="$(md5sum "${image}" | awk '{print $1}')"
+   actual_md5="$(md5sum "${TMP_EEPROM}" | awk '{print $1}')"
+   [ "${actual_md5}" = "${expected_md5}" ] || die "EEPROM loopback: checksum mismatch"
+}
+
+# Update the EEPROM with a new config and check the expected image is produced
+check_update()
+{
+   echo "check_update $1 $2 $3"
+
+   image="${script_dir}/$1"
+   ref_image="${script_dir}/$2"
+   conf="${script_dir}/$3"
+
+   expected_md5="$(md5sum "${ref_image}" | awk '{print $1}')"
+
+   TMP_EEPROM="$(mktemp)"
+   "${script_dir}/../rpi-eeprom-config" \
+      "${image}" \
+      --config "${conf}" \
+      --out "${TMP_EEPROM}"
+
+   actual_md5="$(md5sum "${TMP_EEPROM}" | awk '{print $1}')"
+   if [ "${actual_md5}" != "${expected_md5}" ]; then
+      hexdump -C "${TMP_EEPROM}" > "tmp.hex"
+      die "EEPROM update: checksum mismatch"
+   fi
+}
+
+check_loopback "../firmware/critical/pieeprom-2019-05-10.bin" "bootconf-2019-05-10.txt"
+cleanup
+
+check_loopback "../firmware/critical/pieeprom-2019-07-15.bin" "bootconf-2019-07-15.txt"
+cleanup
+
+check_update "../firmware/critical/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15-freeze.bin" "bootconf-2019-07-15-freeze.txt"
+cleanup
