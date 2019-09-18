@@ -15,7 +15,8 @@ IMAGE_SIZE = 512 * 1024
 # The number, order and size of the sections depends on the bootloader version
 # but the following mask can be used to test for section headers and skip
 # unknown data.
-MAGIC_MASK = 0x55aaf00f
+MAGIC = 0x55aaf00f
+MAGIC_MASK = 0xfffff00f
 FILE_MAGIC = 0x55aaf11f # id for modifiable file, currently only bootconf.txt
 FILE_HDR_LEN = 20
 FILENAME_LEN = 12
@@ -37,7 +38,7 @@ class BootloaderImage(object):
         magic = 0
         while offset < IMAGE_SIZE:
             magic, length = struct.unpack_from('>LL', self._bytes, offset)
-            if (magic & MAGIC_MASK) != MAGIC_MASK:
+            if (magic & MAGIC_MASK) != MAGIC:
                 raise Exception('EEPROM is corrupted')
 
             if magic == FILE_MAGIC: # Found a file
