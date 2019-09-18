@@ -1,3 +1,26 @@
+rpi-eeprom (1.0-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Fix magic number check
+  * Add .gitignore
+  * Add unit test for rpi-eeprom-config
+  * recovery.bin: Update to fix rename bug with FAT16
+  * Bump pieeprom-2019-09-10 to stable
+
+  [ andrum99 ]
+  * rpi-eeprom-update: minor fixes to usage
+  * fix quotation mark
+  * getLatestCriticalUpdate -> getUpdateVersion
+  * fix comment
+  * fix call to getUpdateVersion
+  * add colons to usage
+  * usage: critical -> applicable
+
+  [ Serge Schneider ]
+  * Update gbp.conf
+
+ -- Serge Schneider <serge@raspberrypi.org>  Wed, 18 Sep 2019 11:18:06 +0100
+
 rpi-eeprom (0.3-1) buster; urgency=medium
 
   * rpi-eeprom-update: Fix CPU detection and improve documentation
