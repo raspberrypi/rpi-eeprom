@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2019-09-23 - Git c67e8bb3 (BETA)
+   * Add support for network boot
+   * Configurable ordering for boot modes (BOOT_ORDER and SD/NET_BOOT retries)
+
 ## 2019-09-10 - Git f626c772
    * Configure ethernet RGMII pins at power on. This is a minor change which
      which may improve reliability of ethernet for some users.
