@@ -14,7 +14,8 @@ This documentation will be merged into the main bootloader documents after the b
 Network boot requires a TFTP and NFS server to be configured.  See [Network boot server tutorial](https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/net_tutorial.md)
 
 Additional notes:-
-* The VideoCore firmware (start4.elf) must be updated to the latest rpi-update version in order to get the Pi4 network drivers.
+* The VideoCore firmware (start4.elf and fixup4.dat) must be updated to the latest rpi-update version in order to get the Pi4 network drivers.
+* The latest VideoCore firmware can be downloaded directly from the [rpi-update GitHub repo](https://github.com/Hexxeh/rpi-update)
 * The MAC address on the Pi4 is programmed at manufacture and is not derived from the serial number.
 
 ```
