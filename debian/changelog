@@ -1,3 +1,10 @@
+rpi-eeprom (1.1-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * 2019-09-23 - Beta test for network boot
+
+ -- Serge Schneider <serge@raspberrypi.org>  Mon, 23 Sep 2019 12:10:32 +0100
+
 rpi-eeprom (1.0-1) buster; urgency=medium
 
   [ Tim Gover ]
