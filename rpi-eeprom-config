@@ -62,6 +62,15 @@ class BootloaderImage(object):
 
         struct.pack_into('>L', self._bytes, hdr_offset + 4, new_len)
         struct.pack_into(("%ds" % len(new_config_bytes)), self._bytes, hdr_offset + 4 + FILE_HDR_LEN, new_config_bytes)
+
+        # If the new config is smaller than the old config then set any old
+        # data which is now unused to all ones (erase value)
+        pad_start = hdr_offset + 4 + FILE_HDR_LEN + len(new_config_bytes)
+        pad = 0
+        while pad < (length - len(new_config_bytes)):
+            struct.pack_into('B', self._bytes, pad_start + pad, 0xff)
+            pad = pad + 1
+
         if self._out is not None:
            self._out.write(self._bytes)
            self._out.close()
