@@ -14,7 +14,8 @@ This documentation will be merged into the main bootloader documents after the b
 Network boot requires a TFTP and NFS server to be configured.  See [Network boot server tutorial](https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/net_tutorial.md)
 
 Additional notes:-
-* The VideoCore firmware (start4.elf) must be updated to the latest rpi-update version in order to get the Pi4 network drivers.
+* The VideoCore firmware (start4.elf and fixup4.dat) must be updated to the latest rpi-update version in order to get the Pi4 network drivers.
+* The latest VideoCore firmware can be downloaded directly from the [rpi-update GitHub repo](https://github.com/Hexxeh/rpi-update)
 * The MAC address on the Pi4 is programmed at manufacture and is not derived from the serial number.
 
 ```
@@ -43,7 +44,7 @@ sudo echo FIRMWARE_RELEASE_STATUS="beta" > /etc/default/rpi-eeprom-update
 Network boot is not enabled by default in the bootloader. To enable it the bootloader configuration file must be edited.
 ```
 # Extract the configuration file
-cp /lib/firmware/raspberrypi/beta/pieeprom-2019-09-23.bin pieeprom.bin
+cp /lib/firmware/raspberrypi/bootloader/beta/pieeprom-2019-09-23.bin pieeprom.bin
 rpi-eeprom-config pieeprom.bin > bootconf.txt
 
 # Enable network boot

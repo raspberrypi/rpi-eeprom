@@ -4,18 +4,60 @@ set -e
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 die() {
+   echo "ERROR"
    echo "$@" >&2
    exit 1
 }
 
 TMP_CONFIG=""
 TMP_EEPROM=""
+TMP_EEPROM2=""
 cleanup() {
-   rm -f "${TMP_CONFIG}" -f "${TMP_EEPROM}"
+   rm -f "${TMP_CONFIG}" -f "${TMP_EEPROM}" "${TMP_EEPROM2}"
    TMP_CONFIG=""
    TMP_EEPROM=""
+   TMP_EEPROM2=""
 }
 trap cleanup EXIT
+
+check_reduce_size()
+{
+   # Verify that unused bytes are set to 0xff if the size of the config file is reduced.
+   echo "check_update $1 $2"
+
+   image="${script_dir}/$1"
+   conf="${script_dir}/$2"
+
+   # Check that the production config file can be read correctly
+   image_md5="$(md5sum "${image}" | awk '{print $1}')"
+   TMP_CONFIG="$(mktemp)"
+
+   # Generate a new EEPROM with larger config file
+   cp -f "${conf}" "${TMP_CONFIG}"
+   echo "Add some random text to the config file" >> "${TMP_CONFIG}"
+
+   TMP_EEPROM="$(mktemp)"
+   "${script_dir}/../rpi-eeprom-config" \
+      "${image}" \
+      --config "${TMP_CONFIG}" \
+      --out "${TMP_EEPROM}"
+
+   # Check that the new image is different
+   actual_md5="$(md5sum "${TMP_EEPROM}" | awk '{print $1}')"
+   [ "${image_md5}" != "${actual_md5}" ] || die "EEPROM images should be different"
+
+   # Re-apply the original configuration and make sure the image is the same
+   TMP_EEPROM2="$(mktemp)"
+   "${script_dir}/../rpi-eeprom-config" \
+      "${TMP_EEPROM}" \
+      --config "${conf}" \
+      --out "${TMP_EEPROM2}"
+
+   # Check that applying the EEPROM config file again gets back to the original image
+   actual_md5="$(md5sum "${TMP_EEPROM2}" | awk '{print $1}')"
+   [ "${image_md5}" = "${actual_md5}" ] || die "Image should be the same as original"
+
+}
 
 check_loopback()
 {
@@ -30,7 +72,7 @@ check_loopback()
    [ "${actual_md5}" = "${expected_md5}" ] || die "Config-read: checksum mismatch"
 
    # Check that overwriting the config section produces an identical binary
-   TMP_EEPROM=$(mktemp)
+   TMP_EEPROM="$(mktemp)"
    "${script_dir}/../rpi-eeprom-config" \
       "${image}" \
       --config "${conf}" \
@@ -72,4 +114,7 @@ check_loopback "../firmware/critical/pieeprom-2019-07-15.bin" "bootconf-2019-07-
 cleanup
 
 check_update "../firmware/critical/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15-freeze.bin" "bootconf-2019-07-15-freeze.txt"
+cleanup
+
+check_reduce_size "../firmware/critical/pieeprom-2019-05-10.bin" "bootconf-2019-05-10.txt"
 cleanup

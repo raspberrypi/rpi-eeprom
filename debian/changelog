@@ -1,3 +1,11 @@
+rpi-eeprom (1.2-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Update raspberry_pi4_network_boot_beta.md
+  * Set unused data to zero if size of config is reduced
+
+ -- Serge Schneider <serge@raspberrypi.org>  Tue, 24 Sep 2019 15:39:28 +0100
+
 rpi-eeprom (1.1-1) buster; urgency=medium
 
   [ Tim Gover ]
