@@ -5,10 +5,8 @@ The page describes how to install and configure network boot for the Raspberry P
 
 This documentation will be merged into the main bootloader documents after the beta test is complete.
 
-## Known issue
-* For unknown reasons the brcmfmac wifi is not initialised in netowrk boot mode.
+## Known issues
 * Linux 5.3 kernel seems to poll SDHCI SD ever 10 seconds printing warnings to dmesg
-* A timeout reading start4.elf causes start.elf to be loaded, start.elf should only be loaded if start4.elf does not exist.
 
 ## Server configuration
 Network boot requires a TFTP and NFS server to be configured.  See [Network boot server tutorial](https://www.raspberrypi.org/documentation/hardware/raspberrypi/bootmodes/net_tutorial.md)
