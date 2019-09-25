@@ -1,6 +1,6 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-## 2019-09-23 - Git c67e8bb3 (BETA)
+## 2019-09-25 - Git 4d9824321 (BETA)
    * Increase TFTP timeout to 30s as default & bootconf.txt
    * Fix intermittent boot freeze/slowdown issue after loading start.elf
    * Don't load start.elf during network boot if start4.elf exists but the download times out.
