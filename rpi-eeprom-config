@@ -10,6 +10,8 @@ import sys
 
 IMAGE_SIZE = 512 * 1024
 
+MAX_BOOTCONF_SIZE = 2024
+
 # Each section starts with a magic number followed by a 32 bit offset to the
 # next section (big-endian).
 # The number, order and size of the sections depends on the bootloader version
@@ -55,8 +57,9 @@ class BootloaderImage(object):
         hdr_offset, length = self.find_config()
         new_config_bytes = open(new_config, 'rb').read()
         new_len = len(new_config_bytes) + FILENAME_LEN + 4
-        if new_len > length and new_len > 1024:
-            raise Exception('Config is too large')
+        if len(new_config_bytes) > MAX_BOOTCONF_SIZE:
+            raise Exception("Config is too large (%d bytes). The maximum size is %d bytes."
+                    % (len(new_config_bytes), MAX_BOOTCONF_SIZE))
         if hdr_offset + len(new_config_bytes) + FILE_HDR_LEN > IMAGE_SIZE:
             raise Exception('EEPROM image size exceeded')
 
