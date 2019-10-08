@@ -276,7 +276,6 @@ findBootFS()
    # If ${BOOTFS} is not writable OR is not on /dev/mmcblk0 then error because the ROM
    # can only load recovery.bin from the on-board SD-CARD slot or the EEPROM.
 
-   # To skip installing the safe mode recovery.bin use the -s option
    if blkid | grep -qE "/dev/mmcblk0p1.*LABEL_FATBOOT.*RECOVERY.*TYPE.*vfat"; then
       TMP_BOOTFS_MNT="$(mktemp -d)"
       mount /dev/mmcblk0p1 "${TMP_BOOTFS_MNT}"
@@ -284,8 +283,7 @@ findBootFS()
    fi
 
    # If BOOTFS is not a directory or doesn't contain any .elf files then
-   # it's probably not the boot partition so assume that it cannot be used for a
-   # safe mode recovery
+   # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
    [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ] || die "BOOTFS: \"${BOOTFS}\" contains no .elf files"
 }
