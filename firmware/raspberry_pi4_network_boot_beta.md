@@ -127,3 +127,14 @@ Optional dotted decimal ip address (e.g. 192.169.1.99) for the TFTP server which
 This maybe useful on home networks because tftpd-hpa can be used instead of dnsmasq where broadband router is the DHCP server.
 Default: ""  
 
+### TFTP_PREFIX (since 2019-10-08)
+Configure the TFTP prefix string to probe
+* 0 - The serial number
+* 1 - The value of TFTP_PREFIX_STR
+* 2 - The mac-address separated by dashes (lower case)
+Default: 0 
+
+### TFTP_PREFIX_STR (since 2019-10-08)
+The prefix string to use with TFTP_PREFIX=1 - up to 127 characters.
+Default: ""
+
