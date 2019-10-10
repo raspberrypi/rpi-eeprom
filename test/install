@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# Convenience script for updating the rpi-eeprom updater via a git
+# clone instead of apt install.
+
+# For test & debug only.
+
+set -e
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+
+die() {
+  echo "$@" >&2
+  exit 1
+}
+
+FIRMWARE_DIR="${script_dir}/../firmware"
+CONFIG="/etc/default/rpi-eeprom-update"
+
+[ "$(id -u)" = "0" ] || die "$0 Must be run as root - try 'sudo $0 [-b]'"
+
+cp -rfv "${FIRMWARE_DIR}"/* /lib/firmware/raspberrypi/bootloader
+cp -fv "${script_dir}/../rpi-eeprom-config" /usr/bin
+cp -fv "${script_dir}/../rpi-eeprom-update" /usr/bin
+
+cp -fv "${script_dir}/../rpi-eeprom-update-default" /etc/default/rpi-eeprom-update
+
+if [ "$1" = "-b" ]; then
+   sed -i -e 's/^FIRMWARE_RELEASE_STATUS=.*/FIRMWARE_RELEASE_STATUS=beta/' "${CONFIG}"
+fi
