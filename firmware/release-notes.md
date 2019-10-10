@@ -1,5 +1,11 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2019-10-08 - Git 26dd3686c (BETA)
+   * TFTP now uses RFC2348 blksize option to get 1024 byte blocks if the server supports it.
+   * Fix DHCP handling of SI_ADDR
+   * TFTP_PREFIX and TFTP_PREFIX_STR options for mac-address or string literal prefix.
+   * Improved support for standard capacity and SDv1 cards.
+
 ## 2019-09-25 - Git 4d9824321 (BETA)
    * Increase TFTP timeout to 30s as default & bootconf.txt
    * Fix intermittent boot freeze/slowdown issue after loading start.elf
