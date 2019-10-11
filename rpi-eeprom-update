@@ -158,7 +158,7 @@ getCurrentVersion() {
       fi
    else
       # New bootloader / old firmware ? Try to parse the date
-      CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)")
+      CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)" 2>/dev/null || true)
    fi
 
    # Failed to parse the version. Default to the initial production release.
