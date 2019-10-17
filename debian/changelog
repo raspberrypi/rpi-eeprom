@@ -1,3 +1,20 @@
+rpi-eeprom (1.4-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Remove comments about safe mode
+  * rpi-eeprom-config: Increase the configuration size limit to 2024
+  * test-rpi-eeprom-config: Add test cases for large config files
+  * 2019-10-08 - TFTP prefix strings, block size, various netboot fixes
+  * test: Add utility script to install updates from this git repo
+  * recovery: Make recovery.bin specific to the release status
+  * Remove pieeprom-2019-05-10.bin release
+  * 2019-10-16 - Fix parsing of PXE boot menu option
+  * Add support for updating the USB (VL805) EEPROM
+  * Add rpi-eeprom-update -A option
+  * Standarize on UPDATE_VERSION - use command -v
+
+ -- Serge Schneider <serge@raspberrypi.org>  Tue, 22 Oct 2019 14:04:14 +0100
+
 rpi-eeprom (1.3-1) buster; urgency=medium
 
   [ Tim Gover ]

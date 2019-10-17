@@ -1,3 +1,4 @@
 rpi-eeprom-config usr/bin/
 rpi-eeprom-update usr/bin/
 debian/default/ etc/
+vl805 usr/bin/
