@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2019-10-16 - Git 18472066 (BETA)
+   * Ignore trailing characters when parsing in PXE boot menu option.
+   * Improve error handling with unformatted sd-cards.
 ## 2019-10-08 - Git 26dd3686c (BETA)
    * TFTP now uses RFC2348 blksize option to get 1024 byte blocks if the server supports it.
    * Fix DHCP handling of SI_ADDR
