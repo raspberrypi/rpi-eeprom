@@ -43,7 +43,7 @@ TMP_EEPROM_IMAGE=""
 TMP_BOOTFS_MNT=""
 
 VL805_CURRENT_VERSION=
-VL805_LATEST_VERSION=
+VL805_UPDATE_VERSION=
 
 # The update actions selected by the version check
 ACTION_UPDATE_BOOTLOADER=0
@@ -222,7 +222,7 @@ checkDependencies() {
       die "Bootloader updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
-   if ! vl805 -h > /dev/null 2>&1; then
+   if ! command -v vl805 -h > /dev/null 2>&1; then
       die "vl805 command not found"
    fi 
 
@@ -230,11 +230,11 @@ checkDependencies() {
       die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
    fi
 
-   if ! sha256sum --version > /dev/null 2>&1; then
+   if ! command -v sha256sum > /dev/null 2>&1; then
       die "sha256sum not found. On Debian, try installing the coreutilities package"
    fi
 
-   if ! flashrom --version > /dev/null 2>&1; then
+   if ! command -v flashrom  > /dev/null 2>&1; then
       [ "${USE_FLASHROM}" = 0 ] || die "flashrom not found. On Debian, try installing the flashrom package."
    fi
 
@@ -356,7 +356,7 @@ getVL805UpdateVersion()
    # There are no user modifiable sections in the VL805 firmware and there 
    # are unlikely to be many updates to it so just indicate the latest supported
    # version. This also avoids making any assumptions about the VLI version numbers.
-   VL805_LATEST_VERSION=""
+   VL805_UPDATE_VERSION=""
    if [ -f "${FIRMWARE_IMAGE_DIR}/vl805.latest" ]; then
       ver="$(cat "${FIRMWARE_IMAGE_DIR}/vl805.latest")"
       if [ -f "${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin" ]; then
@@ -454,12 +454,12 @@ checkVersion()
    if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       echo "*** UPDATE REQUIRED ***"
       printVersions
-      write_status_info EXIT_UPDATE_REQUIRED
+      write_status_info "${EXIT_UPDATE_REQUIRED}"
       exit ${EXIT_UPDATE_REQUIRED}
    else
       echo "Bootloader EEPROM is up to date"
       printVersions
-      write_status_info EXIT_SUCCESS
+      write_status_info "${EXIT_SUCCESS}"
       exit ${EXIT_SUCCESS}
    fi
 }
@@ -468,11 +468,11 @@ write_status_info()
 {
    [ -z "${MACHINE_OUTPUT}" ] && return 0
 
-   exit_code="${1}"
+   exit_code="${1:-EXIT_FAILED}"
    bootloader_cur="${BOOTLOADER_CURRENT_VERSION}"
-   bootloader_new="${BOOTLOADER_LATEST_VERSION}"
+   bootloader_new="${BOOTLOADER_UPDATE_VERSION}"
    vl805_cur="${VL805_CURRENT_VERSION}"
-   vl805_new="${VL805_LATEST_VERSION}"
+   vl805_new="${VL805_UPDATE_VERSION}"
 
     if [ "${JSON_OUTPUT}" = "no" ]; then
       cat > "${MACHINE_OUTPUT}" <<EOF
@@ -485,9 +485,9 @@ EOF
    else
       cat > "${MACHINE_OUTPUT}" <<EOF
 {
-  "EXITCODE": "${exit_code}",
-  "BOOTLOADER_CURRENT": ${bootloader_cur},
-  "BOOTLOADER_LATEST": ${bootloader_new}
+  "EXITCODE": ${exit_code},
+  "BOOTLOADER_CURRENT": ${bootloader_cur:-0},
+  "BOOTLOADER_LATEST": ${bootloader_new:-0},
   "VL805_CURRENT": "${vl805_cur}",
   "VL805_LATEST": "${vl805_new}"
 }
@@ -498,8 +498,6 @@ EOF
 
 AUTO_UPDATE_BOOTLOADER=0
 AUTO_UPDATE_VL805=0
-FILE_UPDATE=""
-VL805_FILE_UPDATE=""
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 
