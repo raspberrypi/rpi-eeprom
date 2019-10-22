@@ -454,12 +454,12 @@ checkVersion()
    if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       echo "*** UPDATE REQUIRED ***"
       printVersions
-      write_status_info "${EXIT_UPDATE_REQUIRED}"
+      write_status_info "EXIT_UPDATE_REQUIRED"
       exit ${EXIT_UPDATE_REQUIRED}
    else
       echo "Bootloader EEPROM is up to date"
       printVersions
-      write_status_info "${EXIT_SUCCESS}"
+      write_status_info "EXIT_SUCCESS"
       exit ${EXIT_SUCCESS}
    fi
 }
@@ -485,7 +485,7 @@ EOF
    else
       cat > "${MACHINE_OUTPUT}" <<EOF
 {
-  "EXITCODE": ${exit_code},
+  "EXITCODE": "${exit_code}",
   "BOOTLOADER_CURRENT": ${bootloader_cur:-0},
   "BOOTLOADER_LATEST": ${bootloader_new:-0},
   "VL805_CURRENT": "${vl805_cur}",
