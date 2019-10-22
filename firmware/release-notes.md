@@ -1,5 +1,26 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2019-10-17 - rpi-eeprom-update + recovery.bin
+    * New beta recovery.bin which can update the VLI EEPROM before
+      start.elf is loaded. This is the recommended and default method
+      because no USB devices will be in use at this stage.
+    * Extend the USE_FLASHROM configuration to use the vl805 tool
+      to program the VL805 directly.
+    * Generate SHA256 checksums in .sig files for the bootloader and
+      and VL805 images. This is required by the new recovery.bin to
+      guard against corrupted files being flashed to the EEPROM(s).
+    * Various variable renames to distinguish between the bootloader
+      and the VL805 images.
+
+## 2019-10-16 - Git 18472066 (BETA)
+   * Ignore trailing characters when parsing in PXE boot menu option.
+   * Improve error handling with unformatted sd-cards.
+## 2019-10-08 - Git 26dd3686c (BETA)
+   * TFTP now uses RFC2348 blksize option to get 1024 byte blocks if the server supports it.
+   * Fix DHCP handling of SI_ADDR
+   * TFTP_PREFIX and TFTP_PREFIX_STR options for mac-address or string literal prefix.
+   * Improved support for standard capacity and SDv1 cards.
+
 ## 2019-09-25 - Git 4d9824321 (BETA)
    * Increase TFTP timeout to 30s as default & bootconf.txt
    * Fix intermittent boot freeze/slowdown issue after loading start.elf
