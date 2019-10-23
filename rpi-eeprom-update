@@ -139,7 +139,19 @@ applyRecoveryUpdate()
 }
 
 applyUpdate() {
+   checksums_file="/var/lib/dpkg/info/rpi-eeprom-images.md5sums"
+
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
+
+   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ] && [ -f "${checksums_file}" ]; then
+      (
+         cd /
+         if ! md5sum -c "${checksums_file}" > /dev/null 2>&1; then
+            md5sum -c "${checksums_file}"
+            die "rpi-eeprom-images checksums failed - try reinstalling this package"
+         fi
+      )
+   fi
 
    if [ "${USE_FLASHROM}" = 0 ]; then
       applyRecoveryUpdate
@@ -283,8 +295,10 @@ rpi-eeprom-update [options]... [FILE]
       WARNING: This command should only be run from console mode in order to
       avoid conflicts/deadlock with dtoverlay/dtparam settings.
    -h Display help text and exit
+   -i Ignore package checksums - for rpi-eeprom developers.
    -j Write status information using JSON notation
    -m Write status information to the given file when run without -a or -f
+   -r Removes temporary EEPROM update files from the boot partition.
    -u Install the specified VL805 (USB EEPROM) image file.
 
    To extract the configuration file from an EEPROM image: 
@@ -394,6 +408,7 @@ lookupVersionInfo()
 checkAndApply()
 {
    lookupVersionInfo
+   removePreviousUpdates
 
    # Restrict the automatic updates to the EEPROM types selected by the -A option.
    if [ "${AUTO_UPDATE_VL805}" != 1 ]; then
@@ -417,6 +432,7 @@ checkAndApply()
 
 fileUpdate()
 {
+   removePreviousUpdates
    echo "*** INSTALLING ${BOOTLOADER_UPDATE_IMAGE} ${VL805_UPDATE_IMAGE} ***"
 
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
@@ -454,12 +470,12 @@ checkVersion()
    if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       echo "*** UPDATE REQUIRED ***"
       printVersions
-      write_status_info "${EXIT_UPDATE_REQUIRED}"
+      write_status_info "EXIT_UPDATE_REQUIRED"
       exit ${EXIT_UPDATE_REQUIRED}
    else
       echo "Bootloader EEPROM is up to date"
       printVersions
-      write_status_info "${EXIT_SUCCESS}"
+      write_status_info "EXIT_SUCCESS"
       exit ${EXIT_SUCCESS}
    fi
 }
@@ -469,8 +485,8 @@ write_status_info()
    [ -z "${MACHINE_OUTPUT}" ] && return 0
 
    exit_code="${1:-EXIT_FAILED}"
-   bootloader_cur="${BOOTLOADER_CURRENT_VERSION}"
-   bootloader_new="${BOOTLOADER_UPDATE_VERSION}"
+   bootloader_cur="${BOOTLOADER_CURRENT_VERSION:-0}"
+   bootloader_new="${BOOTLOADER_UPDATE_VERSION:-0}"
    vl805_cur="${VL805_CURRENT_VERSION}"
    vl805_new="${VL805_UPDATE_VERSION}"
 
@@ -485,9 +501,9 @@ EOF
    else
       cat > "${MACHINE_OUTPUT}" <<EOF
 {
-  "EXITCODE": ${exit_code},
-  "BOOTLOADER_CURRENT": ${bootloader_cur:-0},
-  "BOOTLOADER_LATEST": ${bootloader_new:-0},
+  "EXITCODE": "${exit_code}",
+  "BOOTLOADER_CURRENT": ${bootloader_cur},
+  "BOOTLOADER_LATEST": ${bootloader_new},
   "VL805_CURRENT": "${vl805_cur}",
   "VL805_LATEST": "${vl805_new}"
 }
@@ -500,8 +516,9 @@ AUTO_UPDATE_BOOTLOADER=0
 AUTO_UPDATE_VL805=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
+IGNORE_DPKG_CHECKSUMS=0
 
-while getopts A:adhf:m:ju: option; do
+while getopts A:adhif:m:ju:r option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -519,11 +536,18 @@ while getopts A:adhf:m:ju: option; do
       ;;
    f) BOOTLOADER_UPDATE_IMAGE="${OPTARG}"
       ;;
+   i) IGNORE_DPKG_CHECKSUMS=1
+      ;;
    j) JSON_OUTPUT="yes"
       ;;
    m) MACHINE_OUTPUT="${OPTARG}"
       ;;
    h) usage
+      ;;
+   r) [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update -r'"
+      echo "Removing temporary files from previous EEPROM update"
+      removePreviousUpdates
+      exit 0
       ;;
    u) VL805_UPDATE_IMAGE="${OPTARG}"
       ;;
@@ -534,7 +558,6 @@ while getopts A:adhf:m:ju: option; do
 done
 
 checkDependencies
-removePreviousUpdates
 if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ "${AUTO_UPDATE_VL805}" = 1 ]; then
    if vcgencmd bootloader_config | grep FREEZE_VERSION=1; then
       echo "EEPROM version is frozen. Skipping update"
