@@ -1,3 +1,16 @@
+rpi-eeprom (2.0-1) buster; urgency=medium
+
+  [ MilhouseVH ]
+  * revert machine output exit code to string
+  * handle undefined machine output consistently
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Don't remove update files if run with no arguments
+  * critical update: Update VLI to 000137ab revision
+  * rpi-eeprom-update: Verify DPKG checksums if available
+
+ -- Serge Schneider <serge@raspberrypi.org>  Wed, 23 Oct 2019 15:09:15 +0100
+
 rpi-eeprom (1.4-1) buster; urgency=medium
 
   [ Tim Gover ]
