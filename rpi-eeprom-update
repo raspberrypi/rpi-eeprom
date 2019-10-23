@@ -16,8 +16,9 @@ FIRMWARE_ROOT=${FIRMWARE_ROOT:-/lib/firmware/raspberrypi/bootloader}
 FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-critical}
 FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
+ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
 USE_FLASHROM=${USE_FLASHROM:-0}
-RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/recovery.bin}
+RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recovery.bin}
 BOOTFS=${BOOTFS:-/boot}
 
 EXIT_SUCCESS=0
@@ -31,7 +32,7 @@ OVERWRITE_CONFIG=0
 # Maximum safe SPI speed for EEPROM access 16000, slower is ok.
 SPI_SPEED=16000
 # Timestamp for first release which doesn't have a timestamp field
-FIRST_VERSION=1557513636
+BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
 
 # Simple bootloader which is able to load start.elf in the event of a power
@@ -40,6 +41,13 @@ EEPROM_SIZE=524288
 
 TMP_EEPROM_IMAGE=""
 TMP_BOOTFS_MNT=""
+
+VL805_CURRENT_VERSION=
+VL805_UPDATE_VERSION=
+
+# The update actions selected by the version check
+ACTION_UPDATE_BOOTLOADER=0
+ACTION_UPDATE_VL805=0
 
 cleanup() {
    if [ -f "${TMP_EEPROM_IMAGE}" ]; then
@@ -65,9 +73,7 @@ die() {
 
 prepareImage()
 {
-   eeprom_image="$1"
-
-   [ -f "${eeprom_image}" ] || die "EEPROM image \'${eeprom_image}\' not found"
+   [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image \'${BOOTLOADER_UPDATE_IMAGE}\' not found"
    TMP_EEPROM_IMAGE="$(mktemp)"
    TMP_EEPROM_CONFIG="$(mktemp)"
 
@@ -85,98 +91,122 @@ prepareImage()
       OVERWRITE_CONFIG=1
    fi
 
-   cp -f "${eeprom_image}" "${TMP_EEPROM_IMAGE}"
+   cp -f "${BOOTLOADER_UPDATE_IMAGE}" "${TMP_EEPROM_IMAGE}"
 
    if [ "${OVERWRITE_CONFIG}" = 0 ]; then
       "${script_dir}/rpi-eeprom-config" \
          --out "${TMP_EEPROM_IMAGE}" \
-         --config "${TMP_EEPROM_CONFIG}" "${eeprom_image}"
+         --config "${TMP_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
    fi
 }
 
 applyRecoveryUpdate()
 {
-   eeprom_image="$1"
-   [ -f "${eeprom_image}" ] || die "${eeprom_image} not found"
-   TMP_EEPROM_IMAGE="$(mktemp)"
+   [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || [ -n "${VL805_UPDATE_IMAGE}" ] || die "No update images specified"
 
    findBootFS
-   prepareImage "${eeprom_image}"
 
-   # If recovery.bin encounters pieeprom.upd then it will select it in
-   # preference to pieeprom.bin. The .upd file also causes recovery.bin
-   # to rename itself to recovery.000 and reboot if the update is successful.
-   # The rename causes the ROM to ignore this file and use the newly flashed
-   # EEPROM image instead.
-   cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
-      || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
+   # A '.sig' file is created so that recovery.bin can check that the
+   # EEPROM image has not been created (e.g. SD card corruption).
+   # The .sig file format is currently just a SHA256 in ASCII hex. In future,
+   # if an actual public key signature is required then that plus any other
+   # data would be appended after the SHA256 signature.
+   if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+        [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
+
+        TMP_EEPROM_IMAGE="$(mktemp)"
+        prepareImage
+        # If recovery.bin encounters pieeprom.upd then it will select it in
+        # preference to pieeprom.bin. The .upd file also causes recovery.bin
+        # to rename itself to recovery.000 and reboot if the update is successful.
+        # The rename causes the ROM to ignore this file and use the newly flashed
+        # EEPROM image instead.
+        sha256sum "${TMP_EEPROM_IMAGE}" | awk '{print $1}' > "${BOOTFS}/pieeprom.sig" \
+                || die "Failed to create ${BOOTFS}/pieeprom.sig"
+
+        cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
+                || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
+   fi
+
+   if [ -n "${VL805_UPDATE_IMAGE}" ]; then
+        sha256sum "${VL805_UPDATE_IMAGE}" | awk '{print $1}' > "${BOOTFS}/vl805.sig" \
+                || die "Failed to create ${BOOTFS}/vl805.sig"
+        cp -f "${VL805_UPDATE_IMAGE}" "${BOOTFS}/vl805.bin"
+   fi
 
    cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" \
       || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
 }
 
 applyUpdate() {
-   eeprom_image="$1"
-
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
    if [ "${USE_FLASHROM}" = 0 ]; then
-      applyRecoveryUpdate "${eeprom_image}"
+      applyRecoveryUpdate
       return
    fi
 
-   # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
-   # LDO first to avoid sending noise to analog audio.
-   /opt/vc/bin/vcmailbox 0x00030056 4 4 0 > /dev/null || true
-   dtparam audio=off
+   if [ -f "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
+      # LDO first to avoid sending noise to analog audio.
+      /opt/vc/bin/vcmailbox 0x00030056 4 4 0 > /dev/null || true
+      dtparam audio=off
 
-   # Switch the SPI pins to boot EEPROM
-   dtoverlay spi-gpio40-45
-   modprobe spidev
-   modprobe spi-bcm2835
+      # Switch the SPI pins to boot EEPROM
+      dtoverlay spi-gpio40-45
+      modprobe spidev
+      modprobe spi-bcm2835
 
-   prepareImage "${eeprom_image}"
+      prepareImage "${BOOTLOADER_UPDATE_IMAGE}"
 
-   echo "Applying update ${eeprom_image}"
-   flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=${SPI_SPEED}" -w "${TMP_EEPROM_IMAGE}" || die "flashrom EEPROM update failed"
+      echo "Applying bootloaer update ${BOOTLOADER_UPDATE_IMAGE}"
+      flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=${SPI_SPEED}" -w "${TMP_EEPROM_IMAGE}" || die "flashrom EEPROM update failed"
 
-   dtparam -R spi-gpio40-45
-   dtparam audio=on
-   /opt/vc/bin/vcmailbox 0x00030056 4 4 1 > /dev/null || true
+      dtparam -R spi-gpio40-45
+      dtparam audio=on
+      /opt/vc/bin/vcmailbox 0x00030056 4 4 1 > /dev/null || true
+   fi
+
+   if [ -f "${VL805_UPDATE_IMAGE}" ]; then
+      echo "Applying VL805 image ${VL805_UPDATE_IMAGE}"
+      vl805 -w "${VL805_UPDATE_IMAGE}"
+   fi
+
+   echo "Applying bootloader update ${BOOTLOADER_UPDATE_IMAGE}"
 }
 
 # Use the version reported by the loaded EEPROM instead of attempting to retrieve
 # this via flashrom to avoid unnecessary audio glitches.
-CURRENT_VERSION=
-getCurrentVersion() {
+BOOTLOADER_CURRENT_VERSION=
+getBootloaderCurrentVersion() {
    if vcgencmd bootloader_version | grep -q timestamp; then
-      CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
-      if [ "${CURRENT_VERSION}" = "0" ]; then
+      BOOTLOADER_CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
+      if [ "${BOOTLOADER_CURRENT_VERSION}" = "0" ]; then
          # If a timestamp of zero is returned then it's new firmware but an
          # old bootloader. Assume bootloader v0
-         CURRENT_VERSION="${FIRST_VERSION}"
+         BOOTLOADER_CURRENT_VERSION="${BOOTLOADER_FIRST_VERSION}"
       fi
    else
       # New bootloader / old firmware ? Try to parse the date
-      CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)")
+      BOOTLOADER_CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)" 2>/dev/null || true)
    fi
 
    # Failed to parse the version. Default to the initial production release.
-   if [ -z "${CURRENT_VERSION}" ]; then
-      CURRENT_VERSION="${FIRST_VERSION}"
+   if [ -z "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      BOOTLOADER_CURRENT_VERSION="${BOOTLOADER_FIRST_VERSION}"
    fi
 }
 
 # Find latest applicable update version
-UPDATE_IMAGE=""
-UPDATE_VERSION=0
-getUpdateVersion() {
-   UPDATE_VERSION=0
+BOOTLOADER_UPDATE_IMAGE=""
+BOOTLOADER_UPDATE_VERSION=0
+getBootloaderUpdateVersion() {
+   BOOTLOADER_UPDATE_VERSION=0
    match=".*/pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin"
    latest="$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
    if [ -f "${latest}" ]; then
-      UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
-      UPDATE_IMAGE="${latest}"
+      BOOTLOADER_UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
+      BOOTLOADER_UPDATE_IMAGE="${latest}"
    fi
 }
 
@@ -192,12 +222,20 @@ checkDependencies() {
       die "Bootloader updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
+   if ! command -v vl805 -h > /dev/null 2>&1; then
+      die "vl805 command not found"
+   fi 
+
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
-      die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware"
+      die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
    fi
 
-   if ! flashrom --version > /dev/null 2>&1; then
-      [ "${USE_FLASHROM}" = 0 ] || die "flashrom not found."
+   if ! command -v sha256sum > /dev/null 2>&1; then
+      die "sha256sum not found. On Debian, try installing the coreutilities package"
+   fi
+
+   if ! command -v flashrom  > /dev/null 2>&1; then
+      [ "${USE_FLASHROM}" = 0 ] || die "flashrom not found. On Debian, try installing the flashrom package."
    fi
 
    if [ "${USE_FLASHROM}" = 0 ]; then
@@ -208,18 +246,24 @@ checkDependencies() {
 usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
-   Checks whether the Raspberry Pi bootloader EEPROM is up-to-date and
-   optionally updates the EEPROM at the next reboot.
+   Checks whether the Raspberry Pi bootloader and the VL805 USB controller
+   EEPROMs are up-to-date and optionally updates the EEPROMs at the next reboot.
 
-   The default update mechanism writes recovery.bin and pieeprom.upd to the
-   boot partition on the sd-card. At the next reboot the ROM runs recovery.bin
-   which flashes pieeprom.upd to the EEPROM. If the EEPROM update was successful
-   recovery.bin renames itself to recovery.000 to prevent it from running a
-   second time then resets the system. The system should then boot normally.
+   The default update mechanism writes recovery.bin and the EEPROM update 
+   image(s) (pieeprom.upd and vl805.bin) to the boot partition on the sd-card. 
+   The SHA256 hash of the corresponding images are written to pieeprom.sig
+   and/or vl805.sig. This guards against file system corruption which could
+   cause the EEPROM to be flashed with an invalid image. This is is not a
+   security check.
+
+   At the next reboot the ROM runs recovery.bin which updates EEPROM(s). 
+   If the update was successful recovery.bin renames itself to recovery.000
+   to prevent it from running a second time then resets the system.
+   The system should then boot normally.
 
    If /boot does not correspond to the boot partition on the sd-card and this
    is not a NOOBS system then the mount point for BOOTFS should be defined
-   in /etc/default/rpi-eeprom-update
+   in /etc/default/rpi-eeprom-update by defining the BOOTFS variable.
 
    For reference, the flashrom update mechanism may be enabled by defining
    USE_FLASHROM=1 in /etc/default/rpi-eeprom-update. This not recommended
@@ -230,7 +274,8 @@ rpi-eeprom-update [options]... [FILE]
    A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
    before applying the update.
 
-   -a Install the latest update if necessary
+   -a Automatically install bootloader and USB (VLI) EEPROM updates.
+   -A Specify which type of EEPROM to automatically update (vl805 or bootloader)
    -d Use the default bootloader config instead of migrating the current settings
    -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
@@ -240,7 +285,7 @@ rpi-eeprom-update [options]... [FILE]
    -h Display help text and exit
    -j Write status information using JSON notation
    -m Write status information to the given file when run without -a or -f
-
+   -u Install the specified VL805 (USB EEPROM) image file.
 
    To extract the configuration file from an EEPROM image: 
    rpi-eeprom-config pieeprom.bin --out bootconf.txt
@@ -263,10 +308,12 @@ EOF
 
 printVersions()
 {
-   cur="$1"
-   new="$2"
-   echo "CURRENT: $(date -u "-d@${cur}") (${cur})"
-   echo " LATEST: $(date -u "-d@${new}") (${new})"
+   echo "BOOTLOADER"
+   echo "CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   echo " LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
+   echo "VL805"
+   echo "CURRENT: ${VL805_CURRENT_VERSION}"
+   echo " LATEST: ${VL805_UPDATE_VERSION}"
 }
 
 findBootFS()
@@ -276,7 +323,6 @@ findBootFS()
    # If ${BOOTFS} is not writable OR is not on /dev/mmcblk0 then error because the ROM
    # can only load recovery.bin from the on-board SD-CARD slot or the EEPROM.
 
-   # To skip installing the safe mode recovery.bin use the -s option
    if blkid | grep -qE "/dev/mmcblk0p1.*LABEL_FATBOOT.*RECOVERY.*TYPE.*vfat"; then
       TMP_BOOTFS_MNT="$(mktemp -d)"
       mount /dev/mmcblk0p1 "${TMP_BOOTFS_MNT}"
@@ -284,33 +330,105 @@ findBootFS()
    fi
 
    # If BOOTFS is not a directory or doesn't contain any .elf files then
-   # it's probably not the boot partition so assume that it cannot be used for a
-   # safe mode recovery
+   # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
    [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ] || die "BOOTFS: \"${BOOTFS}\" contains no .elf files"
 }
 
+getVL805CurrentVersion()
+{
+   # The version number is obtained by examing a section of PCI config
+   # space which is only accessible as root. If the command is not run as
+   # root then treat the version as unknown and skip VLI updates.
+   VL805_CURRENT_VERSION=""
+   if [ "$(id -u)" = "0" ]; then
+      if vl805 | grep -q "VL805 FW version"; then
+         VL805_CURRENT_VERSION=$(vl805 | grep "VL805 FW version" | awk '{print $4}')
+      fi
+   fi
+}
+
+getVL805UpdateVersion()
+{
+   # The latest VL805 version is indicated by a file containing the version
+   # number. If the version file exists then verify that the corresponding
+   # VL805 binary exists before selecting it.
+   # There are no user modifiable sections in the VL805 firmware and there 
+   # are unlikely to be many updates to it so just indicate the latest supported
+   # version. This also avoids making any assumptions about the VLI version numbers.
+   VL805_UPDATE_VERSION=""
+   if [ -f "${FIRMWARE_IMAGE_DIR}/vl805.latest" ]; then
+      ver="$(cat "${FIRMWARE_IMAGE_DIR}/vl805.latest")"
+      if [ -f "${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin" ]; then
+         VL805_UPDATE_VERSION="${ver}"
+         VL805_UPDATE_IMAGE="${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin"
+      fi
+   fi
+}
+
+# Retrieve the version information and determine whether newer
+# versions are available.
+lookupVersionInfo()
+{
+   getBootloaderCurrentVersion
+   getBootloaderUpdateVersion
+
+   getVL805CurrentVersion
+   getVL805UpdateVersion
+
+   if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      ACTION_UPDATE_BOOTLOADER=1
+   else
+      BOOTLOADER_UPDATE_IMAGE=""
+   fi
+
+   if [ -n "${VL805_CURRENT_VERSION}" ] && [ -n "${VL805_UPDATE_VERSION}" ]; then
+      if [ "${VL805_CURRENT_VERSION}" != "${VL805_UPDATE_VERSION}" ]; then
+         ACTION_UPDATE_VL805=1
+      else
+         VL805_UPDATE_IMAGE=""
+      fi
+   fi
+}
+
 checkAndApply()
 {
-   getCurrentVersion
-   getUpdateVersion
+   lookupVersionInfo
 
-   if [ "${UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
-      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
-      echo "*** INSTALLING REQUIRED UPDATE ***"
-      applyUpdate "${UPDATE_IMAGE}"
-      echo "Bootloader EEPROM update pending. Please reboot to apply the update."
+   # Restrict the automatic updates to the EEPROM types selected by the -A option.
+   if [ "${AUTO_UPDATE_VL805}" != 1 ]; then
+      ACTION_UPDATE_VL805=0
+      VL805_UPDATE_IMAGE=""
+   fi
+   if [ "${AUTO_UPDATE_BOOTLOADER}" != 1 ]; then
+      ACTION_UPDATE_BOOTLOADER=0
+      BOOTLOADER_UPDATE_IMAGE=""
+   fi
+
+   if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
+      echo "*** INSTALLING EEPROM UPDATES ***"
+      printVersions
+      applyUpdate
+      echo "Bootloader and/or VL805 EEPROM update pending. Please reboot to apply the update."
    else
-      echo "Bootloader EEPROM is up to date. $(date -d@${CURRENT_VERSION})"
+      echo "Bootloader and VL805 EEPROMs are up to date. $(date -d@${BOOTLOADER_CURRENT_VERSION})"
    fi
 }
 
 fileUpdate()
 {
-   echo "*** INSTALLING ${1} ***"
-   [ -f "${1}" ] || die "\"${1}\" not found"
-   applyUpdate "$1"
-   echo "Bootloader EEPROM update pending. Please reboot to apply the update."
+   echo "*** INSTALLING ${BOOTLOADER_UPDATE_IMAGE} ${VL805_UPDATE_IMAGE} ***"
+
+   if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "Bootloader image \"${BOOTLOADER_UPDATE_IMAGE}\" not found"
+   fi
+
+   if [ -n "${VL805_UPDATE_IMAGE}" ]; then
+      [ -f "${VL805_UPDATE_IMAGE}" ] || die "VL805 image \"${VL805_UPDATE_IMAGE}\" not found"
+   fi
+
+   applyUpdate
+   echo "EEPROM update pending. Please reboot to apply the update."
 }
 
 removePreviousUpdates()
@@ -322,25 +440,26 @@ removePreviousUpdates()
       # N.B. recovery.bin is normally ignored by the ROM if is not a valid
       # executable but it's best to not have the file at all.
       rm -f "${BOOTFS}/recovery.bin"
-      rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd"
+      rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
+      rm -f "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
       # Case insensitive for FAT bootfs
-      find "${BOOTFS}" -maxdepth 1 -type f -iname "recovery.*" -regex ".*\.[0-9][0-9][0-9]$" -exec rm -f {} \;
+      find "${BOOTFS}" -maxdepth 1 -type f -iname "recovery.*" -regex '.*\.[0-9][0-9][0-9]$' -exec rm -f {} \;
    fi
 }
 
 checkVersion()
 {
-   getCurrentVersion
-   getUpdateVersion
-   if [ "${UPDATE_VERSION}" -gt "${CURRENT_VERSION}" ]; then
+   lookupVersionInfo
+
+   if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       echo "*** UPDATE REQUIRED ***"
-      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
-      write_status_info EXIT_UPDATE_REQUIRED "${CURRENT_VERSION}" "${UPDATE_VERSION}"
+      printVersions
+      write_status_info "${EXIT_UPDATE_REQUIRED}"
       exit ${EXIT_UPDATE_REQUIRED}
    else
       echo "Bootloader EEPROM is up to date"
-      printVersions "${CURRENT_VERSION}" "${UPDATE_VERSION}"
-      write_status_info EXIT_SUCCESS "${CURRENT_VERSION}" "${UPDATE_VERSION}"
+      printVersions
+      write_status_info "${EXIT_SUCCESS}"
       exit ${EXIT_SUCCESS}
    fi
 }
@@ -349,46 +468,64 @@ write_status_info()
 {
    [ -z "${MACHINE_OUTPUT}" ] && return 0
 
-   exit_code="${1}"
-   cur=${2}
-   new=${3}
+   exit_code="${1:-EXIT_FAILED}"
+   bootloader_cur="${BOOTLOADER_CURRENT_VERSION}"
+   bootloader_new="${BOOTLOADER_UPDATE_VERSION}"
+   vl805_cur="${VL805_CURRENT_VERSION}"
+   vl805_new="${VL805_UPDATE_VERSION}"
 
     if [ "${JSON_OUTPUT}" = "no" ]; then
       cat > "${MACHINE_OUTPUT}" <<EOF
 EXITCODE="${exit_code}"
-CURRENT_TS=${cur}
-LATEST_TS=${new}
+BOOTLOADER_CURRENT=${bootloader_cur}
+BOOTLOADER_LATEST=${bootloader_new}
+VL805_CURRENT="${vl805_cur}"
+VL805_LATEST="${vl805_new}"
 EOF
    else
       cat > "${MACHINE_OUTPUT}" <<EOF
 {
-  "EXITCODE": "${exit_code}",
-  "CURRENT_TS": ${cur},
-  "LATEST_TS": ${new}
+  "EXITCODE": ${exit_code},
+  "BOOTLOADER_CURRENT": ${bootloader_cur:-0},
+  "BOOTLOADER_LATEST": ${bootloader_new:-0},
+  "VL805_CURRENT": "${vl805_cur}",
+  "VL805_LATEST": "${vl805_new}"
 }
 EOF
    fi
    return 0
 }
 
-AUTO_UPDATE=""
-FILE_UPDATE=""
+AUTO_UPDATE_BOOTLOADER=0
+AUTO_UPDATE_VL805=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 
-while getopts adhf:m:j option; do
+while getopts A:adhf:m:ju: option; do
    case "${option}" in
-   a) AUTO_UPDATE=1
+   A)
+      if [ "${OPTARG}" = "bootloader" ]; then
+         AUTO_UPDATE_BOOTLOADER=1
+      elif [ "${OPTARG}" = "vl805" ]; then
+         AUTO_UPDATE_VL805=1
+      else
+         die "Unknown update mode: ${OPTARG}"
+      fi
+      ;;
+   a) AUTO_UPDATE_BOOTLOADER=1
+      AUTO_UPDATE_VL805=1
       ;;
    d) OVERWRITE_CONFIG=1
       ;;
-   f) FILE_UPDATE="${OPTARG}"
+   f) BOOTLOADER_UPDATE_IMAGE="${OPTARG}"
       ;;
    j) JSON_OUTPUT="yes"
       ;;
    m) MACHINE_OUTPUT="${OPTARG}"
       ;;
    h) usage
+      ;;
+   u) VL805_UPDATE_IMAGE="${OPTARG}"
       ;;
    *) echo "Unknown argument \"${option}\""
       usage
@@ -398,15 +535,15 @@ done
 
 checkDependencies
 removePreviousUpdates
-if [ -n "${AUTO_UPDATE}" ]; then
+if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ "${AUTO_UPDATE_VL805}" = 1 ]; then
    if vcgencmd bootloader_config | grep FREEZE_VERSION=1; then
       echo "EEPROM version is frozen. Skipping update"
       exit ${EXIT_EEPROM_FROZEN}
    else
       checkAndApply
    fi
-elif [ -n "${FILE_UPDATE}" ]; then
-   fileUpdate "${FILE_UPDATE}"
+elif [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || [ -n "${VL805_UPDATE_IMAGE}" ]; then
+   fileUpdate
 else
    checkVersion
 fi

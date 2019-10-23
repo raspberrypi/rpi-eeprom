@@ -107,6 +107,40 @@ check_update()
    fi
 }
 
+# Verify that rpi-eeprom-config will apply and 2024 byte configuration file correctly.
+check_conf_size_large()
+{
+   echo "check maximum config file size"
+   image="${script_dir}/$1"
+   conf="bootconf-2024.txt"
+
+   expected_md5="$(md5sum "${conf}" | awk '{print $1}')"
+
+   TMP_EEPROM="$(mktemp)"
+   "${script_dir}/../rpi-eeprom-config" \
+      "${image}" \
+      --config "${conf}" \
+      --out "${TMP_EEPROM}"
+
+   actual_md5="$("${script_dir}/../rpi-eeprom-config" "${TMP_EEPROM}" | md5sum | awk '{print $1}')"
+   [ "${actual_md5}" = "${expected_md5}" ] || die "EEPROM check large config: checksum mismatch"
+}
+
+# Verify that rpi-eeprom-config will reject files exceeding 2024 bytes
+check_conf_size_too_large()
+{
+   echo "check config file which exceeds the maximum size"
+   image="${script_dir}/$1"
+   conf="bootconf-2025.txt"
+
+   expected_md5="$(md5sum "${conf}" | awk '{print $1}')"
+
+   TMP_EEPROM="$(mktemp)"
+   if "${script_dir}/../rpi-eeprom-config" "${image}" --config "${conf}" --out "${TMP_EEPROM}" > /dev/null 2>&1; then
+      die "$config should have been rejected"
+   fi
+}
+
 check_loopback "../firmware/critical/pieeprom-2019-05-10.bin" "bootconf-2019-05-10.txt"
 cleanup
 
@@ -117,4 +151,10 @@ check_update "../firmware/critical/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15
 cleanup
 
 check_reduce_size "../firmware/critical/pieeprom-2019-05-10.bin" "bootconf-2019-05-10.txt"
+cleanup
+
+check_conf_size_large "../firmware/critical/pieeprom-2019-05-10.bin"
+cleanup
+
+check_conf_size_too_large "../firmware/critical/pieeprom-2019-05-10.bin"
 cleanup
