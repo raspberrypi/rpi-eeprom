@@ -139,7 +139,19 @@ applyRecoveryUpdate()
 }
 
 applyUpdate() {
+   checksums_file="/var/lib/dpkg/info/rpi-eeprom-images.md5sums"
+
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
+
+   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ] && [ -f "${checksums_file}" ]; then
+      (
+         cd /
+         if ! md5sum -c "${checksums_file}" > /dev/null 2>&1; then
+            md5sum -c "${checksums_file}"
+            die "rpi-eeprom-images checksums failed - try reinstalling this package"
+         fi
+      )
+   fi
 
    if [ "${USE_FLASHROM}" = 0 ]; then
       applyRecoveryUpdate
@@ -283,6 +295,7 @@ rpi-eeprom-update [options]... [FILE]
       WARNING: This command should only be run from console mode in order to
       avoid conflicts/deadlock with dtoverlay/dtparam settings.
    -h Display help text and exit
+   -i Ignore package checksums - for rpi-eeprom developers.
    -j Write status information using JSON notation
    -m Write status information to the given file when run without -a or -f
    -r Removes temporary EEPROM update files from the boot partition.
@@ -503,8 +516,9 @@ AUTO_UPDATE_BOOTLOADER=0
 AUTO_UPDATE_VL805=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
+IGNORE_DPKG_CHECKSUMS=0
 
-while getopts A:adhf:m:ju:r option; do
+while getopts A:adhif:m:ju:r option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -521,6 +535,8 @@ while getopts A:adhf:m:ju:r option; do
    d) OVERWRITE_CONFIG=1
       ;;
    f) BOOTLOADER_UPDATE_IMAGE="${OPTARG}"
+      ;;
+   i) IGNORE_DPKG_CHECKSUMS=1
       ;;
    j) JSON_OUTPUT="yes"
       ;;
