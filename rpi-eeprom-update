@@ -285,6 +285,7 @@ rpi-eeprom-update [options]... [FILE]
    -h Display help text and exit
    -j Write status information using JSON notation
    -m Write status information to the given file when run without -a or -f
+   -r Removes temporary EEPROM update files from the boot partition.
    -u Install the specified VL805 (USB EEPROM) image file.
 
    To extract the configuration file from an EEPROM image: 
@@ -394,6 +395,7 @@ lookupVersionInfo()
 checkAndApply()
 {
    lookupVersionInfo
+   removePreviousUpdates
 
    # Restrict the automatic updates to the EEPROM types selected by the -A option.
    if [ "${AUTO_UPDATE_VL805}" != 1 ]; then
@@ -417,6 +419,7 @@ checkAndApply()
 
 fileUpdate()
 {
+   removePreviousUpdates
    echo "*** INSTALLING ${BOOTLOADER_UPDATE_IMAGE} ${VL805_UPDATE_IMAGE} ***"
 
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
@@ -501,7 +504,7 @@ AUTO_UPDATE_VL805=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 
-while getopts A:adhf:m:ju: option; do
+while getopts A:adhf:m:ju:r option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -525,6 +528,11 @@ while getopts A:adhf:m:ju: option; do
       ;;
    h) usage
       ;;
+   r) [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update -r'"
+      echo "Removing temporary files from previous EEPROM update"
+      removePreviousUpdates
+      exit 0
+      ;;
    u) VL805_UPDATE_IMAGE="${OPTARG}"
       ;;
    *) echo "Unknown argument \"${option}\""
@@ -534,7 +542,6 @@ while getopts A:adhf:m:ju: option; do
 done
 
 checkDependencies
-removePreviousUpdates
 if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ "${AUTO_UPDATE_VL805}" = 1 ]; then
    if vcgencmd bootloader_config | grep FREEZE_VERSION=1; then
       echo "EEPROM version is frozen. Skipping update"
