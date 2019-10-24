@@ -231,7 +231,7 @@ checkDependencies() {
    fi
 
    if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
-      die "Bootloader updates directory ${FIRMWARE_IMAGE_DIR} not found."
+      die "EEPROM updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
    if ! command -v vl805 -h > /dev/null 2>&1; then
@@ -322,10 +322,25 @@ EOF
 
 printVersions()
 {
-   echo "BOOTLOADER"
+   if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
+      echo "BOOTLOADER: update required"
+   else
+      echo "BOOTLOADER: up-to-date"
+   fi
+
    echo "CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
    echo " LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-   echo "VL805"
+
+   if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
+      echo "VL805: update required"
+   else
+      if [ "$(id -u)" = "0" ]; then
+         echo "VL805: up-to-date"
+      else
+         echo "VL805: version unknown. Try sudo rpi-eeprom-update"
+      fi
+   fi
+
    echo "CURRENT: ${VL805_CURRENT_VERSION}"
    echo " LATEST: ${VL805_UPDATE_VERSION}"
 }
@@ -424,9 +439,9 @@ checkAndApply()
       echo "*** INSTALLING EEPROM UPDATES ***"
       printVersions
       applyUpdate
-      echo "Bootloader and/or VL805 EEPROM update pending. Please reboot to apply the update."
+      echo "EEPROM updates pending. Please reboot to apply the update."
    else
-      echo "Bootloader and VL805 EEPROMs are up to date. $(date -d@${BOOTLOADER_CURRENT_VERSION})"
+      printVersions
    fi
 }
 
@@ -473,7 +488,6 @@ checkVersion()
       write_status_info "EXIT_UPDATE_REQUIRED"
       exit ${EXIT_UPDATE_REQUIRED}
    else
-      echo "Bootloader EEPROM is up to date"
       printVersions
       write_status_info "EXIT_SUCCESS"
       exit ${EXIT_SUCCESS}
