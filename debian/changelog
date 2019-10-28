@@ -1,3 +1,11 @@
+rpi-eeprom (2.1-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Tweak update status for BOOTLOADER, VL805
+  * rpi-eeprom-update: Check for vcmailbox, vcgencmd, dtparam, dtoverlay
+
+ -- Serge Schneider <serge@raspberrypi.org>  Mon, 28 Oct 2019 13:35:00 +0000
+
 rpi-eeprom (2.0-1) buster; urgency=medium
 
   [ MilhouseVH ]

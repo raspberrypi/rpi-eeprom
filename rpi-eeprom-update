@@ -20,6 +20,7 @@ ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
 USE_FLASHROM=${USE_FLASHROM:-0}
 RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recovery.bin}
 BOOTFS=${BOOTFS:-/boot}
+VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -161,7 +162,7 @@ applyUpdate() {
    if [ -f "${BOOTLOADER_UPDATE_IMAGE}" ]; then
       # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
       # LDO first to avoid sending noise to analog audio.
-      /opt/vc/bin/vcmailbox 0x00030056 4 4 0 > /dev/null || true
+      "${VCMAILBOX}" 0x00030056 4 4 0 > /dev/null || true
       dtparam audio=off
 
       # Switch the SPI pins to boot EEPROM
@@ -176,7 +177,7 @@ applyUpdate() {
 
       dtparam -R spi-gpio40-45
       dtparam audio=on
-      /opt/vc/bin/vcmailbox 0x00030056 4 4 1 > /dev/null || true
+      ${VCMAILBOX} 0x00030056 4 4 1 > /dev/null || true
    fi
 
    if [ -f "${VL805_UPDATE_IMAGE}" ]; then
@@ -223,6 +224,10 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
+   if ! command -v vcgencmd  > /dev/null; then
+      die "vcgencmd not found. On Debian, try installing the libraspberrypi-bin package."
+   fi
+
    CPU_VER="$(vcgencmd otp_dump | grep 30: | cut -c8)"
 
    if [ "${CPU_VER}" != "3" ]; then
@@ -231,27 +236,39 @@ checkDependencies() {
    fi
 
    if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
-      die "Bootloader updates directory ${FIRMWARE_IMAGE_DIR} not found."
+      die "EEPROM updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
-   if ! command -v vl805 -h > /dev/null 2>&1; then
-      die "vl805 command not found"
+   if ! command -v vl805 > /dev/null; then
+      die "vl805 command not found. On Debian, try reinstalling the rpi-eeprom package."
    fi 
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
       die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
    fi
 
-   if ! command -v sha256sum > /dev/null 2>&1; then
+   if ! command -v sha256sum > /dev/null; then
       die "sha256sum not found. On Debian, try installing the coreutilities package"
    fi
 
-   if ! command -v flashrom  > /dev/null 2>&1; then
-      [ "${USE_FLASHROM}" = 0 ] || die "flashrom not found. On Debian, try installing the flashrom package."
+   if ! command -v flashrom  > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
+      die "flashrom not found. On Debian, try installing the flashrom package."
    fi
 
-   if [ "${USE_FLASHROM}" = 0 ]; then
-      [ -f "${RECOVERY_BIN}" ] || die "${RECOVERY_BIN} not found."
+   if [ ! -x "${VCMAILBOX}" ] && [ "${USE_FLASHROM}" = 1 ]; then
+      die "vcmailbox not found. On Debian, try installing the libraspberrypi-bin package."
+   fi
+
+   if ! command -v dtparam > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
+      die "dtparam not found. On Debian, try installing the libraspberrypi-bin package."
+   fi
+
+   if ! command -v dtoverlay > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
+      die "dtoverlay not found. On Debian, try installing the libraspberrypi-bin package."
+   fi
+
+   if [ "${USE_FLASHROM}" = 0 ] && [ ! -f "${RECOVERY_BIN}" ]; then
+      die "${RECOVERY_BIN} not found."
    fi
 }
 
@@ -322,10 +339,25 @@ EOF
 
 printVersions()
 {
-   echo "BOOTLOADER"
+   if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
+      echo "BOOTLOADER: update required"
+   else
+      echo "BOOTLOADER: up-to-date"
+   fi
+
    echo "CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
    echo " LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-   echo "VL805"
+
+   if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
+      echo "VL805: update required"
+   else
+      if [ "$(id -u)" = "0" ]; then
+         echo "VL805: up-to-date"
+      else
+         echo "VL805: version unknown. Try sudo rpi-eeprom-update"
+      fi
+   fi
+
    echo "CURRENT: ${VL805_CURRENT_VERSION}"
    echo " LATEST: ${VL805_UPDATE_VERSION}"
 }
@@ -424,9 +456,9 @@ checkAndApply()
       echo "*** INSTALLING EEPROM UPDATES ***"
       printVersions
       applyUpdate
-      echo "Bootloader and/or VL805 EEPROM update pending. Please reboot to apply the update."
+      echo "EEPROM updates pending. Please reboot to apply the update."
    else
-      echo "Bootloader and VL805 EEPROMs are up to date. $(date -d@${BOOTLOADER_CURRENT_VERSION})"
+      printVersions
    fi
 }
 
@@ -473,7 +505,6 @@ checkVersion()
       write_status_info "EXIT_UPDATE_REQUIRED"
       exit ${EXIT_UPDATE_REQUIRED}
    else
-      echo "Bootloader EEPROM is up to date"
       printVersions
       write_status_info "EXIT_SUCCESS"
       exit ${EXIT_SUCCESS}
