@@ -282,7 +282,7 @@ rpi-eeprom-update [options]... [FILE]
    image(s) (pieeprom.upd and vl805.bin) to the boot partition on the sd-card. 
    The SHA256 hash of the corresponding images are written to pieeprom.sig
    and/or vl805.sig. This guards against file system corruption which could
-   cause the EEPROM to be flashed with an invalid image. This is is not a
+   cause the EEPROM to be flashed with an invalid image. This is not a
    security check.
 
    At the next reboot the ROM runs recovery.bin which updates EEPROM(s). 
