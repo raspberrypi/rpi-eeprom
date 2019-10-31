@@ -75,20 +75,26 @@ class BootloaderImage(object):
             pad = pad + 1
 
         if self._out is not None:
-           self._out.write(self._bytes)
-           self._out.close()
+            self._out.write(self._bytes)
+            self._out.close()
         else:
-           sys.stdout.write(self._bytes)
+            if hasattr(sys.stdout, 'buffer'):
+                sys.stdout.buffer.write(self._bytes)
+            else:
+                sys.stdout.write(self._bytes)
 
     def read(self):
         hdr_offset, length = self.find_config()
         offset = hdr_offset + 4 + FILE_HDR_LEN
         config_bytes = self._bytes[offset:offset+length-FILENAME_LEN-4]
         if self._out is not None:
-           self._out.write(config_bytes)
-           self._out.close()
+            self._out.write(config_bytes)
+            self._out.close()
         else:
-           sys.stdout.write(config_bytes)
+            if hasattr(sys.stdout, 'buffer'):
+                sys.stdout.buffer.write(config_bytes)
+            else:
+                sys.stdout.write(config_bytes)
 
 def main():
     parser = argparse.ArgumentParser('RPI EEPROM config tool')
