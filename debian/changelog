@@ -1,3 +1,16 @@
+rpi-eeprom (2.2-1) buster; urgency=medium
+
+  [ MilhouseVH ]
+  * Add Python3 support
+
+  [ Tim Gover ]
+  * Remove deprecated EEPROM from test script
+
+  [ josef radinger ]
+  * fix typo
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 31 Oct 2019 12:50:17 +0000
+
 rpi-eeprom (2.1-1) buster; urgency=medium
 
   [ Tim Gover ]
