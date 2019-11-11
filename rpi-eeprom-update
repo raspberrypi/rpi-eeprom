@@ -388,8 +388,13 @@ getVL805CurrentVersion()
    # root then treat the version as unknown and skip VLI updates.
    VL805_CURRENT_VERSION=""
    if [ "$(id -u)" = "0" ]; then
-      if vl805 | grep -q "VL805 FW version"; then
-         VL805_CURRENT_VERSION=$(vl805 | grep "VL805 FW version" | awk '{print $4}')
+      if command -v lspci >/dev/null; then
+         vlver="$(lspci -d 1106:3483 -xxx | awk '/^50:/ { print "VL805 FW version: " $5 $4 $3 $2 }')"
+      else
+         vlver="$(vl805 | grep "VL805 FW version")"
+      fi
+      if [ -n "${vlver}" ]; then
+         VL805_CURRENT_VERSION="${vlver#*: }"
       fi
    fi
 }
