@@ -3,6 +3,7 @@ rpi-eeprom (2.2-2) UNRELEASED; urgency=medium
   [ Serge Schneider ]
   * Add binutils dependency
     - https://github.com/RPi-Distro/repo/issues/156
+  * Install vl850 from firmware/
 
  -- Serge Schneider <serge@raspberrypi.org>  Thu, 07 Nov 2019 14:19:46 +0000
 
