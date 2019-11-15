@@ -1,5 +1,15 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2019-11-15 - Git 40f77230c (BETA) RC1
+    First release candidate before this beta is moved to a stable release series.
+
+    * Avoid resetting TFTP prefix after retries or if start4.elf is not found.
+    * Add MAC_ADDRESS option which allows the OTP Ethernet MAC address to be
+      overriden. An VideoCore firmware update will propagate this forced
+      mac address to device-tree/cmdline in the near future.
+    * Various internal refactorings to prepare for USB MSD storage boot in
+      the next beta-series.
+
 ## 2019-10-17 - rpi-eeprom-update + recovery.bin
     * New beta recovery.bin which can update the VLI EEPROM before
       start.elf is loaded. This is the recommended and default method
