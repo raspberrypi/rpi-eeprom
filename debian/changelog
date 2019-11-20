@@ -1,3 +1,10 @@
+rpi-eeprom (2.4-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * 2019-11-18 - Beta update for network boot fixes
+
+ -- Serge Schneider <serge@raspberrypi.org>  Mon, 18 Nov 2019 14:45:00 +0000
+
 rpi-eeprom (2.3-1) buster; urgency=medium
 
   [ Tim Gover ]
