@@ -98,9 +98,9 @@ class BootloaderImage(object):
 
 def main():
     parser = argparse.ArgumentParser('RPI EEPROM config tool')
-    parser.add_argument('--config', help='Filename of new bootloader config')
-    parser.add_argument('--out', help='Filename for the EEPROM image with updated config')
-    parser.add_argument('eeprom', help='EEPROM filename (pieeprom.bin)')
+    parser.add_argument('--config', help='Insert new bootloader config into EEPROM image. CONFIG specifies the file containing the new config.')
+    parser.add_argument('--out', help='Extract current bootloader config from EEPROM image. OUT specifies the file to put the config into.')
+    parser.add_argument('eeprom', help='Name of EEPROM image file (e.g. pieeprom.bin)')
     args = parser.parse_args()
 
     image = BootloaderImage(args.eeprom, args.out)
