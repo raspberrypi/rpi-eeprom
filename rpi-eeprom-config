@@ -117,7 +117,7 @@ source EEPROM image.\
  which installs them to the /lib/firmware/raspberrypi/bootloader directory.')
     parser.add_argument('--config', help='Name of bootloader configuration file')
     parser.add_argument('--out', help='Name of output file')
-    parser.add_argument('eeprom', help='name of EEPROM file to use as input')
+    parser.add_argument('eeprom', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
 
     image = BootloaderImage(args.eeprom, args.out)
