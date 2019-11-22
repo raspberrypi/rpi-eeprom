@@ -113,7 +113,7 @@ combination of the original EEPROM image file, along with the new bootloader \
 configuration.')
     parser.add_argument('--config', help='Filename of new bootloader config')
     parser.add_argument('--out', help='Name of output file')
-    parser.add_argument('EEPROM', help='EEPROM filename (pieeprom.bin)')
+    parser.add_argument('eeprom', help='EEPROM filename (pieeprom.bin)')
     args = parser.parse_args()
 
     image = BootloaderImage(args.eeprom, args.out)
