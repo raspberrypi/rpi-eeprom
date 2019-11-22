@@ -98,22 +98,26 @@ class BootloaderImage(object):
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, \
-    description='RPI EEPROM config tool. \
+    description='Bootloader EEPROM configuration tool for the Raspberry Pi 4B. \
 \n\nThere are 3 operating modes: \
 \n\n1. Output the bootloader configuration stored in an EEPROM image file to \
 the screen (STDOUT): specify only the name of an EEPROM image file using the \
-EEPROM option. \
+\'eeprom\' option. \
 \n\n2. Output the bootloader configuration stored in an EEPROM image file to a \
-file: specify the EEPROM image file using the EEPROM option, and the output file\
-using the --out option. \
+file: specify the EEPROM image file using the \'eeprom\' option, and the output \
+file using the \'--out\' option.\
 \n\n3. Insert a new bootloader configuration into an EEPROM image file: specify \
-the EEPROM image file using the EEPROM option, the bootloader configuration file\
-using the --config option. A new file which is a combination of the EEPROM image\
-file, together with the new bootloader configuration file you specify will be\
-created - specify its name using the --out option.')
+the source EEPROM image file using the \'eeprom\' option and the bootloader \
+configuration file using the \'--config\' option. A new file which is a \
+combination of the EEPROM image file, together with the new bootloader \
+configuration file will be created - specify its name using the \'--out\' option. \
+The new bootloader configuration will replace any configuration present in the \
+source EEPROM image.\
+\n\nBootloader EEPROM images are contained in the \'rpi-eeprom-images\' package,\
+ which installs them to the /lib/firmware/raspberrypi/bootloader directory.')
     parser.add_argument('--config', help='Filename of new bootloader config')
     parser.add_argument('--out', help='Name of output file')
-    parser.add_argument('eeprom', help='EEPROM filename (pieeprom.bin)')
+    parser.add_argument('eeprom', help='name of EEPROM file to use as input')
     args = parser.parse_args()
 
     image = BootloaderImage(args.eeprom, args.out)
