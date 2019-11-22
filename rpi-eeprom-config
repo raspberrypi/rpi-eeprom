@@ -108,9 +108,9 @@ file: specify the EEPROM image file using the EEPROM option, and the output file
 using the --out option. \
 \n\n3. Insert a new bootloader configuration into an EEPROM image file: specify \
 the EEPROM image file using the EEPROM option, the bootloader configuration file\
-using the --config option, and the name to use for the new file which will be a \
-combination of the original EEPROM image file, along with the new bootloader \
-configuration.')
+using the --config option. A new file which is a combination of the EEPROM image\
+file, together with the new bootloader configuration file you specify will be\
+created - specify its name using the --out option.')
     parser.add_argument('--config', help='Filename of new bootloader config')
     parser.add_argument('--out', help='Name of output file')
     parser.add_argument('eeprom', help='EEPROM filename (pieeprom.bin)')
