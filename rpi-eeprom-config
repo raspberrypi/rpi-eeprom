@@ -97,9 +97,22 @@ class BootloaderImage(object):
                 sys.stdout.write(config_bytes)
 
 def main():
-    parser = argparse.ArgumentParser('RPI EEPROM config tool')
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, \
+    description='RPI EEPROM config tool. \
+\n\nThere are 3 operating modes: \
+\n\n1. Output the bootloader configuration stored in an EEPROM image file to \
+the screen (STDOUT): specify only the name of an EEPROM image file using the \
+EEPROM option. \
+\n\n2. Output the bootloader configuration stored in an EEPROM image file to a \
+file: specify the EEPROM image file using the EEPROM option, and the output file\
+using the --out option. \
+\n\n3. Insert a new bootloader configuration into an EEPROM image file: specify \
+the EEPROM image file using the EEPROM option, the bootloader configuration file\
+using the --config option, and the name to use for the new file which will be a \
+combination of the original EEPROM image file, along with the new bootloader \
+configuration.')
     parser.add_argument('--config', help='Filename of new bootloader config')
-    parser.add_argument('--out', help='Filename for the EEPROM image with updated config')
+    parser.add_argument('--out', help='Name of output file')
     parser.add_argument('eeprom', help='EEPROM filename (pieeprom.bin)')
     args = parser.parse_args()
 
