@@ -224,15 +224,16 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
-   if ! command -v vcgencmd  > /dev/null; then
-      die "vcgencmd not found. On Debian, try installing the libraspberrypi-bin package."
-   fi
-
-   CPU_VER="$(vcgencmd otp_dump | grep 30: | cut -c8)"
-
-   if [ "${CPU_VER}" != "3" ]; then
+   rev="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+   if [ $(((0x$rev >> 23) & 1)) -ne 0 ] && [ $(((0x$rev >> 12) & 15)) -eq 3 ]; then
+      echo "BCM2711 detected"
+   else
       # Not a BCM2711, no EEPROMs to update.
       exit ${EXIT_SUCCESS}
+   fi
+
+   if ! command -v vcgencmd  > /dev/null; then
+      die "vcgencmd not found. On Debian, try installing the libraspberrypi-bin package."
    fi
 
    if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
