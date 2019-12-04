@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2019-12-03 - Git f0d7269d4 (BETA) RC2
+    * Fix handling of multiple menu options with TFTP Option43
+    * Ignore unsupported modes in BOOT_ORDER instead of stopping.
+
 ## 2019-11-18 - Git b6a7593d6 (BETA) RC1
     First release candidate before this beta is moved to a stable release series.
 
