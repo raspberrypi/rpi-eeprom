@@ -22,6 +22,8 @@ RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recover
 BOOTFS=${BOOTFS:-/boot}
 VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
 
+CUSTOM_EEPROM_CONFIG=${CUSTOM_EEPROM_CONFIG:-/etc/default/rpi-eeprom-config}
+
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
 EXIT_FAILED=2
@@ -29,7 +31,7 @@ EXIT_EEPROM_FROZEN=3
 # Reserved
 # EXIT_PREVIOUS_UPDATE_FAILED=4
 
-OVERWRITE_CONFIG=0
+USE_EEPROM_INTERNAL_CONFIG=0
 # Maximum safe SPI speed for EEPROM access 16000, slower is ok.
 SPI_SPEED=16000
 # Timestamp for first release which doesn't have a timestamp field
@@ -54,8 +56,11 @@ cleanup() {
    if [ -f "${TMP_EEPROM_IMAGE}" ]; then
       rm -f "${TMP_EEPROM_IMAGE}"
    fi
-   if [ -f "${TMP_EEPROM_CONFIG}" ]; then
-      rm -f "${TMP_EEPROM_CONFIG}"
+   if [ -f "${TMP_CURRENT_EEPROM_CONFIG}" ]; then
+      rm -f "${TMP_CURRENT_EEPROM_CONFIG}"
+   fi
+   if [ -f "${TMP_NEW_EEPROM_CONFIG}" ]; then
+      rm -f "${TMP_NEW_EEPROM_CONFIG}"
    fi
    if [ -d "${TMP_BOOTFS_MNT}" ]; then
       umount "${TMP_BOOTFS_MNT}"
@@ -63,7 +68,8 @@ cleanup() {
    fi
    TMP_BOOTFS_MNT=
    TMP_EEPROM_IMAGE=
-   TMP_EEPROM_CONFIG=
+   TMP_CURRENT_EEPROM_CONFIG=
+   TMP_NEW_EEPROM_CONFIG=
 }
 trap cleanup EXIT
 
@@ -76,28 +82,48 @@ prepareImage()
 {
    [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image \'${BOOTLOADER_UPDATE_IMAGE}\' not found"
    TMP_EEPROM_IMAGE="$(mktemp)"
-   TMP_EEPROM_CONFIG="$(mktemp)"
+   TMP_CURRENT_EEPROM_CONFIG="$(mktemp)"
 
-   mkdir -p "${FIRMWARE_BACKUP_DIR}"
+   vcgencmd bootloader_config > "${TMP_CURRENT_EEPROM_CONFIG}"
 
    # Backup the configuration of the currently loaded bootloader
-   vcgencmd bootloader_config > "${TMP_EEPROM_CONFIG}"
+   mkdir -p "${FIRMWARE_BACKUP_DIR}"
    backup="${FIRMWARE_BACKUP_DIR}/pieeprom-backup-$(date +%Y%m%d-%H%M%S).conf"
-   cp -f "${TMP_EEPROM_CONFIG}" "${backup}"
-
-   if [ "$(wc -l "${TMP_EEPROM_CONFIG}" | awk '{print $1}')" -lt 3 ]; then
-      # Don't propagate empty EEPROM config files and also prevent the initial
-      # bootloader config with WAKE_ON_GPIO=0 propgating to newer versions by
-      # accident.
-      OVERWRITE_CONFIG=1
-   fi
+   cp -f "${TMP_CURRENT_EEPROM_CONFIG}" "${backup}"
 
    cp -f "${BOOTLOADER_UPDATE_IMAGE}" "${TMP_EEPROM_IMAGE}"
 
-   if [ "${OVERWRITE_CONFIG}" = 0 ]; then
+   if [ "${USE_EEPROM_INTERNAL_CONFIG}" = 0 ]; then
+      TMP_NEW_EEPROM_CONFIG="$(mktemp)"
+      rpi-eeprom-config "${TMP_EEPROM_IMAGE}" --out "${TMP_NEW_EEPROM_CONFIG}"
+
+      # Clean up empty lines
+      sed -i -e 's/[\t ]//g;/^$/d' "${TMP_NEW_EEPROM_CONFIG}"
+
+      no_of_eeprom_config_properties="$(wc -l "${TMP_CURRENT_EEPROM_CONFIG}" | awk '{print $1}')"
+      if [ "$no_of_eeprom_config_properties" -lt 3 ]; then
+         # Prevent the initial bootloader config with WAKE_ON_GPIO=0
+         # propagating to newer versions by accident
+         sed -i 's/WAKE_ON_GPIO=.*/WAKE_ON_GPIO=1/1' "${TMP_NEW_EEPROM_CONFIG}"
+      fi
+
+      # Apply current config settings to new EEPROM config
+      while read line; do
+         field=$(echo "${line}" | cut -d'=' -f1)
+         sed -i "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
+      done < "${TMP_CURRENT_EEPROM_CONFIG}"
+
+      # Apply user customisations to new EEPROM config
+      if [ -f "${CUSTOM_EEPROM_CONFIG}" ]; then
+         while read line; do
+            field=$(echo "${line}" | cut -d'=' -f1)
+            sed -i "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
+         done < "${CUSTOM_EEPROM_CONFIG}"
+      fi
+
       "${script_dir}/rpi-eeprom-config" \
          --out "${TMP_EEPROM_IMAGE}" \
-         --config "${TMP_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
+         --config "${TMP_NEW_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
    fi
 }
 
@@ -113,20 +139,20 @@ applyRecoveryUpdate()
    # if an actual public key signature is required then that plus any other
    # data would be appended after the SHA256 signature.
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
-        [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
+      [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
 
-        TMP_EEPROM_IMAGE="$(mktemp)"
-        prepareImage
-        # If recovery.bin encounters pieeprom.upd then it will select it in
-        # preference to pieeprom.bin. The .upd file also causes recovery.bin
-        # to rename itself to recovery.000 and reboot if the update is successful.
-        # The rename causes the ROM to ignore this file and use the newly flashed
-        # EEPROM image instead.
-        sha256sum "${TMP_EEPROM_IMAGE}" | awk '{print $1}' > "${BOOTFS}/pieeprom.sig" \
-                || die "Failed to create ${BOOTFS}/pieeprom.sig"
+      prepareImage
 
-        cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
-                || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
+      # If recovery.bin encounters pieeprom.upd then it will select it in
+      # preference to pieeprom.bin. The .upd file also causes recovery.bin
+      # to rename itself to recovery.000 and reboot if the update is successful.
+      # The rename causes the ROM to ignore this file and use the newly flashed
+      # EEPROM image instead.
+      sha256sum "${TMP_EEPROM_IMAGE}" | awk '{print $1}' > "${BOOTFS}/pieeprom.sig" \
+               || die "Failed to create ${BOOTFS}/pieeprom.sig"
+
+      cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
+               || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
    fi
 
    if [ -n "${VL805_UPDATE_IMAGE}" ]; then
@@ -170,9 +196,9 @@ applyUpdate() {
       modprobe spidev
       modprobe spi-bcm2835
 
-      prepareImage "${BOOTLOADER_UPDATE_IMAGE}"
+      prepareImage
 
-      echo "Applying bootloaer update ${BOOTLOADER_UPDATE_IMAGE}"
+      echo "Applying bootloader update ${BOOTLOADER_UPDATE_IMAGE}"
       flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=${SPI_SPEED}" -w "${TMP_EEPROM_IMAGE}" || die "flashrom EEPROM update failed"
 
       dtparam -R spi-gpio40-45
@@ -242,7 +268,7 @@ checkDependencies() {
 
    if ! command -v vl805 > /dev/null; then
       die "vl805 command not found. On Debian, try reinstalling the rpi-eeprom package."
-   fi 
+   fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
       die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
@@ -279,14 +305,14 @@ rpi-eeprom-update [options]... [FILE]
    Checks whether the Raspberry Pi bootloader and the VL805 USB controller
    EEPROMs are up-to-date and optionally updates the EEPROMs at the next reboot.
 
-   The default update mechanism writes recovery.bin and the EEPROM update 
-   image(s) (pieeprom.upd and vl805.bin) to the boot partition on the sd-card. 
+   The default update mechanism writes recovery.bin and the EEPROM update
+   image(s) (pieeprom.upd and vl805.bin) to the boot partition on the sd-card.
    The SHA256 hash of the corresponding images are written to pieeprom.sig
    and/or vl805.sig. This guards against file system corruption which could
    cause the EEPROM to be flashed with an invalid image. This is not a
    security check.
 
-   At the next reboot the ROM runs recovery.bin which updates EEPROM(s). 
+   At the next reboot the ROM runs recovery.bin which updates EEPROM(s).
    If the update was successful recovery.bin renames itself to recovery.000
    to prevent it from running a second time then resets the system.
    The system should then boot normally.
@@ -306,7 +332,8 @@ rpi-eeprom-update [options]... [FILE]
 
    -a Automatically install bootloader and USB (VLI) EEPROM updates.
    -A Specify which type of EEPROM to automatically update (vl805 or bootloader)
-   -d Use the default bootloader config instead of migrating the current settings
+   -d Use the default bootloader config (provided in the EEPROM image to be installed)
+      instead of migrating current settings
    -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
@@ -319,17 +346,21 @@ rpi-eeprom-update [options]... [FILE]
    -r Removes temporary EEPROM update files from the boot partition.
    -u Install the specified VL805 (USB EEPROM) image file.
 
-   To extract the configuration file from an EEPROM image: 
+   To extract the configuration file from an EEPROM image:
    rpi-eeprom-config pieeprom.bin --out bootconf.txt
 
-   To update the configuration file in an EEPROM image: 
+   To update the configuration file in an EEPROM image:
    rpi-eeprom-config pieeprom.bin --config bootconf.txt --out pieeprom-new.bin
 
-   To flash the new image: 
+   To flash the new image:
    sudo rpi-eeprom-update -d -f ./pieeprom-new.bin
 
-   The syntax is the same as config.txt but section filters etc are not supported. See
-   online documentation for the list of parameters.
+   Custom bootloader configurations can also be specified in ${CUSTOM_EEPROM_CONFIG}.
+   rpi-eeprom-update will ensure that these modifications are applied during upgrades,
+   providing a fully automatic way to apply configuration customisations.
+
+   Bootloader configuration file syntax is the same as config.txt, but section filters
+   etc. are not supported. See online documentation for the list of parameters.
 
    The official documentation for the Raspberry Pi bootloader EEPROM is available at
    https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
@@ -405,7 +436,7 @@ getVL805UpdateVersion()
    # The latest VL805 version is indicated by a file containing the version
    # number. If the version file exists then verify that the corresponding
    # VL805 binary exists before selecting it.
-   # There are no user modifiable sections in the VL805 firmware and there 
+   # There are no user modifiable sections in the VL805 firmware and there
    # are unlikely to be many updates to it so just indicate the latest supported
    # version. This also avoids making any assumptions about the VLI version numbers.
    VL805_UPDATE_VERSION=""
@@ -569,7 +600,7 @@ while getopts A:adhif:m:ju:r option; do
    a) AUTO_UPDATE_BOOTLOADER=1
       AUTO_UPDATE_VL805=1
       ;;
-   d) OVERWRITE_CONFIG=1
+   d) USE_EEPROM_INTERNAL_CONFIG=1
       ;;
    f) BOOTLOADER_UPDATE_IMAGE="${OPTARG}"
       ;;
