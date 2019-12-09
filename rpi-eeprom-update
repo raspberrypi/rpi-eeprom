@@ -116,8 +116,19 @@ prepareImage()
       # Apply user customisations to new EEPROM config
       if [ -f "${CUSTOM_EEPROM_CONFIG}" ]; then
          while read line; do
-            field=$(echo "${line}" | cut -d'=' -f1)
-            sed -i "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
+            field="$(echo "${line}" | cut -d'=' -f1)"
+
+            if grep -q "${field}" "${TMP_NEW_EEPROM_CONFIG}"; then
+               if [ "${field}" == "FREEZE_VERSION" ]l; then
+                  echo "WARNING: Skipping ${line} from custom EEPROM configuration..."
+                  echo "If you wish to prevent firmware updates from the OS, disable the rpi-eeprom-update systemd service."
+               else
+                  sed -i "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
+               fi
+            else
+               echo "WARNING: Skipping ${field} from custom EEPROM configuration..."
+               echo "Not found in configuration from EEPROM to be installed."
+            fi
          done < "${CUSTOM_EEPROM_CONFIG}"
       fi
 
@@ -361,7 +372,10 @@ rpi-eeprom-update [options]... [FILE]
 
    Custom bootloader configurations can also be specified in ${CUSTOM_EEPROM_CONFIG}.
    rpi-eeprom-update will ensure that these modifications are applied during upgrades,
-   providing a fully automatic way to apply configuration customisations.
+   providing a fully automatic way to apply configuration customisations. Note that
+   FREEZE_VERSION is specifically ignored in this context - if you wish to prevent
+   updates to the firmware from the OS, simply disable the rpi-eeprom-update systemd
+   service.
 
    Bootloader configuration file syntax is the same as config.txt, but section filters
    etc. are not supported. See online documentation for the list of parameters.
@@ -631,7 +645,7 @@ done
 
 checkDependencies
 if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ "${AUTO_UPDATE_VL805}" = 1 ]; then
-   if vcgencmd bootloader_config | grep FREEZE_VERSION=1; then
+   if vcgencmd bootloader_config | grep "FREEZE_VERSION=1"; then
       echo "EEPROM version is frozen. Skipping update"
       exit ${EXIT_EEPROM_FROZEN}
    else
