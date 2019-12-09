@@ -110,7 +110,7 @@ prepareImage()
       # Apply current config settings to new EEPROM config
       while read line; do
          field=$(echo "${line}" | cut -d'=' -f1)
-         sed -i "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
+         sed -i -e "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
       done < "${TMP_CURRENT_EEPROM_CONFIG}"
 
       # Apply user customisations to new EEPROM config
