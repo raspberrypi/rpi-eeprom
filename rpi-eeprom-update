@@ -121,6 +121,10 @@ prepareImage()
          done < "${CUSTOM_EEPROM_CONFIG}"
       fi
 
+      echo "\nBootloader configuration:"
+      cat "${TMP_NEW_EEPROM_CONFIG}"
+      echo ""
+
       "${script_dir}/rpi-eeprom-config" \
          --out "${TMP_EEPROM_IMAGE}" \
          --config "${TMP_NEW_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
