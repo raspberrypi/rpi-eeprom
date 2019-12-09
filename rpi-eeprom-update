@@ -104,7 +104,7 @@ prepareImage()
       if [ "$no_of_eeprom_config_properties" -lt 3 ]; then
          # Prevent the initial bootloader config with WAKE_ON_GPIO=0
          # propagating to newer versions by accident
-         sed -i 's/WAKE_ON_GPIO=.*/WAKE_ON_GPIO=1/1' "${TMP_NEW_EEPROM_CONFIG}"
+         sed -i -e 's/WAKE_ON_GPIO=.*/WAKE_ON_GPIO=1/1' "${TMP_NEW_EEPROM_CONFIG}"
       fi
 
       # Apply current config settings to new EEPROM config
