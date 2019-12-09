@@ -6,8 +6,13 @@ set -e
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
 
+die() {
+   echo "$@" >&2
+   exit ${EXIT_FAILED}
+}
+
 if [ -f /etc/default/rpi-eeprom-update ]; then
-   [ shellcheck -e SC2148,SC2034 "${CUSTOM_EEPROM_CONFIG}" ] || die "Invalid rpi-eeprom-update configuration at ${CUSTOM_EEPROM_CONFIG}"
+   shellcheck -e SC2148,SC2034 /etc/default/rpi-eeprom-update || die "Invalid rpi-eeprom-update configuration at /etc/default/rpi-eeprom-update"
    . /etc/default/rpi-eeprom-update
 fi
 
@@ -74,11 +79,6 @@ cleanup() {
 }
 trap cleanup EXIT
 
-die() {
-   echo "$@" >&2
-   exit ${EXIT_FAILED}
-}
-
 prepareImage()
 {
    [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image \'${BOOTLOADER_UPDATE_IMAGE}\' not found"
@@ -116,13 +116,14 @@ prepareImage()
 
       # Apply user customisations to new EEPROM config
       if [ -f "${CUSTOM_EEPROM_CONFIG}" ]; then
-         [ shellcheck -e SC2148,SC2034 "${CUSTOM_EEPROM_CONFIG}" ] || die "Invalid custom EEPROM configuration at ${CUSTOM_EEPROM_CONFIG}"
+         shellcheck -e SC2148,SC2034 "${CUSTOM_EEPROM_CONFIG}" || die "Invalid custom EEPROM configuration at ${CUSTOM_EEPROM_CONFIG}"
 
+         echo "\n*** APPLYING CUSTOM EEPROM CONFIGURATION ***"
          while read line; do
             field="$(echo "${line}" | cut -d'=' -f1)"
 
             if grep -q "${field}" "${TMP_NEW_EEPROM_CONFIG}"; then
-               if [ "${field}" == "FREEZE_VERSION" ]l; then
+               if [ "${field}" = "FREEZE_VERSION" ]l; then
                   echo "WARNING: Skipping ${line} from custom EEPROM configuration..."
                   echo "If you wish to prevent firmware updates from the OS, disable the rpi-eeprom-update systemd service."
                else
