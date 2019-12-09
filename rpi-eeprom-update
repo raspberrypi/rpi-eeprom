@@ -124,7 +124,7 @@ prepareImage()
                   echo "WARNING: Skipping ${line} from custom EEPROM configuration..."
                   echo "If you wish to prevent firmware updates from the OS, disable the rpi-eeprom-update systemd service."
                else
-                  sed -i "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
+                  sed -i -e "s/${field}=.*/${line}/1" "${TMP_NEW_EEPROM_CONFIG}"
                fi
             else
                echo "WARNING: Skipping ${field} from custom EEPROM configuration..."
