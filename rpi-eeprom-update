@@ -57,6 +57,9 @@ cleanup() {
    if [ -f "${TMP_EEPROM_CONFIG}" ]; then
       rm -f "${TMP_EEPROM_CONFIG}"
    fi
+   if [ -f "${NEW_EEPROM_CONFIG}" ]; then
+      rm -f "${NEW_EEPROM_CONFIG}"
+   fi
    if [ -d "${TMP_BOOTFS_MNT}" ]; then
       umount "${TMP_BOOTFS_MNT}"
       rmdir "${TMP_BOOTFS_MNT}"
@@ -64,6 +67,7 @@ cleanup() {
    TMP_BOOTFS_MNT=
    TMP_EEPROM_IMAGE=
    TMP_EEPROM_CONFIG=
+   NEW_EEPROM_CONFIG=
 }
 trap cleanup EXIT
 
@@ -77,6 +81,7 @@ prepareImage()
    [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image \'${BOOTLOADER_UPDATE_IMAGE}\' not found"
    TMP_EEPROM_IMAGE="$(mktemp)"
    TMP_EEPROM_CONFIG="$(mktemp)"
+   NEW_EEPROM_CONFIG="$(mktemp)"
 
    mkdir -p "${FIRMWARE_BACKUP_DIR}"
 
@@ -85,7 +90,17 @@ prepareImage()
    backup="${FIRMWARE_BACKUP_DIR}/pieeprom-backup-$(date +%Y%m%d-%H%M%S).conf"
    cp -f "${TMP_EEPROM_CONFIG}" "${backup}"
 
-   if [ "$(wc -l "${TMP_EEPROM_CONFIG}" | awk '{print $1}')" -lt 3 ]; then
+   if [ -x "${EEPROM_CONFIG_HOOK}" ]; then
+      echo "Running EEPROM config hook ${EEPROM_CONFIG_HOOK}"
+      if ! "${EEPROM_CONFIG_HOOK}" -u "${BOOTLOADER_UPDATE_IMAGE}" < "${TMP_EEPROM_CONFIG}" > "${NEW_EEPROM_CONFIG}"; then
+         echo "EEPROM config hook \"${EEPROM_CONFIG_HOOK}\"  failed. Using original configuration"
+         cp -f "${TMP_EEPROM_CONFIG}" "${NEW_EEPROM_CONFIG}"
+      fi
+   else
+      cp -f "${TMP_EEPROM_CONFIG}" "${NEW_EEPROM_CONFIG}"
+   fi
+
+   if [ "$(wc -l "${NEW_EEPROM_CONFIG}" | awk '{print $1}')" -lt 3 ]; then
       # Don't propagate empty EEPROM config files and also prevent the initial
       # bootloader config with WAKE_ON_GPIO=0 propgating to newer versions by
       # accident.
@@ -97,7 +112,7 @@ prepareImage()
    if [ "${OVERWRITE_CONFIG}" = 0 ]; then
       "${script_dir}/rpi-eeprom-config" \
          --out "${TMP_EEPROM_IMAGE}" \
-         --config "${TMP_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
+         --config "${NEW_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
    fi
 }
 
