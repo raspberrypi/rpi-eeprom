@@ -120,7 +120,7 @@ prepareImage()
             field="$(echo "${line}" | cut -d'=' -f1)"
 
             if grep -q "${field}" "${TMP_NEW_EEPROM_CONFIG}"; then
-               if [ "${field}" = "FREEZE_VERSION" ]l; then
+               if [ "${field}" = "FREEZE_VERSION" ]; then
                   echo "WARNING: Skipping ${line} from custom EEPROM configuration..."
                   echo "If you wish to prevent firmware updates from the OS, disable the rpi-eeprom-update systemd service."
                else
