@@ -57,6 +57,9 @@ cleanup() {
    if [ -f "${TMP_EEPROM_CONFIG}" ]; then
       rm -f "${TMP_EEPROM_CONFIG}"
    fi
+   if [ -f "${NEW_EEPROM_CONFIG}" ]; then
+      rm -f "${NEW_EEPROM_CONFIG}"
+   fi
    if [ -d "${TMP_BOOTFS_MNT}" ]; then
       umount "${TMP_BOOTFS_MNT}"
       rmdir "${TMP_BOOTFS_MNT}"
@@ -64,6 +67,7 @@ cleanup() {
    TMP_BOOTFS_MNT=
    TMP_EEPROM_IMAGE=
    TMP_EEPROM_CONFIG=
+   NEW_EEPROM_CONFIG=
 }
 trap cleanup EXIT
 
@@ -77,6 +81,7 @@ prepareImage()
    [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image \'${BOOTLOADER_UPDATE_IMAGE}\' not found"
    TMP_EEPROM_IMAGE="$(mktemp)"
    TMP_EEPROM_CONFIG="$(mktemp)"
+   NEW_EEPROM_CONFIG="$(mktemp)"
 
    mkdir -p "${FIRMWARE_BACKUP_DIR}"
 
@@ -85,7 +90,17 @@ prepareImage()
    backup="${FIRMWARE_BACKUP_DIR}/pieeprom-backup-$(date +%Y%m%d-%H%M%S).conf"
    cp -f "${TMP_EEPROM_CONFIG}" "${backup}"
 
-   if [ "$(wc -l "${TMP_EEPROM_CONFIG}" | awk '{print $1}')" -lt 3 ]; then
+   if [ -x "${EEPROM_CONFIG_HOOK}" ]; then
+      echo "Running EEPROM config hook ${EEPROM_CONFIG_HOOK}"
+      if ! "${EEPROM_CONFIG_HOOK}" -u "${BOOTLOADER_UPDATE_IMAGE}" < "${TMP_EEPROM_CONFIG}" > "${NEW_EEPROM_CONFIG}"; then
+         echo "EEPROM config hook \"${EEPROM_CONFIG_HOOK}\"  failed. Using original configuration"
+         cp -f "${TMP_EEPROM_CONFIG}" "${NEW_EEPROM_CONFIG}"
+      fi
+   else
+      cp -f "${TMP_EEPROM_CONFIG}" "${NEW_EEPROM_CONFIG}"
+   fi
+
+   if [ "$(wc -l "${NEW_EEPROM_CONFIG}" | awk '{print $1}')" -lt 3 ]; then
       # Don't propagate empty EEPROM config files and also prevent the initial
       # bootloader config with WAKE_ON_GPIO=0 propgating to newer versions by
       # accident.
@@ -97,7 +112,7 @@ prepareImage()
    if [ "${OVERWRITE_CONFIG}" = 0 ]; then
       "${script_dir}/rpi-eeprom-config" \
          --out "${TMP_EEPROM_IMAGE}" \
-         --config "${TMP_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
+         --config "${NEW_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
    fi
 }
 
@@ -276,34 +291,30 @@ checkDependencies() {
 usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
-   Checks whether the Raspberry Pi bootloader and the VL805 USB controller
-   EEPROMs are up-to-date and optionally updates the EEPROMs at the next reboot.
 
-   The default update mechanism writes recovery.bin and the EEPROM update 
-   image(s) (pieeprom.upd and vl805.bin) to the boot partition on the sd-card. 
-   The SHA256 hash of the corresponding images are written to pieeprom.sig
-   and/or vl805.sig. This guards against file system corruption which could
-   cause the EEPROM to be flashed with an invalid image. This is not a
-   security check.
+Checks whether the Raspberry Pi bootloader and the VL805 USB controller
+EEPROMs are up-to-date and optionally updates the EEPROMs at the next reboot.
 
-   At the next reboot the ROM runs recovery.bin which updates EEPROM(s). 
-   If the update was successful recovery.bin renames itself to recovery.000
-   to prevent it from running a second time then resets the system.
-   The system should then boot normally.
+The default update mechanism writes recovery.bin and the EEPROM update
+image(s) (pieeprom.upd and vl805.bin) to the boot partition on the sd-card.
+The SHA256 hash of the corresponding images are written to pieeprom.sig
+and/or vl805.sig. This guards against file system corruption which could
+cause the EEPROM to be flashed with an invalid image. This is not a
+security check.
 
-   If /boot does not correspond to the boot partition on the sd-card and this
-   is not a NOOBS system then the mount point for BOOTFS should be defined
-   in /etc/default/rpi-eeprom-update by defining the BOOTFS variable.
+At the next reboot the ROM runs recovery.bin which updates EEPROM(s).
+If the update was successful recovery.bin renames itself to recovery.000
+to prevent it from running a second time then resets the system.
+The system should then boot normally.
 
-   For reference, the flashrom update mechanism may be enabled by defining
-   USE_FLASHROM=1 in /etc/default/rpi-eeprom-update. This not recommended
-   because the SPI pins are muxed with audio and other device drivers may
-   be using SPI (e.g. HATs). This is also not safe in the event of a power
-   failure during the update of the EEPROM.
+If /boot does not correspond to the boot partition on the sd-card and this
+is not a NOOBS system then the mount point for BOOTFS should be defined
+in /etc/default/rpi-eeprom-update by defining the BOOTFS variable.
 
-   A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
-   before applying the update.
+A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
+before applying the update.
 
+Options:
    -a Automatically install bootloader and USB (VLI) EEPROM updates.
    -A Specify which type of EEPROM to automatically update (vl805 or bootloader)
    -d Use the default bootloader config instead of migrating the current settings
@@ -319,20 +330,42 @@ rpi-eeprom-update [options]... [FILE]
    -r Removes temporary EEPROM update files from the boot partition.
    -u Install the specified VL805 (USB EEPROM) image file.
 
-   To extract the configuration file from an EEPROM image: 
+Environment:
+Environment variables should be defined in /etc/default/rpi-eeprom-update
+
+EEPROM_CONFIG_HOOK
+
+Specifies the path of an optional script which post-processes the
+configuration file before it is applied to the new image. The modified
+output must contain at least 3 lines and should contain WAKE_ON_GPIO
+and POWER_OFF_ON_HALT settings.
+
+USE_FLASHROM
+
+The flashrom update mechanism may be enabled by setting USE_FLASHROM=1. This
+also selects the vl805 tool instead of using recovery.bin to perform the
+update. This may be desirable if an immediate update is required or if an
+sd-card is not present.
+However, this not recommended because the SPI pins are muxed with audio and other
+device drivers may be using SPI (e.g. HATs). This is also not safe in the
+event of a power failure during the update of the EEPROM.
+Changing the VL805 firmware whilst USB devices are attached may also cause
+those devices to stop working until after the system is reboot.
+
+Examples:
+To extract the configuration file from an EEPROM image:
    rpi-eeprom-config pieeprom.bin --out bootconf.txt
 
-   To update the configuration file in an EEPROM image: 
+To update the configuration file in an EEPROM image:
    rpi-eeprom-config pieeprom.bin --config bootconf.txt --out pieeprom-new.bin
 
-   To flash the new image: 
+To flash the new image:
    sudo rpi-eeprom-update -d -f ./pieeprom-new.bin
 
-   The syntax is the same as config.txt but section filters etc are not supported. See
-   online documentation for the list of parameters.
+The syntax is the same as config.txt See online documentation for the list of parameters.
 
-   The official documentation for the Raspberry Pi bootloader EEPROM is available at
-   https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
+The official documentation for the Raspberry Pi bootloader EEPROM is available at
+https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
 
 EOF
   exit ${EXIT_SUCCESS}
