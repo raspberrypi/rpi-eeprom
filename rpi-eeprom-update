@@ -435,19 +435,17 @@ getVL805CurrentVersion()
 
 getVL805UpdateVersion()
 {
-   # The latest VL805 version is indicated by a file containing the version
-   # number. If the version file exists then verify that the corresponding
-   # VL805 binary exists before selecting it.
-   # There are no user modifiable sections in the VL805 firmware and there 
-   # are unlikely to be many updates to it so just indicate the latest supported
-   # version. This also avoids making any assumptions about the VLI version numbers.
+   # The VL805 version number is an eight character hex string. Select the
+   # largest number for the newest version.
+   # The vl805.latest version is retained for backwards compatibility with
+   # thirdparty scripts (are there any?) but it not used by this script and
+   # is deprecated.
    VL805_UPDATE_VERSION=""
-   if [ -f "${FIRMWARE_IMAGE_DIR}/vl805.latest" ]; then
-      ver="$(cat "${FIRMWARE_IMAGE_DIR}/vl805.latest")"
-      if [ -f "${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin" ]; then
-         VL805_UPDATE_VERSION="${ver}"
-         VL805_UPDATE_IMAGE="${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin"
-      fi
+   match='.*/vl805-.*.bin'
+   ver=$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -regex "${match}" | sed 's/.*\/vl805-\([0-9a-f]*\)\.bin/\1/' | sort -r | head -n1)
+   if [ -f "${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin" ]; then
+      VL805_UPDATE_VERSION="${ver}"
+      VL805_UPDATE_IMAGE="${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin"
    fi
 }
 
@@ -468,7 +466,7 @@ lookupVersionInfo()
    fi
 
    if [ -n "${VL805_CURRENT_VERSION}" ] && [ -n "${VL805_UPDATE_VERSION}" ]; then
-      if [ "${VL805_CURRENT_VERSION}" != "${VL805_UPDATE_VERSION}" ]; then
+      if [ "${VL805_CURRENT_VERSION}" \< "${VL805_UPDATE_VERSION}" ];  then
          ACTION_UPDATE_VL805=1
       else
          VL805_UPDATE_IMAGE=""
