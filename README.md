@@ -5,7 +5,7 @@ This repository contains the scripts and pre-compiled binaries used to create th
 For bootloader support the best place to start is the Raspberry Pi [General Users forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) or for discussion of beta releases try the [Advanced Users forum](https://www.raspberrypi.org/forums/viewforum.php?f=29&sid=9bbc277968ad953e77749b255d0ce3a2)
 
 # Rescue image
-If the Raspberry Pi4 is not booting the it's very unlikely that the EEPROM is corrupted. If you think it has an invalid image or you want to revert to the factory setting then download the rescue image from the Raspberry Pi [downloads page](https://www.raspberrypi.org/downloads/)
+If the Raspberry Pi4 is not booting, then it's very unlikely that the EEPROM is corrupted. If you think it has an invalid image or you want to revert to the factory setting, then download the rescue image from the Raspberry Pi [downloads page](https://www.raspberrypi.org/downloads/)
 
 # Bootloader documentation
 * [The boot folder](https://www.raspberrypi.org/documentation/configuration/boot_folder.md)
