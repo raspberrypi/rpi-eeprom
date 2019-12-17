@@ -187,7 +187,7 @@ applyUpdate() {
 
       prepareImage "${BOOTLOADER_UPDATE_IMAGE}"
 
-      echo "Applying bootloaer update ${BOOTLOADER_UPDATE_IMAGE}"
+      echo "Applying bootloader update ${BOOTLOADER_UPDATE_IMAGE}"
       flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=${SPI_SPEED}" -w "${TMP_EEPROM_IMAGE}" || die "flashrom EEPROM update failed"
 
       dtparam -R spi-gpio40-45
