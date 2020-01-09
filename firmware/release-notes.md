@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-01-09 - Git df0ff18c (BETA) RC3
+    * Fix parsing of multiple menu entries in PXE options.
+    * Fix regression in IP address parsing
+
 ## 2019-12-03 - Git f0d7269d4 (BETA) RC2
     * Fix handling of multiple menu options with TFTP Option43
     * Ignore unsupported modes in BOOT_ORDER instead of stopping.
