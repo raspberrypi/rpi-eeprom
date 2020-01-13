@@ -35,6 +35,7 @@ SPI_SPEED=16000
 # Timestamp for first release which doesn't have a timestamp field
 BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
+BOARD_REVISION=
 
 # Simple bootloader which is able to load start.elf in the event of a power
 # cut. This runs SDRAM at low speed and may have reduced functionality but
@@ -239,8 +240,8 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
-   rev="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
-   if [ $(((0x$rev >> 23) & 1)) -ne 0 ] && [ $(((0x$rev >> 12) & 15)) -eq 3 ]; then
+   BOARD_REVISION="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+   if [ $(((0x$BOARD_REVISION >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_REVISION >> 12) & 15)) -eq 3 ]; then
       echo "BCM2711 detected"
    else
       # Not a BCM2711, no EEPROMs to update.
@@ -255,9 +256,15 @@ checkDependencies() {
       die "EEPROM updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
+   # If a board revision specific firmware directory is defined then use that
+   # in preference to the generic directory.
+   if [ -d "${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}" ]; then
+      FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}"
+   fi
+
    if ! command -v vl805 > /dev/null; then
       die "vl805 command not found. On Debian, try reinstalling the rpi-eeprom package."
-   fi 
+   fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
       die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
@@ -352,6 +359,17 @@ event of a power failure during the update of the EEPROM.
 Changing the VL805 firmware whilst USB devices are attached may also cause
 those devices to stop working until after the system is reboot.
 
+FIRMWARE_RELEASE_STATUS
+
+Specifies the release status of the firmware to apply. The default is 'critical'
+which is the most stable production version. Alternatively, 'beta' may be selected
+for development releases.
+A 'critical' update is the latest stable production version and is normally
+only updated after it has been tested via the 'beta' release.
+Before selecting a firmware release directory this script checks whether there
+is a board revision specific variant e.g. critical-c03111. If present then the
+board-revision specific version is used in preference.
+
 Examples:
 To extract the configuration file from an EEPROM image:
    rpi-eeprom-config pieeprom.bin --out bootconf.txt
@@ -442,7 +460,7 @@ getVL805UpdateVersion()
    # is deprecated.
    VL805_UPDATE_VERSION=""
    match='.*/vl805-.*.bin'
-   ver=$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -regex "${match}" | sed 's/.*\/vl805-\([0-9a-f]*\)\.bin/\1/' | sort -r | head -n1)
+   ver=$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -follow -regex "${match}" | sed 's/.*\/vl805-\([0-9a-f]*\)\.bin/\1/' | sort -r | head -n1)
    if [ -f "${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin" ]; then
       VL805_UPDATE_VERSION="${ver}"
       VL805_UPDATE_IMAGE="${FIRMWARE_IMAGE_DIR}/vl805-${ver}.bin"
@@ -528,7 +546,7 @@ removePreviousUpdates()
       rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
       rm -f "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
       # Case insensitive for FAT bootfs
-      find "${BOOTFS}" -maxdepth 1 -type f -iname "recovery.*" -regex '.*\.[0-9][0-9][0-9]$' -exec rm -f {} \;
+      find "${BOOTFS}" -maxdepth 1 -type f -follow -iname "recovery.*" -regex '.*\.[0-9][0-9][0-9]$' -exec rm -f {} \;
    fi
 }
 
