@@ -1,3 +1,27 @@
+rpi-eeprom (3.0-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * vcgencmd: Use cpuinfo instead of otp_dump
+  * pieeprom-2019-12-03: Fix DHCP Option43 menu handling
+  * install: Fix path to vl805 executable
+  * rpi-eeprom-update: Add support for config txt processing hooks
+  * rpi-eeprom-update: Add hook/flashrom help and fix section formatting
+  * rpi-eeprom-update: Improve version selection for VL805
+  * Update README.md
+  * 2020-01-19: PXE menu and IP address parsing fixes
+  * Add the vl805-000137ad FW to beta
+  * rpi-eeprom-update: Add support for board-revision specific images.
+
+  [ andrum99 ]
+  * rpi-eeprom-config - fix up help text (and therefore also man page)
+
+  [ Serge Schneider ]
+  * Update rpi-eeprom-config man page description
+  * Update package architecture
+  * Remove vl805 from rpi-eeprom-images
+
+ -- Serge Schneider <serge@raspberrypi.org>  Mon, 13 Jan 2020 11:01:19 +0000
+
 rpi-eeprom (2.4-1) buster; urgency=medium
 
   [ Tim Gover ]
