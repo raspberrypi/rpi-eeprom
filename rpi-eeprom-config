@@ -48,8 +48,8 @@ class BootloaderImage(object):
                 if name.decode('utf-8') == 'bootconf.txt':
                     return (offset, length)
 
-            offset += 4 + length
-            offset += 8 - (offset % 8) # Pad
+            offset += 8 + length # length + type
+            offset = (offset + 7) & ~7
 
         raise Exception('Bootloader config not found')
 
