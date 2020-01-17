@@ -1,6 +1,8 @@
 rpi-eeprom (3.1-1) buster; urgency=medium
 
   [ Tim Gover ]
+  * Update release notes for rpi-eeprom-config change
+  * 2019-01-17: Fix SD card voltage detect + DHCP option 0 padding
   * rpi-eeprom-config: Fix padding calculation
 
  -- Serge Schneider <serge@raspberrypi.org>  Tue, 14 Jan 2020 16:12:38 +0000
