@@ -1,5 +1,12 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-01-17 - Git 9e30fb4d (BETA) RC4
+    * Handle DHCP option 0 - padding
+    * Fix SD card voltage detection
+
+## 2020-01-14 - rpi-eeprom-config
+    * Fix padding calculation
+
 ## 2020-01-09 - Git df0ff18c (BETA) RC3
     * Fix parsing of multiple menu entries in PXE options.
     * Fix regression in IP address parsing
