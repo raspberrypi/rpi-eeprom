@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-01-22 - vl805 00137ad
+    * Set the default/critical vl805 version to be 00137ad. This has the 
+      same power savings as 0137ab but with fixes for USB webcams.
+
 ## 2020-01-17 - Git 5e86aac5f (BETA) RC4
     * Handle DHCP option 0 - padding
     * Fix SD card voltage detection
