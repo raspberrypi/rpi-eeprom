@@ -1,3 +1,11 @@
+rpi-eeprom (4.0-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * vl805: Remove the redundant .latest version info files
+  * vl805: Update the critical version to be 00137ad
+
+ -- Serge Schneider <serge@raspberrypi.org>  Wed, 22 Jan 2020 14:33:33 +0000
+
 rpi-eeprom (3.1-1) buster; urgency=medium
 
   [ Tim Gover ]
