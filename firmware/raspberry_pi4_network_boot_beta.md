@@ -41,10 +41,10 @@ sudo echo FIRMWARE_RELEASE_STATUS="beta" > /etc/default/rpi-eeprom-update
 ### Configuration - Enable network boot
 Network boot is not enabled by default in the bootloader. To enable it the bootloader configuration file must be edited.
 
-**NOTE:** The `/lib/firmware...` line below ends with a date at the end of the file's name. There are several versions of the beta bootloader in there, so make sure to select the most up-to-date version for your Raspberry Pi.
+**NOTE:** The `/lib/firmware...` file listed in the code block below should not be copied directly, as it requires a date be maually used. There are several versions of the beta bootloader inside that directory, so make sure to select the most up-to-date version for your Raspberry Pi.
 ```
 # Extract the configuration file
-cp /lib/firmware/raspberrypi/bootloader/beta/pieeprom-$DATE.bin pieeprom.bin
+cp /lib/firmware/raspberrypi/bootloader/beta/pieeprom-YYYY-MM-DD.bin pieeprom.bin
 rpi-eeprom-config pieeprom.bin > bootconf.txt
 
 # Enable network boot
