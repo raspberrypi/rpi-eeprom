@@ -262,10 +262,6 @@ checkDependencies() {
       FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}"
    fi
 
-   if ! command -v vl805 > /dev/null; then
-      die "vl805 command not found. On Debian, try reinstalling the rpi-eeprom package."
-   fi
-
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
       die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
    fi
