@@ -1,3 +1,9 @@
+rpi-eeprom (5.0-2) buster; urgency=medium
+
+  * Add pciutils dependency
+
+ -- Serge Schneider <serge@raspberrypi.org>  Fri, 28 Feb 2020 18:35:22 +0000
+
 rpi-eeprom (5.0-1) buster; urgency=medium
 
   [ Justin P ]
