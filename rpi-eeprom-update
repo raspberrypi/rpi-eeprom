@@ -394,6 +394,7 @@ printVersions()
 
    echo "CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
    echo " LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
+   echo " FW DIR: ${FIRMWARE_IMAGE_DIR}"
 
    if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
       echo "VL805: update required"
