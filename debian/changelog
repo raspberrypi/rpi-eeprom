@@ -1,3 +1,20 @@
+rpi-eeprom (5.0-1) buster; urgency=medium
+
+  [ Justin P ]
+  * Clarifying the Dated .bin files
+  * Formatting and Phrasing changes
+  * Adjusted workding once more
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Remove dependency on vl805
+  * firmware: Promote the latest beta firmware to stable
+
+  [ Serge Schneider ]
+  * Set architecture to 'all'
+  * Add python-minimal build dependency
+
+ -- Serge Schneider <serge@raspberrypi.org>  Fri, 28 Feb 2020 14:41:56 +0000
+
 rpi-eeprom (4.0-1) buster; urgency=medium
 
   [ Tim Gover ]

@@ -1,5 +1,16 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-02-27 rpi-eeprom-update & firmware
+    * Remove the dependency check for the vl805 utility. This is deprecated
+      and there is no 64-bit version. The file is still available in Github
+      for anyone who wants to continue using USE_FLASHROM or create their
+      own scripts.
+    * Add a stable firmware directory based on the latest beta release.
+      Stable should be interpreted as feature-freeze releases. In this
+      case the core network boot is stable enough for most scenarios
+      and this de-risks adding new more experimental features in the
+      beta folder.
+
 ## 2020-01-22 - vl805 00137ad
     * Set the default/critical vl805 version to be 00137ad. This has the 
       same power savings as 0137ab but with fixes for USB webcams.
