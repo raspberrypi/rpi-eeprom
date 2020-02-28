@@ -11,8 +11,7 @@ if [ -f /etc/default/rpi-eeprom-update ]; then
 fi
 
 FIRMWARE_ROOT=${FIRMWARE_ROOT:-/lib/firmware/raspberrypi/bootloader}
-# May be used to select beta releases instead of the default critical
-# updates.
+# May be used to select beta or stable releases instead of the default critical updates.
 FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-critical}
 FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
@@ -262,10 +261,6 @@ checkDependencies() {
       FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}"
    fi
 
-   if ! command -v vl805 > /dev/null; then
-      die "vl805 command not found. On Debian, try reinstalling the rpi-eeprom package."
-   fi
-
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
       die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
    fi
@@ -362,10 +357,10 @@ those devices to stop working until after the system is reboot.
 FIRMWARE_RELEASE_STATUS
 
 Specifies the release status of the firmware to apply. The default is 'critical'
-which is the most stable production version. Alternatively, 'beta' may be selected
-for development releases.
+which is the most stable production version. Alternatively, 'stable' or
+'beta' may be selected for development releases.
 A 'critical' update is the latest stable production version and is normally
-only updated after it has been tested via the 'beta' release.
+only updated after it has been tested via the 'beta' and then a 'stable' release.
 Before selecting a firmware release directory this script checks whether there
 is a board revision specific variant e.g. critical-c03111. If present then the
 board-revision specific version is used in preference.
