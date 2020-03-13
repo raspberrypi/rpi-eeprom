@@ -1,5 +1,32 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-03-11 Add 2020-03-04 beta firmware recovery
+    * Support static IP address configuration. The following fields may be
+      set manually using dotted decimal address. If set, then DHCP if skipped.
+       * CLIENT_IP
+       * SUBNET
+       * GATEWAY
+       * TFTP_IP
+    * If a fatal bootloader occurs then a HDMI diagnostics screen is displayed
+      at VGA/DVI resolution on both monitors for two minutes. This may be
+      disabled by setting DISABLE_HDMI=1 in the EEPROM configuration OR
+      setting display_splash=1 in config.txt.
+    * Allow the PXE menu option to match a custom string specified by
+      PXE_OPTION43. The default is still "Raspberry Pi Boot"
+    * DHCP_OPTION97 - The default GUID has now changed to 
+      RPI4+BOARD_ID+ETH_MAC_LSB+SERIAL in order to make it easier to
+      automatically identify Raspberry Pi computers. The old behaviour
+      is enabled by setting DHCP_OPTION97=0 which simply repeats the serial
+      number 4 times.
+    * SELF_UPDATE. If SELF_UPDATE is set to 1 in the EEPROM configration AND
+      config.txt contains bootloader_update=1 then the bootloader will looking
+      for pieeprom.upd and vl805.bin and apply these firmware files if 
+      they are different to current image before doing a watchdog reset.
+      This should make it easier to update the bootloader for network
+      booted setups because an sd-card is not required for recovery.bin.
+      As usual, TFTP should only be used on private networks because the
+      protocol is not secure against spoofing.
+
 ## 2020-02-27 rpi-eeprom-update & firmware
     * Remove the dependency check for the vl805 utility. This is deprecated
       and there is no 64-bit version. The file is still available in Github
