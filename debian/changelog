@@ -1,3 +1,17 @@
+rpi-eeprom (5.1-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Print the firmware image directory in the version status message
+  * Remove network-boot beta documentation
+
+  [ Ryan Finnie ]
+  * Allow for run from local git checkout
+
+  [ Tim Gover ]
+  * pieeprom-2020-03-04: Netboot enhancements, self update and HDMI diagnostics
+
+ -- Serge Schneider <serge@raspberrypi.org>  Fri, 13 Mar 2020 14:16:34 +0000
+
 rpi-eeprom (5.0-2) buster; urgency=medium
 
   * Add pciutils dependency
