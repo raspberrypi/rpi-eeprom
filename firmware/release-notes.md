@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-03-16 Add 2020-03-16 beta firmware
+    * Fix DHCP Option97 GUID generation. The MAC LSB portion was previously
+      always zero.
+
 ## 2020-03-11 Add 2020-03-04 beta firmware recovery
     * Support static IP address configuration. The following fields may be
       set manually using dotted decimal address. If set, then DHCP if skipped.
@@ -26,6 +30,8 @@
       booted setups because an SD card is not required for recovery.bin.
       As usual, TFTP should only be used on private networks because the
       protocol is not secure against spoofing.
+    * recovery.bin. The beta recovery.bin will now display a green screen
+      via HDMI if successful or red if a failure occurs.
 
 ## 2020-02-27 rpi-eeprom-update & firmware
     * Remove the dependency check for the vl805 utility. This is deprecated
