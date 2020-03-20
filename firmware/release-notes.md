@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-03-19 Add 2020-03-19 beta firmware
+    * Minor mods for manufacture test.
+
 ## 2020-03-16 Add 2020-03-16 beta firmware
     * Fix DHCP Option97 GUID generation. The MAC LSB portion was previously
       always zero.
