@@ -1,3 +1,14 @@
+rpi-eeprom (5.2-1) buster; urgency=medium
+
+  [ andrum99 ]
+  * release-notes.md - fix typos
+
+  [ Tim Gover ]
+  * pieeprom-2020-03-16 - Minor fix for Option97 GUID
+  * pieeprom-2020-03-19: Minor fixes for manufacture test
+
+ -- Serge Schneider <serge@raspberrypi.org>  Fri, 20 Mar 2020 16:18:48 +0000
+
 rpi-eeprom (5.1-1) buster; urgency=medium
 
   [ Tim Gover ]
