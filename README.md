@@ -21,7 +21,7 @@ Bootloader bugs are especially difficult to describe because there's no display.
 * Wireshark trace for network boot. Filtering for DHCP and TFTP protocols or by mac-address for the Pi4 is fine.
 
 # BETA versions of the bootloader
-If you want to try the BETA version of the bootloader then we recommend that you always try this with a spare sd-card and comfortable with using the rescue image. For debugging you may find a USB serial cable useful.
+If you want to try the BETA version of the bootloader then we recommend that you always try this with a spare sd-card and are comfortable with using the rescue image. For debugging you may find a USB serial cable useful.
 
-Beta features are always documented [here](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware/raspberry_pi4_network_boot_beta.md) first. Once the configuration has stabalised then the [Bootloader configuration](https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md) will be updated, however, there's normally a bit of a delay in order to allow official documentation to be reviewed.
+Beta features are always documented [here](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware/release-notes.md) first. Once the configuration has stabalised then the [Bootloader configuration](https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md) will be updated, however, there's normally a bit of a delay in order to allow official documentation to be reviewed.
 
