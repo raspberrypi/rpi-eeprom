@@ -1,3 +1,10 @@
+rpi-eeprom (5.4-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2020-04-09: New beta with experimental PLL tweaks
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 09 Apr 2020 19:12:12 +0100
+
 rpi-eeprom (5.3-1) buster; urgency=medium
 
   [ Andrew Scheller ]
