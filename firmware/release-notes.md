@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-04-09 Add 2020-04-09 beta firmware.
+    * Experimental tweaks for PLL analog setup to reduced jitter and
+      improve PCIe reliability on slower silicon.
+
 ## 2020-04-07 Promote 2020-03-19 beta firmware to stable.
     * No major bugs reported. Promote this to stable as a step
       towards getting HDMI diagnostics into the default firmware
