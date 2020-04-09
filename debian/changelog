@@ -1,3 +1,14 @@
+rpi-eeprom (5.3-1) buster; urgency=medium
+
+  [ Andrew Scheller ]
+  * Fix broken link
+
+  [ Tim Gover ]
+  * Update README.md
+  * Promote pieeprom-2020-03-19 to a stable update
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 09 Apr 2020 08:00:46 +0100
+
 rpi-eeprom (5.2-1) buster; urgency=medium
 
   [ andrum99 ]
