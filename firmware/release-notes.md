@@ -1,5 +1,21 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-04-12 Update beta+stable recovery.bin
+    * If the VL805 image was updated but the bootloader was not then
+      recovery.bin would incorrectly switch to infinite flashing activity
+      LED pattern used in the rescue image to prevent infinite reboots.
+      Fix recovery.bin to reboot in this case. The current 'critical'
+      release does not have this problem.
+    * Fix uart_2ndstage logging in beta/stable recovery image.
+    * Change recovery.bin to reboot instead of displaying an error patern
+      if there are no EEPROM images. The Raspberry Pi Image makes it very
+      difficult to create a broken rescue image but a stray recovery.bin
+      could stop Raspbian from booting.
+    * Fix detection of VL805 EEPROM in recovery.bin
+
+    N.B. These recovery.bin file used for critical updates and the rescue
+    image does not suffer from these bugs.
+
 ## 2020-04-09 Add 2020-04-09 beta firmware.
     * Experimental tweaks for PLL analog setup to reduced jitter and
       improve PCIe reliability on slower silicon.
