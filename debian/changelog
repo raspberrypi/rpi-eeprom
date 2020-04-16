@@ -1,3 +1,10 @@
+rpi-eeprom (5.6-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2020-16-04: Revert PLL analog setup changes
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 16 Apr 2020 19:18:15 +0100
+
 rpi-eeprom (5.5-1) buster; urgency=medium
 
   [ Tim Gover ]
