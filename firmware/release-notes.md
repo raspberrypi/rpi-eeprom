@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-04-16 Revert PLL analog changes
+    * This seems to cause problems on some firmware releases if enable_tvout
+      is set due to different behaviour in PLL management.
+
 ## 2020-04-12 Update beta+stable recovery.bin
     * If the VL805 image was updated but the bootloader was not then
       recovery.bin would incorrectly switch to infinite flashing activity
