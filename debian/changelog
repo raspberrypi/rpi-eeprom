@@ -1,3 +1,10 @@
+rpi-eeprom (5.7-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2020-16-04.bin -> pieeprom-2020-04-16.bin
+
+ -- Serge Schneider <serge@raspberrypi.org>  Fri, 17 Apr 2020 11:50:03 +0100
+
 rpi-eeprom (5.6-1) buster; urgency=medium
 
   [ Tim Gover ]
