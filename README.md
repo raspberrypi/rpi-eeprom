@@ -4,6 +4,8 @@ This repository contains the scripts and pre-compiled binaries used to create th
 # Support
 For bootloader support the best place to start is the Raspberry Pi [General Users forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) or for discussion of beta releases try the [Advanced Users forum](https://www.raspberrypi.org/forums/viewforum.php?f=29&sid=9bbc277968ad953e77749b255d0ce3a2)
 
+N.B. Direct e-mail support questions will be ignored.
+
 # Rescue image
 If the Raspberry Pi4 is not booting, then it's very unlikely that the EEPROM is corrupted. The first thing that you should check is that the OS image was correctly installed using the Raspberry Pi Imager which is available on the [downloads page](https://www.raspberrypi.org/downloads/). If that doesn't work or you wish to revert EEPROM configuration changes to factory defaults then you can also create an EEPROM recovery SD card image using the Raspberry Pi Imager.
 
