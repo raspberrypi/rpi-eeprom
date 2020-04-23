@@ -1,3 +1,16 @@
+rpi-eeprom (5.8-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Update README.md
+
+  [ tim ]
+  * Push pieeprom-2020-04-16 to stable
+
+  [ Tim Gover ]
+  * Remove +x bit
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 23 Apr 2020 16:53:18 +0100
+
 rpi-eeprom (5.7-1) buster; urgency=medium
 
   [ Tim Gover ]

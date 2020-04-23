@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-04-16 Promote to stable
+    * The PLL analog changes in the beta release never made it to stable.
+      Skip straight 2020-04-16 to synchronize releases.
+
 ## 2020-04-16 Revert PLL analog changes
     * This seems to cause problems on some firmware releases if enable_tvout
       is set due to different behaviour in PLL management.
