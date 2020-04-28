@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## Promote 2020-04-16 EEPROM release critical
+    * Make this the default release for all users. This supports network
+      boot, configurable boot order and HDMI diagnostics screen.
+
 ## 2020-04-16 Promote to stable
     * The PLL analog changes in the beta release never made it to stable.
       Skip straight 2020-04-16 to synchronize releases.
