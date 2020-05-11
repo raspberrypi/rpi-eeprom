@@ -1,5 +1,10 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-05-11 Garbage collect old binaries
+    * Now that 2020-04-16 is has been released as the default production
+      release move the old binaries to an old (deprecated) directory.
+      These can be removed for the APT package to reduce disk space.
+
 ## Promote 2020-04-16 EEPROM release critical
     * Make this the default release for all users. This supports network
       boot, configurable boot order and HDMI diagnostics screen.
