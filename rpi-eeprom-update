@@ -306,11 +306,13 @@ usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
 
-Checks whether the Raspberry Pi bootloader and the VL805 USB controller
+Bootloader EEPROM update tool for the Raspberry Pi 4.
+
+Checks whether the Raspberry Pi 4 bootloader and the VL805 USB controller
 EEPROMs are up-to-date and optionally updates the EEPROMs at the next reboot.
 
 The default update mechanism writes recovery.bin and the EEPROM update
-image(s) (pieeprom.upd and vl805.bin) to the boot partition on the sd-card.
+image(s) (pieeprom.upd and vl805.bin) to the boot partition.
 The SHA256 hash of the corresponding images are written to pieeprom.sig
 and/or vl805.sig. This guards against file system corruption which could
 cause the EEPROM to be flashed with an invalid image. This is not a
@@ -321,8 +323,8 @@ If the update was successful recovery.bin renames itself to recovery.000
 to prevent it from running a second time then resets the system.
 The system should then boot normally.
 
-If /boot does not correspond to the boot partition on the sd-card and this
-is not a NOOBS system then the mount point for BOOTFS should be defined
+If /boot does not correspond to the boot partition and this
+is not a NOOBS system, then the mount point for BOOTFS should be defined
 in /etc/default/rpi-eeprom-update by defining the BOOTFS variable.
 
 A backup of the current EEPROM config file is written to ${FIRMWARE_BACKUP_DIR}
@@ -359,7 +361,7 @@ USE_FLASHROM
 The flashrom update mechanism may be enabled by setting USE_FLASHROM=1. This
 also selects the vl805 tool instead of using recovery.bin to perform the
 update. This may be desirable if an immediate update is required or if an
-sd-card is not present.
+SD card is not present.
 However, this not recommended because the SPI pins are muxed with audio and other
 device drivers may be using SPI (e.g. HATs). This is also not safe in the
 event of a power failure during the update of the EEPROM.
