@@ -2,7 +2,7 @@
 
 # rpi-eeprom-config
 # Utility for reading and writing the configuration file in the
-# Raspberry Pi4 bootloader EEPROM image.
+# Raspberry Pi 4 bootloader EEPROM image.
 
 import argparse
 import struct
@@ -98,7 +98,7 @@ class BootloaderImage(object):
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, \
-    description='Bootloader EEPROM configuration tool for the Raspberry Pi 4B. \
+    description='Bootloader EEPROM configuration tool for the Raspberry Pi 4. \
 \n\nThere are 3 operating modes: \
 \n\n1. Output the bootloader configuration stored in an EEPROM image file to \
 the screen (STDOUT): specify only the name of an EEPROM image file using the \

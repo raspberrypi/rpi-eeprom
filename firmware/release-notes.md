@@ -1,5 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-05-15 Add pieeprom-2020-05-15 beta with USB boot
+    * USB mass storage boot will NOT work without the updated firmware
+      start.elf binaries. These will probably be released via rpi-update
+      in a few days time.
+      This release simply helps to validate if there are regressions in
+      the current SD and Network boot modes.
+
+      * SELF_UPDATE and bootloader_update are now enabled by default.
+
+## 2020-05-11 Garbage collect old binaries
+    * Now that 2020-04-16 is has been released as the default production
+      release move the old binaries to an old (deprecated) directory.
+      These can be removed for the APT package to reduce disk space.
+
 ## Promote 2020-04-16 EEPROM release critical
     * Make this the default release for all users. This supports network
       boot, configurable boot order and HDMI diagnostics screen.
