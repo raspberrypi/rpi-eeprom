@@ -440,7 +440,11 @@ findBootFS()
    # If BOOTFS is not a directory or doesn't contain any .elf files then
    # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
-   [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ] || die "BOOTFS: \"${BOOTFS}\" contains no .elf files"
+   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ]; then
+      echo "BOOTFS ${BOOTFS}"
+   else
+      echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
+   fi
 }
 
 getVL805CurrentVersion()
