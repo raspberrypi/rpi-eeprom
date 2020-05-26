@@ -1,5 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-05-26 USB MSD updates
+    * Resolve: USB boot fails if the GPT contains no basic data or EFI partitions #130
+    * Resolve: Fix default BOOT_ORDER in mass storage beta #129
+    * Resolve: Add support for booting from a "superfloppy" disk #120
+    * Resolve: USB MSD timeout message - incorrect units #131
+    * Resolve: Recognize efi partition (0xef) as a valid boot #126
+    * The HDMI diagnostics screen now displays the most significant bytes
+      of the SHA-256 of the config.txt file.
+
+## 2020-05-26 rpi-eeprom-update
+    * Mark USE_FLASHROM as deprecated.
+    * Resolve: Unnecessary check for '*.elf' in BOOTFS #92
+    * Update help for FIRMWARE_RELEASE_STATUS.
+
 ## 2020-05-15 Add pieeprom-2020-05-15 beta with USB boot
     * USB mass storage boot will NOT work without the updated firmware
       start.elf binaries. These will probably be released via rpi-update
