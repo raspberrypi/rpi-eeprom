@@ -46,7 +46,16 @@ SPI_SPEED=16000
 # Timestamp for first release which doesn't have a timestamp field
 BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
+BOARD_INFO=
 BOARD_REVISION=
+BOARD_TYPE=
+
+# Newer board revisions embed the VLI firmware in the bootloader EEPROM and
+# there is no way to separately update the VLI firmware. Consequently,
+# standalone vl805 update files do not trigger automatic updates.
+# Recovery.bin and the the SPI bootloader ignore vl805.bin files on boards
+# without a dedicate VL805 EEPROM.
+HAVE_VL805_EEPROM=0
 
 # Simple bootloader which is able to load start.elf in the event of a power
 # cut. This runs SDRAM at low speed and may have reduced functionality but
@@ -252,12 +261,23 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
-   BOARD_REVISION="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
-   if [ $(((0x$BOARD_REVISION >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_REVISION >> 12) & 15)) -eq 3 ]; then
+   BOARD_INFO="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+   if [ $(((0x$BOARD_INFO >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_INFO >> 12) & 15)) -eq 3 ]; then
       echo "BCM2711 detected"
    else
       # Not a BCM2711, no EEPROMs to update.
       exit ${EXIT_SUCCESS}
+   fi
+
+   BOARD_TYPE=$(((0x$BOARD_INFO >> 4) & 0xff))
+   BOARD_REVISION=$((0x$BOARD_INFO & 0xf))
+
+   if [ ${BOARD_TYPE} = 17 ] && [ ${BOARD_REVISION} \< 4 ]; then
+      echo "Dedicated VL805 EEPROM detected"
+      HAVE_VL805_EEPROM=1
+   else
+      echo "VL805 firmware in bootloader EEPROM"
+      HAVE_VL805_EEPROM=0
    fi
 
    if ! command -v vcgencmd  > /dev/null; then
@@ -270,8 +290,8 @@ checkDependencies() {
 
    # If a board revision specific firmware directory is defined then use that
    # in preference to the generic directory.
-   if [ -d "${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}" ]; then
-      FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}"
+   if [ -d "${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}" ]; then
+      FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}"
    fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
@@ -505,7 +525,6 @@ lookupVersionInfo()
    getBootloaderUpdateVersion
 
    getVL805CurrentVersion
-   getVL805UpdateVersion
 
    if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       ACTION_UPDATE_BOOTLOADER=1
@@ -513,12 +532,18 @@ lookupVersionInfo()
       BOOTLOADER_UPDATE_IMAGE=""
    fi
 
-   if [ -n "${VL805_CURRENT_VERSION}" ] && [ -n "${VL805_UPDATE_VERSION}" ]; then
-      if [ "${VL805_CURRENT_VERSION}" \< "${VL805_UPDATE_VERSION}" ];  then
-         ACTION_UPDATE_VL805=1
-      else
-         VL805_UPDATE_IMAGE=""
+   if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
+      getVL805UpdateVersion
+      if [ -n "${VL805_CURRENT_VERSION}" ] && [ -n "${VL805_UPDATE_VERSION}" ]; then
+         if [ "${VL805_CURRENT_VERSION}" \< "${VL805_UPDATE_VERSION}" ];  then
+            ACTION_UPDATE_VL805=1
+         else
+            VL805_UPDATE_IMAGE=""
+         fi
       fi
+   else
+      VL805_UPDATE_VERSION="${VL805_CURRENT_VERSION}"
+      ACTION_UPDATE_VL805=0
    fi
 }
 
