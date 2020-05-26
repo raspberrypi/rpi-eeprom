@@ -187,6 +187,7 @@ applyUpdate() {
    fi
 
    if [ -f "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      echo "WARNING: USE_FLASHROM is deprecated."
       # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
       # LDO first to avoid sending noise to analog audio.
       "${VCMAILBOX}" 0x00030056 4 4 0 > /dev/null || true
@@ -357,6 +358,9 @@ output must contain at least 3 lines and should contain WAKE_ON_GPIO
 and POWER_OFF_ON_HALT settings.
 
 USE_FLASHROM
+
+USE_FLASHROM is deprecated and there is no support for this. The muxing
+of the SPI pins causes too many issues for this to ever be reliable.
 
 The flashrom update mechanism may be enabled by setting USE_FLASHROM=1. This
 also selects the vl805 tool instead of using recovery.bin to perform the
