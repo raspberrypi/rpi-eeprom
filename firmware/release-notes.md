@@ -1,6 +1,6 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-## 2020-05-26 Fix DPI issue - BETA
+## 2020-05-27 Fix DPI issue - BETA
     * Resolve: DPI failure after HDMI diagnostics screen in beta bootloader #133
     * Resolve: VL805 readback failure in the bootloader #134
 
