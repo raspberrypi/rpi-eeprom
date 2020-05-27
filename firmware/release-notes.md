@@ -1,6 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-## 2020-05-26 USB MSD updates
+## 2020-05-26 Fix DPI issue - BETA
+    * Resolve: DPI failure after HDMI diagnostics screen in beta bootloader #133
+
+## 2020-05-26 USB MSD updates - BETA
     * Resolve: USB boot fails if the GPT contains no basic data or EFI partitions #130
     * Resolve: Fix default BOOT_ORDER in mass storage beta #129
     * Resolve: Add support for booting from a "superfloppy" disk #120
