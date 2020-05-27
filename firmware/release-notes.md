@@ -2,6 +2,7 @@
 
 ## 2020-05-26 Fix DPI issue - BETA
     * Resolve: DPI failure after HDMI diagnostics screen in beta bootloader #133
+    * Resolve: VL805 readback failure in the bootloader #134
 
 ## 2020-05-26 USB MSD updates - BETA
     * Resolve: USB boot fails if the GPT contains no basic data or EFI partitions #130
