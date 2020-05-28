@@ -14,7 +14,6 @@ override_dh_auto_build: debian/rpi-eeprom-update.1 debian/rpi-eeprom-config.1
 override_dh_install:
 	mkdir -p debian/rpi-eeprom/var/lib/raspberrypi/bootloader/backup/
 	dh_install
-	rm -f debian/rpi-eeprom-images/lib/firmware/raspberrypi/bootloader/vl805
 
 debian/rpi-eeprom-update.1:
 	help2man -N --version-string="${DEB_VERSION_UPSTREAM}" --help-option="-h" \
