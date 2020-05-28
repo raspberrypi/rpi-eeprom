@@ -141,17 +141,17 @@ check_conf_size_too_large()
    fi
 }
 
-check_loopback "../firmware/critical/pieeprom-2019-07-15.bin" "bootconf-2019-07-15.txt"
+check_loopback "../firmware/old/beta/pieeprom-2019-07-15.bin" "bootconf-2019-07-15.txt"
 cleanup
 
-check_update "../firmware/critical/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15-freeze.bin" "bootconf-2019-07-15-freeze.txt"
+check_update "../firmware/old/beta/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15-freeze.bin" "bootconf-2019-07-15-freeze.txt"
 cleanup
 
-check_reduce_size "../firmware/critical/pieeprom-2019-07-15.bin" "bootconf-2019-07-15.txt"
+check_reduce_size "../firmware/old/beta/pieeprom-2019-07-15.bin" "bootconf-2019-07-15.txt"
 cleanup
 
-check_conf_size_large "../firmware/critical/pieeprom-2019-07-15.bin"
+check_conf_size_large "../firmware/old/beta/pieeprom-2019-07-15.bin"
 cleanup
 
-check_conf_size_too_large "../firmware/critical/pieeprom-2019-07-15.bin"
+check_conf_size_too_large "../firmware/old/beta/pieeprom-2019-07-15.bin"
 cleanup

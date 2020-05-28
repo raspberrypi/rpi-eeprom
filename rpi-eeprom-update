@@ -46,7 +46,16 @@ SPI_SPEED=16000
 # Timestamp for first release which doesn't have a timestamp field
 BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
+BOARD_INFO=
 BOARD_REVISION=
+BOARD_TYPE=
+
+# Newer board revisions embed the VLI firmware in the bootloader EEPROM and
+# there is no way to separately update the VLI firmware. Consequently,
+# standalone vl805 update files do not trigger automatic updates.
+# Recovery.bin and the the SPI bootloader ignore vl805.bin files on boards
+# without a dedicate VL805 EEPROM.
+HAVE_VL805_EEPROM=0
 
 # Simple bootloader which is able to load start.elf in the event of a power
 # cut. This runs SDRAM at low speed and may have reduced functionality but
@@ -187,6 +196,7 @@ applyUpdate() {
    fi
 
    if [ -f "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      echo "WARNING: USE_FLASHROM is deprecated."
       # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
       # LDO first to avoid sending noise to analog audio.
       "${VCMAILBOX}" 0x00030056 4 4 0 > /dev/null || true
@@ -251,12 +261,23 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
-   BOARD_REVISION="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
-   if [ $(((0x$BOARD_REVISION >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_REVISION >> 12) & 15)) -eq 3 ]; then
+   BOARD_INFO="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+   if [ $(((0x$BOARD_INFO >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_INFO >> 12) & 15)) -eq 3 ]; then
       echo "BCM2711 detected"
    else
       # Not a BCM2711, no EEPROMs to update.
       exit ${EXIT_SUCCESS}
+   fi
+
+   BOARD_TYPE=$(((0x$BOARD_INFO >> 4) & 0xff))
+   BOARD_REVISION=$((0x$BOARD_INFO & 0xf))
+
+   if [ ${BOARD_TYPE} = 17 ] && [ ${BOARD_REVISION} \< 4 ]; then
+      echo "Dedicated VL805 EEPROM detected"
+      HAVE_VL805_EEPROM=1
+   else
+      echo "VL805 firmware in bootloader EEPROM"
+      HAVE_VL805_EEPROM=0
    fi
 
    if ! command -v vcgencmd  > /dev/null; then
@@ -269,8 +290,8 @@ checkDependencies() {
 
    # If a board revision specific firmware directory is defined then use that
    # in preference to the generic directory.
-   if [ -d "${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}" ]; then
-      FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_REVISION}"
+   if [ -d "${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}" ]; then
+      FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}"
    fi
 
    if vcgencmd bootloader_config | grep -qi "Command not registered"; then
@@ -358,6 +379,9 @@ and POWER_OFF_ON_HALT settings.
 
 USE_FLASHROM
 
+USE_FLASHROM is deprecated and there is no support for this. The muxing
+of the SPI pins causes too many issues for this to ever be reliable.
+
 The flashrom update mechanism may be enabled by setting USE_FLASHROM=1. This
 also selects the vl805 tool instead of using recovery.bin to perform the
 update. This may be desirable if an immediate update is required or if an
@@ -370,14 +394,26 @@ those devices to stop working until after the system is reboot.
 
 FIRMWARE_RELEASE_STATUS
 
-Specifies the release status of the firmware to apply. The default is 'critical'
-which is the most stable production version. Alternatively, 'stable' or
-'beta' may be selected for development releases.
-A 'critical' update is the latest stable production version and is normally
-only updated after it has been tested via the 'beta' and then a 'stable' release.
+Specifies the release status of the firmware to apply. The default is 'critical'.
+
 Before selecting a firmware release directory this script checks whether there
 is a board revision specific variant e.g. critical-c03111. If present then the
 board-revision specific version is used in preference.
+
+Release status:
+
+critical: The latest production release plus important security or hardware compatibility bug fixes.
+
+stable: Contains new features have already undergone some beta testing.
+These are candidats for new production releases.
+
+beta: New features, bug fixes for development/test purposes. Use at your own
+risk!
+
+As far as rpi-eeprom-update is concerned FIRMWARE_RELEASE_STATUS is just
+the subdirectory mapping under ${FIRMWARE_ROOT}. Therefore, custom release
+directories are supported by creating the relevant directory and changing
+the FIRMWARE_RELEASE_STATUS environment variable.
 
 Examples:
 To extract the configuration file from an EEPROM image:
@@ -440,7 +476,11 @@ findBootFS()
    # If BOOTFS is not a directory or doesn't contain any .elf files then
    # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
-   [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ] || die "BOOTFS: \"${BOOTFS}\" contains no .elf files"
+   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ]; then
+      echo "BOOTFS ${BOOTFS}"
+   else
+      echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
+   fi
 }
 
 getVL805CurrentVersion()
@@ -485,7 +525,6 @@ lookupVersionInfo()
    getBootloaderUpdateVersion
 
    getVL805CurrentVersion
-   getVL805UpdateVersion
 
    if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       ACTION_UPDATE_BOOTLOADER=1
@@ -493,12 +532,18 @@ lookupVersionInfo()
       BOOTLOADER_UPDATE_IMAGE=""
    fi
 
-   if [ -n "${VL805_CURRENT_VERSION}" ] && [ -n "${VL805_UPDATE_VERSION}" ]; then
-      if [ "${VL805_CURRENT_VERSION}" \< "${VL805_UPDATE_VERSION}" ];  then
-         ACTION_UPDATE_VL805=1
-      else
-         VL805_UPDATE_IMAGE=""
+   if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
+      getVL805UpdateVersion
+      if [ -n "${VL805_CURRENT_VERSION}" ] && [ -n "${VL805_UPDATE_VERSION}" ]; then
+         if [ "${VL805_CURRENT_VERSION}" \< "${VL805_UPDATE_VERSION}" ];  then
+            ACTION_UPDATE_VL805=1
+         else
+            VL805_UPDATE_IMAGE=""
+         fi
       fi
+   else
+      VL805_UPDATE_VERSION="${VL805_CURRENT_VERSION}"
+      ACTION_UPDATE_VL805=0
    fi
 }
 
