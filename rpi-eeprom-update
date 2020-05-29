@@ -632,21 +632,25 @@ write_status_info()
    vl805_new="${VL805_UPDATE_VERSION}"
 
     if [ "${JSON_OUTPUT}" = "no" ]; then
+      [ "${HAVE_VL805_EEPROM}" = "0" ] && vl805_eeprom="no" || vl805_eeprom="yes"
       cat > "${MACHINE_OUTPUT}" <<EOF
 EXITCODE="${exit_code}"
 BOOTLOADER_CURRENT=${bootloader_cur}
 BOOTLOADER_LATEST=${bootloader_new}
 VL805_CURRENT="${vl805_cur}"
 VL805_LATEST="${vl805_new}"
+VL805_EEPROM="${vl805_eeprom}"
 EOF
    else
+      [ "${HAVE_VL805_EEPROM}" = "0" ] && vl805_eeprom="false" || vl805_eeprom="true"
       cat > "${MACHINE_OUTPUT}" <<EOF
 {
   "EXITCODE": "${exit_code}",
   "BOOTLOADER_CURRENT": ${bootloader_cur},
   "BOOTLOADER_LATEST": ${bootloader_new},
   "VL805_CURRENT": "${vl805_cur}",
-  "VL805_LATEST": "${vl805_new}"
+  "VL805_LATEST": "${vl805_new}",
+  "VL805_EEPROM": ${vl805_eeprom}
 }
 EOF
    fi
