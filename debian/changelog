@@ -1,3 +1,21 @@
+rpi-eeprom (7.1-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * test: Fixup paths for config test
+  * rpi-eeprom-update: Change BOOTFS .elf check to a warning
+  * rpi-eeprom-update: Mark USE_FLASHROM as deprecated.
+  * rpi-eeprom-update: Update help for FIRMWARE_RELEASE_STATUS
+  * pieeprom-2020-05-26.bin - USB MSD beta updates
+  * pieeprom-2020-05-27.bin - DPI fix
+  * pieeprom-2020-05-27: Patch release with VL805 self-update fix
+  * rpi-eeprom-update: Update VL805 version check for boards without
+    VL805 EEPROM
+
+  [ andrum99 ]
+  * Update release-notes.md
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 28 May 2020 13:33:21 +0100
+
 rpi-eeprom (7.0-1) buster; urgency=medium
 
   [ Tim Gover ]

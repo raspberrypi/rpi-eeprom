@@ -1,1 +1,4 @@
-firmware/* lib/firmware/raspberrypi/bootloader/
+firmware/critical lib/firmware/raspberrypi/bootloader/
+firmware/stable lib/firmware/raspberrypi/bootloader/
+firmware/beta lib/firmware/raspberrypi/bootloader/
+firmware/release-notes.md lib/firmware/raspberrypi/bootloader/
