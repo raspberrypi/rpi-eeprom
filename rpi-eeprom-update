@@ -404,8 +404,8 @@ Release status:
 
 critical: The latest production release plus important security or hardware compatibility bug fixes.
 
-stable: Contains new features have already undergone some beta testing.
-These are candidats for new production releases.
+stable: Contains new features that have already undergone some beta testing.
+These are candidates for new production releases.
 
 beta: New features, bug fixes for development/test purposes. Use at your own
 risk!
