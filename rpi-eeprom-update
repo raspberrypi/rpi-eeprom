@@ -358,8 +358,6 @@ Options:
    -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
-      WARNING: This command should only be run from console mode in order to
-      avoid conflicts/deadlock with dtoverlay/dtparam settings.
    -h Display help text and exit
    -i Ignore package checksums - for rpi-eeprom developers.
    -j Write status information using JSON notation
