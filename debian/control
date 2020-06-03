@@ -12,13 +12,18 @@ Package: rpi-eeprom
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, rpi-eeprom-images, libraspberrypi-bin,
  python, binutils, raspberrypi-bootloader (>= 1.20190819), pciutils
+Breaks: rpi-eeprom-images (<<7.2)
+Replaces: rpi-eeprom-images (<<7.2)
 Recommends: flashrom
+Provides: rpi-eeprom-images
 Description: Raspberry Pi 4 boot EEPROM updater
  Checks whether the Raspberry Pi bootloader EEPROM is up-to-date and updates
  the EEPROM.
 
 Package: rpi-eeprom-images
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Raspberry Pi 4 boot EEPROM images
- This package contains the bootloader EEPROM images for Raspberry Pi 4
+Depends: rpi-eeprom (>=7.2)
+Priority: optional
+Section: oldlibs
+Description: transitional package
+ This is a transitional package. It can safely be removed.

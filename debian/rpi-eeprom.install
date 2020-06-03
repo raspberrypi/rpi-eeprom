@@ -1,3 +1,8 @@
 rpi-eeprom-config usr/bin/
 rpi-eeprom-update usr/bin/
 debian/default/ etc/
+
+firmware/critical lib/firmware/raspberrypi/bootloader/
+firmware/stable lib/firmware/raspberrypi/bootloader/
+firmware/beta lib/firmware/raspberrypi/bootloader/
+firmware/release-notes.md lib/firmware/raspberrypi/bootloader/
