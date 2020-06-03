@@ -358,9 +358,9 @@ Options:
    -a Automatically install bootloader and USB (VLI) EEPROM updates.
    -A Specify which type of EEPROM to automatically update (vl805 or bootloader)
    -d Use the default bootloader config, or if a file is specified using the -f
-      flag use the config in that file. This option only applies in the case of
-      a bootloader EEPROM update - it has no effect when there is no update
-      needed.
+      flag use the config in that file. This option only applies when a
+      bootloader EEPROM update is needed; if the bootloader EEPROM is up-to-date
+      then its config will not be changed.
    -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
