@@ -1,5 +1,21 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-06-03 Bootmode tweaks and fix issue with > 4TB drives - BETA
+   * Resolve: Unable to boot from USB MSD - Seagate 5Tb HDD backup drive #139
+   * Increase USB MSD timeout from 10 to 20 seconds.
+   * Max retries now default to zero because the default BOOT_ORDER includes
+     restart (0xf). Therefore, each boot-mode is now tried once before moving
+     to the next mode. The retries mechanism is largely redudant now that
+     the loop/restart mode exists.
+   * If TFTP fails and network boot retries > 0 then wait 5 seconds before
+     retrying to avoid overloading a misconfigured TFTP server.
+   * Map undefined boot-modes in BOOT_ORDER to SD (0x1) instead of stopping.
+   * Add missing pieeprom-2020-05-28
+
+## 2020-05-28 Secondary fix for VL805 readback issue - BETA
+    * Re-upload 2020-05-28 after Git issue
+    * rpi-eeprom-update for new board revisions
+
 ## 2020-05-27 Fix DPI issue - BETA
     * Resolve: DPI failure after HDMI diagnostics screen in beta bootloader #133
     * Resolve: VL805 readback failure in the bootloader #134
@@ -83,20 +99,20 @@
        * SUBNET
        * GATEWAY
        * TFTP_IP
-    * If a fatal bootloader error occurs then an HDMI diagnostics screen is 
-      displayed at VGA/DVI resolution on both outputs for two minutes. 
-      This may be disabled by setting DISABLE_HDMI=1 in the EEPROM 
+    * If a fatal bootloader error occurs then an HDMI diagnostics screen is
+      displayed at VGA/DVI resolution on both outputs for two minutes.
+      This may be disabled by setting DISABLE_HDMI=1 in the EEPROM
       configuration OR setting display_splash=1 in config.txt.
     * Allow the PXE menu option to match a custom string specified by
       PXE_OPTION43. The default is still "Raspberry Pi Boot"
-    * DHCP_OPTION97 - The default GUID has now changed to 
+    * DHCP_OPTION97 - The default GUID has now changed to
       RPI4+BOARD_ID+ETH_MAC_LSB+SERIAL in order to make it easier to
       automatically identify Raspberry Pi computers. The old behaviour
       is enabled by setting DHCP_OPTION97=0 which simply repeats the serial
       number 4 times.
     * SELF_UPDATE. If SELF_UPDATE is set to 1 in the EEPROM configuration AND
       config.txt contains bootloader_update=1 then the bootloader will looking
-      for pieeprom.upd and vl805.bin and apply these firmware files if 
+      for pieeprom.upd and vl805.bin and apply these firmware files if
       they are different to the current image, before doing a watchdog reset.
       This should make it easier to update the bootloader for network
       booted setups because an SD card is not required for recovery.bin.
@@ -117,7 +133,7 @@
       beta folder.
 
 ## 2020-01-22 - vl805 00137ad
-    * Set the default/critical vl805 version to be 00137ad. This has the 
+    * Set the default/critical vl805 version to be 00137ad. This has the
       same power savings as 0137ab but with fixes for USB webcams.
 
 ## 2020-01-17 - Git 5e86aac5f (BETA) RC4
@@ -185,7 +201,7 @@
 ## 2019-07-15 - Git 514670a2
    * Turn green LED activity off on halt.
    * Pad embedded config file with spaces for easier editing by end users.
-   * Halt now behaves the same as earlier Pi models to improve power behavior at halt for HATs. 
+   * Halt now behaves the same as earlier Pi models to improve power behavior at halt for HATs.
    * WAKE_ON_GPIO now defaults to 1 in the EEPROM config file.
    * POWER_OFF_ON_HALT setting added defaulting to zero. Set this to 1 to restore the behavior where 'sudo halt' powers off all PMIC output.
    * If WAKE_ON_GPIO=1 then POWER_OFF_ON_HALT is ignored.
