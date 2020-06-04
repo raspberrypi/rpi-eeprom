@@ -1,3 +1,26 @@
+rpi-eeprom (7.2-1) buster; urgency=medium
+
+  [ MilhouseVH ]
+  * include vl805 eeprom presence in machine output
+
+  [ Andrew Scheller ]
+  * small typos
+
+  [ Tim Gover ]
+  * Create releases.md
+  * pieeprom-2020-06-03: Bootmode tweaks and fix issue with > 4TB drives - BETA
+  * rpi-eeprom-update: Remove warning in -f section
+
+  [ andrum99 ]
+  * rpi-eeprom-update - fix description of -d flag
+  * Clarify -d option when EEPROM update not needed
+  * reword
+
+  [ Serge Schneider ]
+  * Merge rpi-eeprom-images into rpi-eeprom package
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 04 Jun 2020 00:40:45 +0100
+
 rpi-eeprom (7.1-1) buster; urgency=medium
 
   [ Tim Gover ]
