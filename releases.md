@@ -1,8 +1,10 @@
 # rpi-eeprom releases
 This page provides links to the production and development release images for the Raspberry Pi 4 bootloader EEPROM. Normally, the 
 bootloader is automatically updated after an APT update via the [rpi-eeprom-update](https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md)
-utility. However, it's sometimes more convenient to use a recovery image to program the EEPROM with default settings for a given release than 
-updating via Linux.
+utility. However, it's sometimes more convenient to use a recovery image to program the EEPROM with default settings for a given release than updating via Linux.
+
+## Release Notes
+The release notes for the are available [here](https://github.com/raspberrypi/rpi-eeprom/blob/v2020.06.03-137ad/firmware/release-notes.md)
 
 ## Recovery Image
 The latest production recovery image is [2020-04-16](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.04.16-137ad). This
