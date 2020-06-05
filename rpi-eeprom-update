@@ -272,7 +272,7 @@ checkDependencies() {
    BOARD_TYPE=$(((0x$BOARD_INFO >> 4) & 0xff))
    BOARD_REVISION=$((0x$BOARD_INFO & 0xf))
 
-   if [ ${BOARD_TYPE} = 17 ] && [ ${BOARD_REVISION} \< 4 ]; then
+   if [ ${BOARD_TYPE} -eq 17 ] && [ ${BOARD_REVISION} -lt 4 ]; then
       echo "Dedicated VL805 EEPROM detected"
       HAVE_VL805_EEPROM=1
    else
@@ -539,7 +539,7 @@ lookupVersionInfo()
    if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
       getVL805UpdateVersion
       if [ -n "${VL805_CURRENT_VERSION}" ] && [ -n "${VL805_UPDATE_VERSION}" ]; then
-         if [ "${VL805_CURRENT_VERSION}" \< "${VL805_UPDATE_VERSION}" ];  then
+         if [ "$((0x${VL805_CURRENT_VERSION}))" -lt "$((0x${VL805_UPDATE_VERSION}))" ];  then
             ACTION_UPDATE_VL805=1
          else
             VL805_UPDATE_IMAGE=""
