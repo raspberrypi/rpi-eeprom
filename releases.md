@@ -11,7 +11,7 @@ The latest production recovery image is [2020-04-16](https://github.com/raspberr
 is the version selected by the [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/).
 
 ## USB MSD BETA
-The latest USB mass storage boot **BETA** recovery image is [2020-06-03](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.06.03-137ad).
+The latest USB mass storage boot **BETA** recovery image is [2020-06-12](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.06.12-137ad).
 
 ## Previous releases
 All [previous releases](https://github.com/raspberrypi/rpi-eeprom/releases) are available here.
