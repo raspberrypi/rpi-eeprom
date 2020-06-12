@@ -13,6 +13,8 @@ is the version selected by the [Raspberry Pi Imager](https://www.raspberrypi.org
 ## USB MSD BETA
 The latest USB mass storage boot **BETA** recovery image is [2020-06-12](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.06.12-137ad).
 
+For support please see this [forum thread](https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=277007)
+
 ## Previous releases
 All [previous releases](https://github.com/raspberrypi/rpi-eeprom/releases) are available here.
 
