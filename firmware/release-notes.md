@@ -1,5 +1,17 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-06-12 Improve support for powered USB SATA devices - BETA
+   * Reset Ethernet MAC + PHY if final boot mode is not network boot
+     See: Kernel warning and network failure when attempting to use the network after bootloader times out. #144
+   * Improve handling of multiple bootable USB devices and remove USB_MSD_BOOT_MAX_RETRIES
+   * Resolve: No DHCPACK with DHCP relay agent #58
+   * Toggle USB root hub port power for 200ms on the first USB MSD boot attempt
+     See: Bootloader can't boot via USB-HDD after system reboot #151
+   * Update bootloader handover to support uart_2ndstage - requires
+     a newer start.elf firmware which will be via rpi-update.
+   * Assert PCIe fundamental reset if the final bootmode was not USB-MSD because
+     the OS might not do this before starting XHCI.
+
 ## 2020-06-03 Bootmode tweaks and fix issue with > 4TB drives - BETA
    * Resolve: Unable to boot from USB MSD - Seagate 5Tb HDD backup drive #139
    * Increase USB MSD timeout from 10 to 20 seconds.
