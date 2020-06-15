@@ -1,5 +1,14 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2020-06-15 Increase default USB port power delay - BETA
+   * Increase the default power off delay to 500ms following more
+     interop testing.
+   * Make the USB port power off time configurable via the USB_MSD_PWR_OFF_TIME
+     config. The range may be set between 250 and 1000ms. Zero means no port
+     power off.
+   * Fix some issues in XHCI endpoint configuration where the code was wrong
+     but does not fail with the current VL805 FW.
+
 ## 2020-06-12 Improve support for powered USB SATA devices - BETA
    * Reset Ethernet MAC + PHY if final boot mode is not network boot
      See: Kernel warning and network failure when attempting to use the network after bootloader times out. #144
