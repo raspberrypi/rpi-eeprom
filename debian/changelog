@@ -1,3 +1,21 @@
+rpi-eeprom (7.3-1) buster; urgency=medium
+
+  [ andrum99 ]
+  * releases.md: typo, link, grammar fixes
+
+  [ Kyle J. McKay ]
+  * rpi-eeprom-update: compare versions algebraically
+
+  [ Tim Gover ]
+  * Update bug_report.md
+  * github: Disable blank issues
+  * pieeprom-2020-06-12 Improve support for powered USB SATA devices - BETA
+  * Update releases.md
+  * pieeprom-2020-06-15 Tweak toggling of USB port power at boot - BETA
+  * Update MSD beta to 2020-06-15
+
+ -- Serge Schneider <serge@raspberrypi.org>  Tue, 16 Jun 2020 10:59:32 +0100
+
 rpi-eeprom (7.2-1) buster; urgency=medium
 
   [ MilhouseVH ]
