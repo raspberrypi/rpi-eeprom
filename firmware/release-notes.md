@@ -1,6 +1,6 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-## 2020-06-17 Promote 2020-06-16 to STABLE
+## 2020-06-17 Promote 2020-06-15 to STABLE
    * Promote the latest beta EEPROM and recovery.bin to stable and
      feature freeze USB MSD support until a production release is ready.
 
