@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+**Feature requests MUST be posted to the Rasperry Pi [General Users forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) first.
+There is limited space in the bootloader and add additioanl test overhead in a critical part of the system. Discussing features helps to ensure that new functionality is generally useful to all Raspberry Pi users including non-Raspberry Pi OS distributions Please include the link after this has been discussed, otherwise, the bug will be closed. ***
+
 For general boot questions please check the read the [Boot Problems] (https://www.raspberrypi.org/forums/viewtopic.php?t=58151) sticky post on the forums.  
 
 N.B The bootloader does not persist in memory and if the rainbow splash screen has been displayed the issue is likely to be in the firmware or Linux. If so, it's better to target the bug in the [Firmware](https://github.com/raspberrypi/firmware/) or [Linux](https://github.com/raspberrypi/linux/) repositories first e.g. NFS, USB or dmesg logs would be Linux issues.
