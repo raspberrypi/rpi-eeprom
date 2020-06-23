@@ -7,7 +7,7 @@ assignees: ''
 
 ---
 
-For general boot questions please check the read the [Boot Problems] (https://www.raspberrypi.org/forums/viewtopic.php?t=58151) sticky post on the forums.  
+For general boot questions please check the read the [Boot Problems](https://www.raspberrypi.org/forums/viewtopic.php?t=58151) sticky post on the forums.  
 
 N.B The bootloader does not persist in memory and if the rainbow splash screen has been displayed the issue is likely to be in the firmware or Linux. If so, it's better to target the bug in the [Firmware](https://github.com/raspberrypi/firmware/) or [Linux](https://github.com/raspberrypi/linux/) repositories first e.g. NFS, USB or dmesg logs would be Linux issues.
 
