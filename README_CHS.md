@@ -17,7 +17,7 @@ N.B. 直接发送邮件询问问题将会被忽略。
 
 # 报告Bug
 引导加载程序错误特别难以描述，因为并不会被显示。如有可能，请提供以下信息，以帮助我们识别问题。
-* EEPROM版本 (vcgencmd bootloader_version or the pieeprom filename)
+* EEPROM版本 (vcgencmd bootloader_version或者是pieeprom filename)
 * EEPROM配置 (rpi-eeprom-config)
 * 使用USB的UART跟踪
 * 使用Wireshark的网络引导跟踪. 过滤DHCP和TFTP协议或使用MAC地址（对于Pi4）也是可以的。
