@@ -4,6 +4,12 @@
    * Promote the latest beta EEPROM and recovery.bin to stable and
      feature freeze USB MSD support until a production release is ready.
 
+Please note that the recent 64-bit beta image
+`2020-05-27-raspios-buster-arm64.zip` includes the updated firmware
+and boots just fine, but the 32-bit stable image uses the older firmware
+and requires manual updates for the `.elf` and `.dat` files, as documented
+in the [#172 issue](https://github.com/raspberrypi/rpi-eeprom/issues/172).
+
 ## 2020-06-15 Increase default USB port power delay - BETA
    * Increase the default power off delay to 500ms following more
      interop testing.
