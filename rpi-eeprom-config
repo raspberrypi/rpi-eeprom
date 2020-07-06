@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # rpi-eeprom-config
 # Utility for reading and writing the configuration file in the
