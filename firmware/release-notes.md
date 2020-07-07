@@ -4,7 +4,7 @@ USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
 
-## 2020-07-09 Promote 2020-06-15 to STABLE
+## 2020-07-09 Tweak USB port power and clear ACT LED after SPI - BETA
    * Increase port power off limit to 5 seconds.
    * Increase the port power off default to 1 second. This seems to cover most
      commonly seen USB MSD devices which require the USB port power to be disabled
