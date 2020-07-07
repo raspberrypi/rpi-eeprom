@@ -1,6 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-## 2020-06-17 Promote 2020-06-16 to STABLE
+USB MSD boot also requires updated beta GPU firmware. Please read
+https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
+
+
+## 2020-07-09 Tweak USB port power and clear ACT LED after SPI - BETA
+   * Increase port power off limit to 5 seconds.
+   * Increase the port power off default to 1 second. This seems to cover most
+     commonly seen USB MSD devices which require the USB port power to be disabled
+     after the USB HC chip is reset.
+   * Reset activity LED after SPI access to reduce the number of spurious LED flashes.
+   * Add SPI error diagnostic error code (3 long 1 short) if SPI commands timeout.
+     (So far this failure has not been observed on failed boards)
+
+## 2020-06-17 Promote 2020-06-15 to STABLE
    * Promote the latest beta EEPROM and recovery.bin to stable and
      feature freeze USB MSD support until a production release is ready.
 
