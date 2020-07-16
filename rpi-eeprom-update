@@ -32,6 +32,7 @@ USE_FLASHROM=${USE_FLASHROM:-0}
 RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recovery.bin}
 BOOTFS=${BOOTFS:-/boot}
 VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
+CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -176,7 +177,7 @@ applyRecoveryUpdate()
 }
 
 applyUpdate() {
-   checksums_file="/var/lib/dpkg/info/rpi-eeprom-images.md5sums"
+   checksums_file="/var/lib/dpkg/info/rpi-eeprom.md5sums"
 
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
@@ -185,7 +186,7 @@ applyUpdate() {
          cd /
          if ! md5sum -c "${checksums_file}" > /dev/null 2>&1; then
             md5sum -c "${checksums_file}"
-            die "rpi-eeprom-images checksums failed - try reinstalling this package"
+            die "rpi-eeprom checksums failed - try reinstalling this package"
          fi
       )
    fi
@@ -271,6 +272,12 @@ checkDependencies() {
 
    BOARD_TYPE=$(((0x$BOARD_INFO >> 4) & 0xff))
    BOARD_REVISION=$((0x$BOARD_INFO & 0xf))
+
+   if [ ${BOARD_TYPE} -eq 20 ] && [ ${CM4_ENABLE_RPI_EEPROM_UPDATE} != '1' ]; then
+      # For CM4, USB device boot is the recommended method for EEPROM updates.
+      echo "rpi-eeprom-update is not enabled by default on CM4"
+      exit ${EXIT_SUCCESS}
+   fi
 
    if [ ${BOARD_TYPE} -eq 17 ] && [ ${BOARD_REVISION} -lt 4 ]; then
       echo "Dedicated VL805 EEPROM detected"

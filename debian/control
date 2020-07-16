@@ -2,7 +2,7 @@ Source: rpi-eeprom
 Section: misc
 Priority: optional
 Maintainer: Serge Schneider <serge@raspberrypi.org>
-Build-Depends: debhelper (>= 11), help2man, python-minimal | python3-minimal
+Build-Depends: debhelper (>= 11), help2man, python-minimal
 Standards-Version: 4.1.3
 Homepage: https://github.com/raspberrypi/rpi-eeprom/
 Vcs-Browser: https://github.com/raspberrypi/rpi-eeprom/
@@ -11,7 +11,7 @@ Vcs-Git: https://github.com/raspberrypi/rpi-eeprom.git
 Package: rpi-eeprom
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, rpi-eeprom-images, libraspberrypi-bin,
- python | python3, binutils, raspberrypi-bootloader (>= 1.20190819), pciutils
+ python, binutils, raspberrypi-bootloader (>= 1.20190819), pciutils
 Breaks: rpi-eeprom-images (<<7.2)
 Replaces: rpi-eeprom-images (<<7.2)
 Recommends: flashrom
@@ -22,7 +22,7 @@ Description: Raspberry Pi 4 boot EEPROM updater
 
 Package: rpi-eeprom-images
 Architecture: all
-Depends: rpi-eeprom (>=7.2)
+Depends: ${misc:Depends}, rpi-eeprom (>=7.2)
 Priority: optional
 Section: oldlibs
 Description: transitional package

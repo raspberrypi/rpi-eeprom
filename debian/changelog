@@ -1,3 +1,30 @@
+rpi-eeprom (7.5-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Feature requests
+  * Update bug_report.md
+  * Fix date in release notes see #158
+
+  [ RaspberryPiFan ]
+  * Fix a link
+
+  [ Tim Gover ]
+  * Update releases.md
+
+  [ Dave Jones ]
+  * Query checksums from rpi-eeprom instead of rpi-eeprom-images
+
+  [ Pyry Kontio ]
+  * Use /usr/bin/env python to make rpi-eeprom-config more portable
+
+  [ Tim Gover ]
+  * pieeprom-2020-07-06 - BETA
+    - Tweak USB port power and clear ACT LED after SPI
+  * Fix release notes title
+  * Disable rpi-eeprom-update by default on CM4
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 08 Jul 2020 00:18:35 +0100
+
 rpi-eeprom (7.4-1) buster; urgency=medium
 
   [ Tim Gover ]
