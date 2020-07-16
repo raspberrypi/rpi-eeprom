@@ -3,6 +3,35 @@
 USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-07-16 Update VL805 FW to 0138A1 and add optional EEPROM write-protect - BETA
+   * Update the VL805 embedded / standalone FW version to 0138A1
+      *  User settings of the ASPM bits in the PCI configuration space
+         link control register are now maintained
+      * Better full-speed Isochronous endpoint support
+   * Add eeprom_write_protect config.txt variable which if set configures
+     the non-volatile status register bits to define the write protect
+     regions.
+      * If 1 then configure the write protect regions for both the
+        bootloader and VLI EEPROMs to cover the entire EEPROM.
+      * If zero then clear all write protect bits.
+      * If missing or -1 then don't change the current state.
+   * The write protect is only effective if the /WP pin is pulled low
+     e.g. by shorting TP5 to ground.
+   * WARNING: Previous versions of the bootloader, recovery.bin and vl805
+     tool do NOT clear the non-volatile status bits for the VL805 SPI EEPROM.
+     Consequently, installing an older version will fail/hang if the write
+     protect bits have not been cleared first (eeprom_write_protect=0)
+   * Update the vl805 user-space tool to clear the WP bits.
+   * Add recovery_wait config.txt option which if set to 1 forces the EEPROM
+     rescue image and flashes the activity LED forever. This is intended for
+     use with an SD card image which just contains recovery.bin + config.txt
+     and is used to set/clear WP on multiple boards.
+   * The write protect functionality works with self-update mode, however,
+     the bootloader must have already been updated to the version supporting
+     write protect first i.e. at least two reboots are required.
+   * Update the HDMI diagnostics screen to display 'RO' after the EEPROM version
+     if the write status register for the bootloader SPI EEPROM has write protect
+     bits defined. This does NOT attempt to verify if /WP is low.
 
 ## 2020-07-06 Tweak USB port power and clear ACT LED after SPI - BETA
    * Increase port power off limit to 5 seconds.
