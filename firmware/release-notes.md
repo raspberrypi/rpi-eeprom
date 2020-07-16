@@ -4,6 +4,8 @@ USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
 ## 2020-07-16 Update VL805 FW to 0138A1 and add optional EEPROM write-protect - BETA
+   * Patch previous 2020-07-16 from c44ee87f -> 45291ce6 to fix a CM4 specific
+     issue which does not impact Model B
    * Update the VL805 embedded / standalone FW version to 0138A1
       *  User settings of the ASPM bits in the PCI configuration space
          link control register are now maintained
