@@ -1,3 +1,14 @@
+rpi-eeprom (7.6-1) buster; urgency=medium
+
+  [ Alessandro Petrelli ]
+  * correct date
+
+  [ Tim Gover ]
+  * pieeprom-2020-07-16: VL805 0138A1 plus optional EEPROM write protect
+  * Change "update required" message to "update available"
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 16 Jul 2020 15:14:23 +0100
+
 rpi-eeprom (7.5-1) buster; urgency=medium
 
   [ Tim Gover ]
