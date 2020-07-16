@@ -1,3 +1,10 @@
+rpi-eeprom (7.7-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2020-07-16 - Fix CM4 startup issue
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 16 Jul 2020 18:55:34 +0100
+
 rpi-eeprom (7.6-1) buster; urgency=medium
 
   [ Alessandro Petrelli ]
