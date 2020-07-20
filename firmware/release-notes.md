@@ -3,6 +3,12 @@
 USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-07-20 Promote 2020-07-16 bootloader and VL805 0138A1 FW to stable - STABLE
+   * Promote the latest beta to stable as the next production firmware release
+     candidate.
+     The main difference between this and the previous stable version is
+     the VL805 FW update. 
+
 ## 2020-07-16 Update VL805 FW to 0138A1 and add optional EEPROM write-protect - BETA
    * Patch previous 2020-07-16 from c44ee87f -> 45291ce6 to fix a CM4 specific
      issue which does not impact Model B
