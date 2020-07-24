@@ -285,7 +285,7 @@ checkDependencies() {
       exit ${EXIT_SUCCESS}
    fi
 
-   if [ ${BOARD_TYPE} -eq 17 ] && [ ${BOARD_REVISION} -lt 4 ]; then
+   if [ ${BOARD_TYPE} -eq 17 ] && [ ${BOARD_REVISION} -le 4 ]; then
       echo "Dedicated VL805 EEPROM detected"
       HAVE_VL805_EEPROM=1
    else
