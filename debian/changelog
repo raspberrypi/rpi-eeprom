@@ -1,3 +1,13 @@
+rpi-eeprom (7.9-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Update releases.md
+  * rpi-eeprom-update: Set file permissions on the EEPROM update files
+  * Rename .config.yml to config.yml
+  * pieeprom-2020-07-31.bin - Standardize USB port power off across Pi4 models
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 03 Aug 2020 11:04:37 +0100
+
 rpi-eeprom (7.8-1) buster; urgency=medium
 
   [ Tim Gover ]
