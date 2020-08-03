@@ -164,12 +164,18 @@ applyRecoveryUpdate()
 
         cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
                 || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
+
+        # For NFS mounts ensure that the files are readable to the TFTP user
+        chmod -f go+r "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
    fi
 
    if [ -n "${VL805_UPDATE_IMAGE}" ]; then
         sha256sum "${VL805_UPDATE_IMAGE}" | awk '{print $1}' > "${BOOTFS}/vl805.sig" \
                 || die "Failed to create ${BOOTFS}/vl805.sig"
         cp -f "${VL805_UPDATE_IMAGE}" "${BOOTFS}/vl805.bin"
+
+        # For NFS mounts ensure that the files are readable to the TFTP user
+        chmod -f go+r "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
    fi
 
    cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" \
