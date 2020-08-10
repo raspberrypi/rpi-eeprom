@@ -3,15 +3,20 @@
 USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-08-10 Promote 2020-07-31 release to STABLE
+   * The USB port power management change from the last BETA improves
+     compatiblity for devices which during reset with no regressions reported.
+     Make this the latest stable release.
+
 ## 2020-07-31 Standardize USB port power control accross board revisions - BETA
-   * Turn off USB power power for 1-second regardless of boot-mode. This appears
+   * Turn off USB port power for 1-second regardless of boot-mode. This appears
      to resolve an issue on R1.3 and older board revisions where some USB
      devices would fail upon reboot. On R1.4 USB port power is turned off
      automatically by the PMIC so this is just held in reset for longer. For
      earlier board revisions the USB port power is explicitly turned off via
      XHCI.
      This can be overriden via USB_MSD_PWR_OFF_TIME in the EEPROM config.
-   * Update the to latest Broadcom memsys FW - no significant functional change.
+   * Update to the latest Broadcom memsys FW - no significant functional change.
 
 ## 2020-07-20 Promote 2020-07-16 bootloader and VL805 0138A1 FW to stable - STABLE
    * Promote the latest beta to stable as the next production firmware release
