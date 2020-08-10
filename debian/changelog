@@ -1,3 +1,13 @@
+rpi-eeprom (7.10-1) buster; urgency=medium
+
+  [ Andrew Scheller ]
+  * Typos
+
+  [ Tim Gover ]
+  * Promote beta 2020-07-31 to stable
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 10 Aug 2020 14:17:42 +0100
+
 rpi-eeprom (7.9-1) buster; urgency=medium
 
   [ Tim Gover ]
