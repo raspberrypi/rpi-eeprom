@@ -7,7 +7,7 @@ utility. However, it's sometimes more convenient to use a recovery image to prog
 Release notes are available [here](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware/release-notes.md).
 
 ## Recovery image
-The latest production recovery image is [2020-04-16](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.04.16-137ad). This
+The latest production recovery image is [2020-07-31](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.07.31-138a1). This
 is the version selected by the [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/).
 
 ## USB MSD boot
