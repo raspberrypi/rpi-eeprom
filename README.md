@@ -1,11 +1,11 @@
 # rpi-eeprom
-This repository contains the scripts and pre-compiled binaries used to create the rpi-eeprom package which is used to update the Raspberry Pi4 bootloader and VLI EEPROMs.
+This repository contains the scripts and pre-compiled binaries used to create the `rpi-eeprom` package which is used to update the Raspberry Pi 4 bootloader and VLI EEPROMs.
 
 # Support
-Please check the Raspberry Pi [General Users forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) if you have a support question. 
+Please check the Raspberry Pi [general discussion forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) if you have a support question. 
 
 # Reset to factory defaults
-The [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) provides a EEPROM recovery image which may be used to reset the bootloader and VLI EEPROMs to factory defaults.
+The [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) provides an EEPROM recovery image which may be used to reset the bootloader and VLI EEPROMs to factory defaults.
 
 # Bootloader documentation
 * [The boot folder](https://www.raspberrypi.org/documentation/configuration/boot_folder.md)
