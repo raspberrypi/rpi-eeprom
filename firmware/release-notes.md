@@ -3,6 +3,12 @@
 USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-08-31 Disable self-update from SD card - BETA
+   * Since the ROM will load recovery.bin from the SD card self update is not
+     required. Although it functions correctly there is a small risk stale
+     pieeprom.upd files would be installed automatically e.g. if the
+     rpi-eeprom-update service has been disabled.
+
 ## 2020-08-10 Promote 2020-07-31 release to STABLE
    * The USB port power management change from the last BETA improves
      compatiblity for devices which during reset with no regressions reported.
