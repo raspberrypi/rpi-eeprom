@@ -1,3 +1,22 @@
+rpi-eeprom (7.11-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2020-08-31 - Disable self update mode from SD cards
+  * Update link to latest stable release
+  * Update releases.md
+  * Update README.md
+
+  [ andrum99 ]
+  * Update README.md
+
+  [ Hristo Venev ]
+  * rpi-eeprom-update: Upstream kernel fix
+
+  [ Serge Schneider ]
+  * Use Python 3
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 01 Sep 2020 14:02:00 +0100
+
 rpi-eeprom (7.10-1) buster; urgency=medium
 
   [ Andrew Scheller ]
