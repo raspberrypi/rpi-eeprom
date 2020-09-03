@@ -3,6 +3,14 @@
 USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-09-02 Only use green LED for error status in bootloader
+   * Turn the green LED on and leave it on unless an error code occurs.
+     Previously, SD activity was displayed but that plus muxing with the
+     SPI CS made the LED activity confusing.
+     The HDMI diagnostics screen now provides much better information
+     for determing if the bootloader is running or frozen.
+   * CM4 enable GPIO for SD power.
+
 ## 2020-08-31 Disable self-update from SD card - BETA
    * Since the ROM will load recovery.bin from the SD card self update is not
      required. Although it functions correctly there is a small risk stale
