@@ -3,7 +3,7 @@
 USB MSD boot also requires updated beta GPU firmware. Please read
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
-## 2020-09-02 Only use green LED for error status in bootloader
+## 2020-09-02 Only use green LED for error status in bootloader - BETA
    * Turn the green LED on and leave it on unless an error code occurs.
      Previously, SD activity was displayed but that plus muxing with the
      SPI CS made the LED activity confusing.
