@@ -1,3 +1,14 @@
+rpi-eeprom (7.13-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Use od instead of hexdump to simplify package dependencies
+  * pieeprom-2020-09-02: Simplify green activity LED behavior
+
+  [ MichaIng ]
+  * Remove rpi-eeprom-images from dependencies
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 03 Sep 2020 18:43:10 +0100
+
 rpi-eeprom (7.12-1) buster; urgency=medium
 
   [ Tim Brooks ]
