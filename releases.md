@@ -11,11 +11,9 @@ The latest production recovery image is [2020-04-16](https://github.com/raspberr
 is the version selected by the [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/).
 
 ## USB MSD boot
-The latest USB mass storage boot recovery image is [2020-07-31](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.07.31-138a1).
+The latest USB mass storage boot recovery image is [2020-09-03](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.09.03-138a1) and requires Raspberry Pi OS 2020-08-20 or newer.
 
-For support please see this [forum thread](https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=277007)
-
-N.B. Although the bootloader has now been promoted to a stable / feature-freeze release USB MSD should still be considered BETA software because this requires updates to the GPU firmware. 
+For support please see use the Raspberry Pi [general discussion](https://www.raspberrypi.org/forums/viewforum.php?f=63) forum.
 
 ## Previous releases
 All [previous releases](https://github.com/raspberrypi/rpi-eeprom/releases) are available here.
