@@ -268,7 +268,7 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
-   BOARD_INFO="$(od -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' ')"
+   BOARD_INFO="$(od -v -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' \n')"
    if [ $(((0x$BOARD_INFO >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_INFO >> 12) & 15)) -eq 3 ]; then
       echo "BCM2711 detected"
    else
