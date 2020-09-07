@@ -1,3 +1,11 @@
+rpi-eeprom (8.0-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Promote pieeprom-2020-09-03 to STABLE
+  * Update releases.md
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 07 Sep 2020 14:35:50 +0100
+
 rpi-eeprom (7.14-1) buster; urgency=medium
 
   [ Kyle J. McKay ]
