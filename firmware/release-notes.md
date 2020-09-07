@@ -1,7 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-USB MSD boot also requires updated beta GPU firmware. Please read
+USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
+
+## 2020-09-07 Promote 2020-09-03 to release to STABLE
 
 ## 2020-09-03 Only use green LED for error status in bootloader - BETA
    * Turn the green LED on and leave it on unless an error code occurs.
