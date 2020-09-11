@@ -3,6 +3,23 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-09-14 Promote the 2020-09-03 release to be the default EEPROM images.
+   * Promote the 2020-09-03 bootloader EEPROM and VLI 0138A1 as the default
+     release (critical folder).
+    
+   Interesting changes since 2020-04-16:-
+
+   * Add support for booting from USB mass storage devices.
+   * Add support for bootloader updates for USB MSD or network boot (self-update)
+   * Improve compatibility for USB devices which require the USB port power
+     to be switched off for a period of time during a reboot.
+   * Add support GPT and Hybrid MBR partition tables.
+   * Add support for EEPROM write-protect.
+   * Add the ability to loop between different boot-modes until a bootable
+     image is found. The default is to loop between SD and USB-MSD.
+   * VLI 0138A1 - Improve full-speed isochronous endpoint support.
+
+
 ## 2020-09-07 Promote 2020-09-03 to release to STABLE
 
 ## 2020-09-03 Only use green LED for error status in bootloader - BETA
