@@ -1,3 +1,13 @@
+rpi-eeprom (9.0-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2020-09-03: Promote latest stable to default/critical
+  * Update releases.md
+  * Update README.md
+  * Archive 2020-08-31 and 2020-09-02 beta releases.
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 14 Sep 2020 14:27:21 +0100
+
 rpi-eeprom (8.0-1) buster; urgency=medium
 
   [ Tim Gover ]
