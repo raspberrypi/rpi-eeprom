@@ -394,6 +394,8 @@ Options:
    -h Display help text and exit
    -i Ignore package checksums - for rpi-eeprom developers.
    -j Write status information using JSON notation
+   -l Returns the full path to the latest available EEPROM image file according
+      to the FIRMWARE_RELEASE_STATUS and FIRMWARE_IMAGE_DIR settings.
    -m Write status information to the given file when run without -a or -f
    -r Removes temporary EEPROM update files from the boot partition.
    -u Install the specified VL805 (USB EEPROM) image file.
@@ -694,7 +696,7 @@ MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 IGNORE_DPKG_CHECKSUMS=$LOCAL_MODE
 
-while getopts A:adhif:m:ju:r option; do
+while getopts A:adhilf:m:ju:r option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -715,6 +717,11 @@ while getopts A:adhif:m:ju:r option; do
    i) IGNORE_DPKG_CHECKSUMS=1
       ;;
    j) JSON_OUTPUT="yes"
+      ;;
+   l)
+      getBootloaderUpdateVersion
+      echo "${BOOTLOADER_UPDATE_IMAGE}"
+      exit 0
       ;;
    m) MACHINE_OUTPUT="${OPTARG}"
       ;;
