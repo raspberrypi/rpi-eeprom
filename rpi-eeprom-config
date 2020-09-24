@@ -37,7 +37,15 @@ def exit_handler():
         tmp_image = '%s/pieeprom.upd' % TEMP_DIR
         if os.path.exists(tmp_image):
             os.remove(tmp_image)
+        tmp_conf = '%s/boot.conf' % TEMP_DIR
+        if os.path.exists(tmp_conf):
+            os.remove(tmp_conf)
         os.rmdir(TEMP_DIR)
+
+def create_tempdir():
+    global TEMP_DIR
+    if TEMP_DIR is None:
+        TEMP_DIR = tempfile.mkdtemp()
 
 def exit_error(msg):
     """
@@ -79,17 +87,40 @@ def apply_update(config):
     Applies the config file to the latest available EEPROM image and spawns
     rpi-eeprom-update to schedule the update at the next reboot.
     """
-    global TEMP_DIR
     latest = get_latest_eeprom()
-    TEMP_DIR = tempfile.mkdtemp()
+    create_tempdir()
     tmp_update = "%s/%s" % (TEMP_DIR, 'pieeprom.upd')
     image = BootloaderImage(latest, tmp_update)
     image.write(config)
+    config_str = open(config).read()
 
-    sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig: %s\n" % (latest, config))
+    sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig: %s\n%s\n" %
+                     (latest, config, config_str))
     args = ['sudo', 'rpi-eeprom-update', '-d', '-f', tmp_update]
     resp = shell_cmd(args)
     sys.stdout.write(resp)
+
+def edit_config():
+    """
+    Implements something like visudo for editing EEPROM configs.
+    """
+    if 'EDITOR' not in os.environ:
+        exit_error('EDITOR environment variable not defined')
+    create_tempdir()
+    current_config = read_current_config()
+    tmp_conf = "%s/boot.conf" % TEMP_DIR
+    out = open(tmp_conf, 'w')
+    out.write(current_config)
+    out.close()
+    cmd = "\'%s\' \'%s\'" % (os.environ['EDITOR'], tmp_conf)
+    result = os.system(cmd)
+    if result != 0:
+        exit_error("Aborting update because \'%s\' exited with code %d." % (cmd, result))
+
+    new_config = open(tmp_conf, 'r').read()
+    if len(new_config.splitlines()) < 2:
+        exit_error("Aborting update because \'%s\' appears to be empty." % tmp_conf)
+    apply_update(tmp_conf)
 
 def read_current_config():
     """
@@ -217,8 +248,17 @@ Operating modes:
    The latest available image is determined by querying \'rpi-eeprom-update -l\'
    and depends on the rpi-eeprom-update configuration.
 
-Bootloader EEPROM images are contained in the \'rpi-eeprom-images\' package,
-which installs them to the /lib/firmware/raspberrypi/bootloader directory.'
+5. Launches the default text editor ($EDITOR) to edit the current EEPROM
+   configuration and then invokes rpi-eeprom-update to apply the updated
+   configuration to the latest available EEPROM image and schedule an update
+   at the next reboot.
+
+N.B. The 'current' EEPROM configuration is read via 'vcgencmd bootloader_config'
+and is the configuration that the system was booted with. It does NOT reflect
+any pending updates.
+
+See 'rpi-eeprom-update -h' for more information about the available EEPROM
+images.
 """
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=description)
@@ -226,11 +266,14 @@ which installs them to the /lib/firmware/raspberrypi/bootloader directory.'
     parser.add_argument('-a', '--apply', required=False,
                         help='Updates the bootloader to the given config plus latest available EEPROM release.')
     parser.add_argument('-c', '--config', help='Name of bootloader configuration file', required=False)
+    parser.add_argument('-e', '--edit', action='store_true', default=False, help='Edit the current EEPROM config')
     parser.add_argument('-o', '--out', help='Name of output file', required=False)
     parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
 
-    if args.apply is not None:
+    if args.edit:
+        edit_config()
+    elif args.apply is not None:
         if not os.path.exists(args.apply):
             exit_error("config file '%s' not found" % args.apply)
         apply_update(args.apply)
@@ -243,7 +286,11 @@ which installs them to the /lib/firmware/raspberrypi/bootloader directory.'
         else:
             image.read()
     elif args.config is None and args.eeprom is None:
-        sys.stdout.write(read_current_config())
+        current_config = read_current_config()
+        if args.out is not None:
+            open(args.out, 'w').write(current_config)
+        else:
+            sys.stdout.write(current_config)
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
