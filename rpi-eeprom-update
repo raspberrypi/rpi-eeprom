@@ -71,8 +71,12 @@ VL805_UPDATE_VERSION=
 # The update actions selected by the version check
 ACTION_UPDATE_BOOTLOADER=0
 ACTION_UPDATE_VL805=0
+CHECKSUMS=''
 
 cleanup() {
+   if [ -f "${CHECKSUMS}" ]; then
+      rm -f "${CHECKSUMS}"
+   fi
    if [ -f "${TMP_EEPROM_IMAGE}" ]; then
       rm -f "${TMP_EEPROM_IMAGE}"
    fi
@@ -183,15 +187,17 @@ applyRecoveryUpdate()
 }
 
 applyUpdate() {
-   checksums_file="/var/lib/dpkg/info/rpi-eeprom.md5sums"
+   package_checksums_file="/var/lib/dpkg/info/rpi-eeprom.md5sums"
+   CHECKSUMS=$(mktemp)
+   cat "${package_checksums_file}" | grep -E '\.bin$' > "${CHECKSUMS}"
 
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
-   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ] && [ -f "${checksums_file}" ]; then
+   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ] && [ -f "${CHECKSUMS}" ]; then
       (
          cd /
-         if ! md5sum -c "${checksums_file}" > /dev/null 2>&1; then
-            md5sum -c "${checksums_file}"
+         if ! md5sum -c "${CHECKSUMS}" > /dev/null 2>&1; then
+            md5sum -c "${CHECKSUMS}"
             die "rpi-eeprom checksums failed - try reinstalling this package"
          fi
       )
