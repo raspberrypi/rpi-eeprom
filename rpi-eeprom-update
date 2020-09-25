@@ -147,6 +147,7 @@ applyRecoveryUpdate()
    [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || [ -n "${VL805_UPDATE_IMAGE}" ] || die "No update images specified"
 
    findBootFS
+   echo "BOOTFS ${BOOTFS}"
 
    # A '.sig' file is created so that recovery.bin can check that the
    # EEPROM image has not been created (e.g. SD card corruption).
@@ -388,6 +389,7 @@ retained.
 Options:
    -a Automatically install bootloader and USB (VLI) EEPROM updates.
    -A Specify which type of EEPROM to automatically update (vl805 or bootloader)
+   -b Outputs the path that pending EEPROM updates will be written to.
    -d Use the default bootloader config, or if a file is specified using the -f
       flag use the config in that file. This option only applies when a
       bootloader EEPROM update is needed; if the bootloader EEPROM is up-to-date
@@ -513,9 +515,7 @@ findBootFS()
    # If BOOTFS is not a directory or doesn't contain any .elf files then
    # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
-   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ]; then
-      echo "BOOTFS ${BOOTFS}"
-   else
+   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" = 0 ]; then
       echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
    fi
 }
@@ -700,7 +700,7 @@ MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 IGNORE_DPKG_CHECKSUMS=$LOCAL_MODE
 
-while getopts A:adhilf:m:ju:r option; do
+while getopts A:abdhilf:m:ju:r option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -713,6 +713,11 @@ while getopts A:adhilf:m:ju:r option; do
       ;;
    a) AUTO_UPDATE_BOOTLOADER=1
       AUTO_UPDATE_VL805=1
+      ;;
+   b) 
+      findBootFS    
+      echo ${BOOTFS}
+      exit 0
       ;;
    d) OVERWRITE_CONFIG=1
       ;;
