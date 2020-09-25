@@ -34,10 +34,10 @@ def exit_handler():
     Delete any temporary files.
     """
     if TEMP_DIR is not None and os.path.exists(TEMP_DIR):
-        tmp_image = '%s/pieeprom.upd' % TEMP_DIR
+        tmp_image = os.path.join(TEMP_DIR, 'pieeprom.upd')
         if os.path.exists(tmp_image):
             os.remove(tmp_image)
-        tmp_conf = '%s/boot.conf' % TEMP_DIR
+        tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
         if os.path.exists(tmp_conf):
             os.remove(tmp_conf)
         os.rmdir(TEMP_DIR)
@@ -56,15 +56,20 @@ def exit_error(msg):
     sys.exit(1)
 
 def shell_cmd(args):
+    """
+    Executes a shell command waits for completion returning STDOUT. If an
+    error occurs then exit and output the subprocess stdout, stderr messages
+    for debug.
+    """
     start = time.time()
     arg_str = ' '.join(args)
-    result = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    result = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     while time.time() - start < 5:
         if result.poll() is not None:
             break
 
-    if result.poll is None:
+    if result.poll() is None:
         exit_error("%s timeout" % arg_str)
 
     if result.returncode != 0:
@@ -82,25 +87,28 @@ def get_latest_eeprom():
         exit_error("EEPROM image '%s' not found" % latest)
     return latest
 
-def apply_update(config):
+def apply_update(config, eeprom=None):
     """
     Applies the config file to the latest available EEPROM image and spawns
     rpi-eeprom-update to schedule the update at the next reboot.
     """
-    latest = get_latest_eeprom()
+    if eeprom is not None:
+       eeprom_image = eeprom
+    else:
+       eeprom_image = get_latest_eeprom()
     create_tempdir()
-    tmp_update = "%s/%s" % (TEMP_DIR, 'pieeprom.upd')
-    image = BootloaderImage(latest, tmp_update)
+    tmp_update = os.path.join(TEMP_DIR, 'pieeprom.upd')
+    image = BootloaderImage(eeprom_image, tmp_update)
     image.write(config)
     config_str = open(config).read()
 
     sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig: %s\n%s\n" %
-                     (latest, config, config_str))
+                     (eeprom_image, config, config_str))
     args = ['sudo', 'rpi-eeprom-update', '-d', '-f', tmp_update]
     resp = shell_cmd(args)
     sys.stdout.write(resp)
 
-def edit_config():
+def edit_config(eeprom=None):
     """
     Implements something like visudo for editing EEPROM configs.
     """
@@ -108,7 +116,7 @@ def edit_config():
         exit_error('EDITOR environment variable not defined')
     create_tempdir()
     current_config = read_current_config()
-    tmp_conf = "%s/boot.conf" % TEMP_DIR
+    tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
     out = open(tmp_conf, 'w')
     out.write(current_config)
     out.close()
@@ -120,7 +128,7 @@ def edit_config():
     new_config = open(tmp_conf, 'r').read()
     if len(new_config.splitlines()) < 2:
         exit_error("Aborting update because \'%s\' appears to be empty." % tmp_conf)
-    apply_update(tmp_conf)
+    apply_update(tmp_conf, eeprom)
 
 def read_current_config():
     """
@@ -221,15 +229,15 @@ def main():
 Bootloader EEPROM configuration tool for the Raspberry Pi 4.
 Operating modes:
 
-1. Output the current bootloader to configuration STDOUT if no arguments are
+1. Outputs the current bootloader configuration to STDOUT if no arguments are
    specified OR the given output file if --out is specified.
 
-   rpi-eeprom-config (--out boot.conf)
+   rpi-eeprom-config [--out boot.conf]
 
 2. Extracts the configuration file from the given \'eeprom\' file and outputs
    the result to STDOUT or the output file if --output is specified.
 
-   rpi-eeprom-config pieeprom.bin (--out boot.conf)
+   rpi-eeprom-config pieeprom.bin [--out boot.conf]
 
 3. Writes a new EEPROM image replacing the configuration file with the contents
    of the file specified by --config.
@@ -239,23 +247,24 @@ Operating modes:
    The new image file can be installed via rpi-eeprom-update
    rpi-eeprom-update -d -f newimage.bin
 
-4. Applies a given config file to the latest available EEPROM image and
-   invokes rpi-eeprom-update to update the bootloader when the system is
-   rebooted.
+4. Applies a given config file an EEPROM image and invokes rpi-eeprom-update
+   to schedule an update of the bootloader when the system is rebooted.
 
-   rpi-eeprom-config --apply boot.conf
+   rpi-eeprom-config --apply boot.conf [pieeprom.bin]
 
-   The latest available image is determined by querying \'rpi-eeprom-update -l\'
-   and depends on the rpi-eeprom-update configuration.
+   If the \'eeprom\' argument is not specified then the latest available image
+   is selected by calling \'rpi-eeprom-update -l\'.
 
-5. Launches the default text editor ($EDITOR) to edit the current EEPROM
-   configuration and then invokes rpi-eeprom-update to apply the updated
-   configuration to the latest available EEPROM image and schedule an update
-   at the next reboot.
+5. The `--edit` parameter behaves the same as `--apply` except that instead of
+   applying a predefined configuration file the default text editor ($EDITOR) is
+   launched with the contents of the current EEPROM configuration.
 
-N.B. The 'current' EEPROM configuration is read via 'vcgencmd bootloader_config'
-and is the configuration that the system was booted with. It does NOT reflect
-any pending updates.
+   N.B. The 'current' EEPROM configuration is read via 'vcgencmd bootloader_config'
+   and is the configuration that the system was booted with. It does not reflect any
+   pending updates so invoking this a second time without rebooting would discard
+   any previous edits.
+
+   rpi-eeprom-config --edit [pieeprom.bin]
 
 See 'rpi-eeprom-update -h' for more information about the available EEPROM
 images.
@@ -272,11 +281,11 @@ images.
     args = parser.parse_args()
 
     if args.edit:
-        edit_config()
+        edit_config(args.eeprom)
     elif args.apply is not None:
         if not os.path.exists(args.apply):
             exit_error("config file '%s' not found" % args.apply)
-        apply_update(args.apply)
+        apply_update(args.apply, args.eeprom)
     elif args.eeprom is not None:
         image = BootloaderImage(args.eeprom, args.out)
         if args.config is not None:
