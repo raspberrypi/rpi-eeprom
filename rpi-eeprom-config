@@ -87,23 +87,24 @@ def get_latest_eeprom():
         exit_error("EEPROM image '%s' not found" % latest)
     return latest
 
-def apply_update(config, eeprom=None):
+def apply_update(config, eeprom=None, config_src=None):
     """
     Applies the config file to the latest available EEPROM image and spawns
     rpi-eeprom-update to schedule the update at the next reboot.
     """
     if eeprom is not None:
-       eeprom_image = eeprom
+        eeprom_image = eeprom
     else:
-       eeprom_image = get_latest_eeprom()
+        eeprom_image = get_latest_eeprom()
     create_tempdir()
     tmp_update = os.path.join(TEMP_DIR, 'pieeprom.upd')
     image = BootloaderImage(eeprom_image, tmp_update)
     image.write(config)
     config_str = open(config).read()
-
-    sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig: %s\n%s\n" %
-                     (eeprom_image, config, config_str))
+    if config_src is None:
+        config_src = ''
+    sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig_src: %s\nconfig: %s\n%s\n" %
+                     (eeprom_image, config_src, config, config_str))
 
     # Ignore APT package checksums so that this doesn't fail when used
     # with EEPROMs with configs delivered outside of APT.
@@ -117,12 +118,31 @@ def edit_config(eeprom=None):
     Implements something like visudo for editing EEPROM configs.
     """
     # Default to nano if $EDITOR is not defined.
-    editor='nano'
+    editor = 'nano'
     if 'EDITOR' in os.environ:
-       editor=os.environ['EDITOR']
+        editor = os.environ['EDITOR']
+
+    config_src = ''
+    if eeprom is None:
+        # If an EEPROM has not been specified but there is a pending
+        # update then use that as the current EEPROM image.
+        bootfs = shell_cmd(['rpi-eeprom-update', '-b']).rstrip()
+        pending = os.path.join(bootfs, 'pieeprom.upd')
+        if os.path.exists(pending):
+            config_src = pending
+            image = BootloaderImage(pending)
+            current_config = image.get_config()
+        else:
+            config_src = 'vcgencmd bootloader_config'
+            current_config = read_current_config()
+    else:
+        # If an EEPROM image is specified OR there is pending update
+        # then get the current config from there.
+        image = BootloaderImage(eeprom)
+        config_src = eeprom
+        current_config = image.get_config()
 
     create_tempdir()
-    current_config = read_current_config()
     tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
     out = open(tmp_conf, 'w')
     out.write(current_config)
@@ -135,19 +155,16 @@ def edit_config(eeprom=None):
     new_config = open(tmp_conf, 'r').read()
     if len(new_config.splitlines()) < 2:
         exit_error("Aborting update because \'%s\' appears to be empty." % tmp_conf)
-    apply_update(tmp_conf, eeprom)
+    apply_update(tmp_conf, eeprom, config_src)
 
 def read_current_config():
     """
     Reads the configuration used by the current bootloader.
     """
-    result = shell_cmd(['vcgencmd', 'bootloader_config'])
-    if result is None:
-        exit_error('Failed to read the current bootloader configuration')
-    return result
+    return shell_cmd(['vcgencmd', 'bootloader_config'])
 
 class BootloaderImage(object):
-    def __init__(self, filename, output):
+    def __init__(self, filename, output=None):
         """
         Instantiates a Bootloader image writer with a source eeprom (filename)
         and optionally an output filename.
@@ -214,10 +231,14 @@ class BootloaderImage(object):
             else:
                 sys.stdout.write(self._bytes)
 
-    def read(self):
+    def get_config(self):
         hdr_offset, length = self.find_config()
         offset = hdr_offset + 4 + FILE_HDR_LEN
         config_bytes = self._bytes[offset:offset+length-FILENAME_LEN-4]
+        return config_bytes
+
+    def read(self):
+        config_bytes = self.get_config()
         if self._out is not None:
             self._out.write(config_bytes)
             self._out.close()
@@ -266,10 +287,10 @@ Operating modes:
    applying a predefined configuration file the default text editor ($EDITOR) is
    launched with the contents of the current EEPROM configuration.
 
-   N.B. The 'current' EEPROM configuration is read via 'vcgencmd bootloader_config'
-   and is the configuration that the system was booted with. It does not reflect any
-   pending updates so invoking this a second time without rebooting would discard
-   any previous edits.
+   The configuration file will be taken from:
+       * The `eeprom` file - if specified.
+       * The current pending update - typically /boot/pieeprom.upd
+       * The cached bootloader configuration 'vcgencmd bootloader_config'
 
    rpi-eeprom-config --edit [pieeprom.bin]
 
@@ -292,7 +313,7 @@ images.
     elif args.apply is not None:
         if not os.path.exists(args.apply):
             exit_error("config file '%s' not found" % args.apply)
-        apply_update(args.apply, args.eeprom)
+        apply_update(args.apply, args.eeprom, args.apply)
     elif args.eeprom is not None:
         image = BootloaderImage(args.eeprom, args.out)
         if args.config is not None:
