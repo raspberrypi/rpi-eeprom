@@ -104,7 +104,11 @@ def apply_update(config, eeprom=None):
 
     sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig: %s\n%s\n" %
                      (eeprom_image, config, config_str))
-    args = ['sudo', 'rpi-eeprom-update', '-d', '-f', tmp_update]
+
+    # Ignore APT package checksums so that this doesn't fail when used
+    # with EEPROMs with configs delivered outside of APT.
+    # The checksums are really just a safety check for automatic updates.
+    args = ['sudo', 'rpi-eeprom-update', '-d', '-i', '-f', tmp_update]
     resp = shell_cmd(args)
     sys.stdout.write(resp)
 
@@ -112,15 +116,18 @@ def edit_config(eeprom=None):
     """
     Implements something like visudo for editing EEPROM configs.
     """
-    if 'EDITOR' not in os.environ:
-        exit_error('EDITOR environment variable not defined')
+    # Default to nano if $EDITOR is not defined.
+    editor='nano'
+    if 'EDITOR' in os.environ:
+       editor=os.environ['EDITOR']
+
     create_tempdir()
     current_config = read_current_config()
     tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
     out = open(tmp_conf, 'w')
     out.write(current_config)
     out.close()
-    cmd = "\'%s\' \'%s\'" % (os.environ['EDITOR'], tmp_conf)
+    cmd = "\'%s\' \'%s\'" % (editor, tmp_conf)
     result = os.system(cmd)
     if result != 0:
         exit_error("Aborting update because \'%s\' exited with code %d." % (cmd, result))
@@ -247,7 +254,7 @@ Operating modes:
    The new image file can be installed via rpi-eeprom-update
    rpi-eeprom-update -d -f newimage.bin
 
-4. Applies a given config file an EEPROM image and invokes rpi-eeprom-update
+4. Applies a given config file to an EEPROM image and invokes rpi-eeprom-update
    to schedule an update of the bootloader when the system is rebooted.
 
    rpi-eeprom-config --apply boot.conf [pieeprom.bin]
