@@ -268,7 +268,15 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
-   BOARD_INFO="$(od -v -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' \n')"
+
+   if [ -f "/sys/firmware/devicetree/base/system/linux,revision" ]; then
+      BOARD_INFO="$(od -v -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' \n')"
+   elif grep -q Revision /proc/cpuinfo; then
+      BOARD_INFO="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+   else
+      BOARD_INFO="$(vcgencmd otp_dump | grep '30:' | sed 's/.*://')"
+   fi
+
    if [ $(((0x$BOARD_INFO >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_INFO >> 12) & 15)) -eq 3 ]; then
       echo "BCM2711 detected"
    else
