@@ -631,14 +631,16 @@ removePreviousUpdates()
    if [ "$(id -u)" = "0" ]; then
       findBootFS
 
-      # Remove any stale recovery.bin files or EEPROM images
-      # N.B. recovery.bin is normally ignored by the ROM if is not a valid
-      # executable but it's best to not have the file at all.
-      rm -f "${BOOTFS}/recovery.bin"
-      rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
-      rm -f "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
-      # Case insensitive for FAT bootfs
-      find "${BOOTFS}" -maxdepth 1 -type f -follow -iname "recovery.*" -regex '.*\.[0-9][0-9][0-9]$' -exec rm -f {} \;
+      (
+         # Remove any stale recovery.bin files or EEPROM images
+         # N.B. recovery.bin is normally ignored by the ROM if is not a valid
+         # executable but it's best to not have the file at all.
+         rm -f "${BOOTFS}/recovery.bin"
+         rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
+         rm -f "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
+         # Case insensitive for FAT bootfs
+         find "${BOOTFS}" -maxdepth 1 -type f -follow -iname "recovery.*" -regex '.*\.[0-9][0-9][0-9]$' -exec rm -f {} \;
+      ) || die "Failed to remove previous update files"
    fi
 }
 
