@@ -109,7 +109,7 @@ def apply_update(config, eeprom=None, config_src=None):
     # Ignore APT package checksums so that this doesn't fail when used
     # with EEPROMs with configs delivered outside of APT.
     # The checksums are really just a safety check for automatic updates.
-    args = ['sudo', 'rpi-eeprom-update', '-d', '-i', '-f', tmp_update]
+    args = ['rpi-eeprom-update', '-d', '-i', '-f', tmp_update]
     resp = shell_cmd(args)
     sys.stdout.write(resp)
 
@@ -278,7 +278,10 @@ Operating modes:
 4. Applies a given config file to an EEPROM image and invokes rpi-eeprom-update
    to schedule an update of the bootloader when the system is rebooted.
 
-   rpi-eeprom-config --apply boot.conf [pieeprom.bin]
+   Since this command launches rpi-eeprom-update to schedule the EERPOM update
+   it must be run as root.
+
+   sudo rpi-eeprom-config --apply boot.conf [pieeprom.bin]
 
    If the \'eeprom\' argument is not specified then the latest available image
    is selected by calling \'rpi-eeprom-update -l\'.
@@ -287,12 +290,15 @@ Operating modes:
    applying a predefined configuration file the default text editor ($EDITOR) is
    launched with the contents of the current EEPROM configuration.
 
+   Since this command launches rpi-eeprom-update to schedule the EERPOM update
+   it must be run as root.
+
    The configuration file will be taken from:
        * The `eeprom` file - if specified.
        * The current pending update - typically /boot/pieeprom.upd
        * The cached bootloader configuration 'vcgencmd bootloader_config'
 
-   rpi-eeprom-config --edit [pieeprom.bin]
+   sudo rpi-eeprom-config --edit [pieeprom.bin]
 
 See 'rpi-eeprom-update -h' for more information about the available EEPROM
 images.
@@ -307,6 +313,10 @@ images.
     parser.add_argument('-o', '--out', help='Name of output file', required=False)
     parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
+
+
+    if (args.edit or args.apply is not None) and os.getuid() != 0:
+        exit_error("--edit/--apply must be run as root")
 
     if args.edit:
         edit_config(args.eeprom)
