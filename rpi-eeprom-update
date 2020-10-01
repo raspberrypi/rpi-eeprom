@@ -192,20 +192,26 @@ applyRecoveryUpdate()
 }
 
 applyUpdate() {
-   package_checksums_file="/var/lib/dpkg/info/rpi-eeprom.md5sums"
-   CHECKSUMS=$(mktemp)
-   cat "${package_checksums_file}" | grep -E '\.bin$' > "${CHECKSUMS}"
-
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
-   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ] && [ -f "${CHECKSUMS}" ]; then
+   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ]; then
       (
+         package_info_dir="/var/lib/dpkg/info/"
+         package_checksums_file="${package_info_dir}/rpi-eeprom.md5sums"
+
+         if ! grep -qE '\.bin$' "${package_info_dir}/rpi-eeprom.md5sums"; then
+            # Try the old rpi-eeprom-images package
+            package_checksums_file="${package_info_dir}/rpi-eeprom-images.md5sums"
+         fi
+
+         CHECKSUMS=$(mktemp)
+         cat "${package_checksums_file}" | grep -E '\.bin$' > "${CHECKSUMS}"
          cd /
          if ! md5sum -c "${CHECKSUMS}" > /dev/null 2>&1; then
             md5sum -c "${CHECKSUMS}"
             die "rpi-eeprom checksums failed - try reinstalling this package"
          fi
-      )
+      ) || die "Unable to validate EEPROM image package checksums"
    fi
 
    if [ "${USE_FLASHROM}" = 0 ]; then
