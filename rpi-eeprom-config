@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 
-# rpi-eeprom-config
-# Utility for reading and writing the configuration file in the
-# Raspberry Pi 4 bootloader EEPROM image.
+"""
+rpi-eeprom-config
+"""
 
 import argparse
+import atexit
+import os
+import subprocess
 import struct
 import sys
+import tempfile
+import time
 
 IMAGE_SIZE = 512 * 1024
 
@@ -22,18 +27,160 @@ MAGIC_MASK = 0xfffff00f
 FILE_MAGIC = 0x55aaf11f # id for modifiable file, currently only bootconf.txt
 FILE_HDR_LEN = 20
 FILENAME_LEN = 12
+TEMP_DIR = None
+
+def exit_handler():
+    """
+    Delete any temporary files.
+    """
+    if TEMP_DIR is not None and os.path.exists(TEMP_DIR):
+        tmp_image = os.path.join(TEMP_DIR, 'pieeprom.upd')
+        if os.path.exists(tmp_image):
+            os.remove(tmp_image)
+        tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
+        if os.path.exists(tmp_conf):
+            os.remove(tmp_conf)
+        os.rmdir(TEMP_DIR)
+
+def create_tempdir():
+    global TEMP_DIR
+    if TEMP_DIR is None:
+        TEMP_DIR = tempfile.mkdtemp()
+
+def exit_error(msg):
+    """
+    Trapped a fatal arror, output message to stderr and exit with non-zero
+    return code.
+    """
+    sys.stderr.write("ERROR: %s\n" % msg)
+    sys.exit(1)
+
+def shell_cmd(args):
+    """
+    Executes a shell command waits for completion returning STDOUT. If an
+    error occurs then exit and output the subprocess stdout, stderr messages
+    for debug.
+    """
+    start = time.time()
+    arg_str = ' '.join(args)
+    result = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    while time.time() - start < 5:
+        if result.poll() is not None:
+            break
+
+    if result.poll() is None:
+        exit_error("%s timeout" % arg_str)
+
+    if result.returncode != 0:
+        exit_error("%s failed: %d\n %s\n %s\n" %
+                   (arg_str, result.returncode, result.stdout.read(), result.stderr.read()))
+    else:
+        return result.stdout.read()
+
+def get_latest_eeprom():
+    """
+    Returns the path of the latest EEPROM image file if it exists.
+    """
+    latest = shell_cmd(['rpi-eeprom-update', '-l']).rstrip()
+    if not os.path.exists(latest):
+        exit_error("EEPROM image '%s' not found" % latest)
+    return latest
+
+def apply_update(config, eeprom=None, config_src=None):
+    """
+    Applies the config file to the latest available EEPROM image and spawns
+    rpi-eeprom-update to schedule the update at the next reboot.
+    """
+    if eeprom is not None:
+        eeprom_image = eeprom
+    else:
+        eeprom_image = get_latest_eeprom()
+    create_tempdir()
+    tmp_update = os.path.join(TEMP_DIR, 'pieeprom.upd')
+    image = BootloaderImage(eeprom_image, tmp_update)
+    image.write(config)
+    config_str = open(config).read()
+    if config_src is None:
+        config_src = ''
+    sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig_src: %s\nconfig: %s\n%s\n" %
+                     (eeprom_image, config_src, config, config_str))
+
+    # Ignore APT package checksums so that this doesn't fail when used
+    # with EEPROMs with configs delivered outside of APT.
+    # The checksums are really just a safety check for automatic updates.
+    args = ['rpi-eeprom-update', '-d', '-i', '-f', tmp_update]
+    resp = shell_cmd(args)
+    sys.stdout.write(resp)
+
+def edit_config(eeprom=None):
+    """
+    Implements something like visudo for editing EEPROM configs.
+    """
+    # Default to nano if $EDITOR is not defined.
+    editor = 'nano'
+    if 'EDITOR' in os.environ:
+        editor = os.environ['EDITOR']
+
+    config_src = ''
+    if eeprom is None:
+        # If an EEPROM has not been specified but there is a pending
+        # update then use that as the current EEPROM image.
+        bootfs = shell_cmd(['rpi-eeprom-update', '-b']).rstrip()
+        pending = os.path.join(bootfs, 'pieeprom.upd')
+        if os.path.exists(pending):
+            config_src = pending
+            image = BootloaderImage(pending)
+            current_config = image.get_config()
+        else:
+            config_src = 'vcgencmd bootloader_config'
+            current_config = read_current_config()
+    else:
+        # If an EEPROM image is specified OR there is pending update
+        # then get the current config from there.
+        image = BootloaderImage(eeprom)
+        config_src = eeprom
+        current_config = image.get_config()
+
+    create_tempdir()
+    tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
+    out = open(tmp_conf, 'w')
+    out.write(current_config)
+    out.close()
+    cmd = "\'%s\' \'%s\'" % (editor, tmp_conf)
+    result = os.system(cmd)
+    if result != 0:
+        exit_error("Aborting update because \'%s\' exited with code %d." % (cmd, result))
+
+    new_config = open(tmp_conf, 'r').read()
+    if len(new_config.splitlines()) < 2:
+        exit_error("Aborting update because \'%s\' appears to be empty." % tmp_conf)
+    apply_update(tmp_conf, eeprom, config_src)
+
+def read_current_config():
+    """
+    Reads the configuration used by the current bootloader.
+    """
+    return shell_cmd(['vcgencmd', 'bootloader_config'])
 
 class BootloaderImage(object):
-    def __init__(self, filename, output):
+    def __init__(self, filename, output=None):
+        """
+        Instantiates a Bootloader image writer with a source eeprom (filename)
+        and optionally an output filename.
+        """
         self._filename = filename
-        self._bytes = bytearray(open(filename, 'rb').read())
+        try:
+            self._bytes = bytearray(open(filename, 'rb').read())
+        except IOError as err:
+            exit_error("Failed to read \'%s\'\n%s\n" % (filename, str(err)))
         self._out = None
         if output is not None:
             self._out = open(output, 'wb')
 
         if len(self._bytes) != IMAGE_SIZE:
-            raise Exception("%s: Expected size %d bytes actual size %d bytes" %
-                            (filename, IMAGE_SIZE, len(self._bytes)))
+            exit_error("%s: Expected size %d bytes actual size %d bytes" %
+                       (filename, IMAGE_SIZE, len(self._bytes)))
 
     def find_config(self):
         offset = 0
@@ -51,7 +198,7 @@ class BootloaderImage(object):
             offset += 8 + length # length + type
             offset = (offset + 7) & ~7
 
-        raise Exception('Bootloader config not found')
+        raise Exception('EEPROM parse error: Bootloader config not found')
 
     def write(self, new_config):
         hdr_offset, length = self.find_config()
@@ -59,12 +206,13 @@ class BootloaderImage(object):
         new_len = len(new_config_bytes) + FILENAME_LEN + 4
         if len(new_config_bytes) > MAX_BOOTCONF_SIZE:
             raise Exception("Config is too large (%d bytes). The maximum size is %d bytes."
-                    % (len(new_config_bytes), MAX_BOOTCONF_SIZE))
+                            % (len(new_config_bytes), MAX_BOOTCONF_SIZE))
         if hdr_offset + len(new_config_bytes) + FILE_HDR_LEN > IMAGE_SIZE:
             raise Exception('EEPROM image size exceeded')
 
         struct.pack_into('>L', self._bytes, hdr_offset + 4, new_len)
-        struct.pack_into(("%ds" % len(new_config_bytes)), self._bytes, hdr_offset + 4 + FILE_HDR_LEN, new_config_bytes)
+        struct.pack_into(("%ds" % len(new_config_bytes)), self._bytes,
+                         hdr_offset + 4 + FILE_HDR_LEN, new_config_bytes)
 
         # If the new config is smaller than the old config then set any old
         # data which is now unused to all ones (erase value)
@@ -83,10 +231,14 @@ class BootloaderImage(object):
             else:
                 sys.stdout.write(self._bytes)
 
-    def read(self):
+    def get_config(self):
         hdr_offset, length = self.find_config()
         offset = hdr_offset + 4 + FILE_HDR_LEN
         config_bytes = self._bytes[offset:offset+length-FILENAME_LEN-4]
+        return config_bytes
+
+    def read(self):
+        config_bytes = self.get_config()
         if self._out is not None:
             self._out.write(config_bytes)
             self._out.close()
@@ -97,34 +249,96 @@ class BootloaderImage(object):
                 sys.stdout.write(config_bytes)
 
 def main():
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, \
-    description='Bootloader EEPROM configuration tool for the Raspberry Pi 4. \
-\n\nThere are 3 operating modes: \
-\n\n1. Output the bootloader configuration stored in an EEPROM image file to \
-the screen (STDOUT): specify only the name of an EEPROM image file using the \
-\'eeprom\' option. \
-\n\n2. Output the bootloader configuration stored in an EEPROM image file to a \
-file: specify the EEPROM image file using the \'eeprom\' option, and the output \
-file using the \'--out\' option.\
-\n\n3. Insert a new bootloader configuration into an EEPROM image file: specify \
-the source EEPROM image file using the \'eeprom\' option and the bootloader \
-configuration file using the \'--config\' option. A new file which is a \
-combination of the EEPROM image file, together with the new bootloader \
-configuration file will be created - specify its name using the \'--out\' option. \
-The new bootloader configuration will replace any configuration present in the \
-source EEPROM image.\
-\n\nBootloader EEPROM images are contained in the \'rpi-eeprom-images\' package,\
- which installs them to the /lib/firmware/raspberrypi/bootloader directory.')
-    parser.add_argument('--config', help='Name of bootloader configuration file')
-    parser.add_argument('--out', help='Name of output file')
-    parser.add_argument('eeprom', help='Name of EEPROM file to use as input')
+    """
+    Utility for reading and writing the configuration file in the
+    Raspberry Pi 4 bootloader EEPROM image.
+    """
+    description = """\
+Bootloader EEPROM configuration tool for the Raspberry Pi 4.
+Operating modes:
+
+1. Outputs the current bootloader configuration to STDOUT if no arguments are
+   specified OR the given output file if --out is specified.
+
+   rpi-eeprom-config [--out boot.conf]
+
+2. Extracts the configuration file from the given \'eeprom\' file and outputs
+   the result to STDOUT or the output file if --output is specified.
+
+   rpi-eeprom-config pieeprom.bin [--out boot.conf]
+
+3. Writes a new EEPROM image replacing the configuration file with the contents
+   of the file specified by --config.
+
+   rpi-eeprom-config --config boot.conf --out newimage.bin pieeprom.bin
+
+   The new image file can be installed via rpi-eeprom-update
+   rpi-eeprom-update -d -f newimage.bin
+
+4. Applies a given config file to an EEPROM image and invokes rpi-eeprom-update
+   to schedule an update of the bootloader when the system is rebooted.
+
+   Since this command launches rpi-eeprom-update to schedule the EERPOM update
+   it must be run as root.
+
+   sudo rpi-eeprom-config --apply boot.conf [pieeprom.bin]
+
+   If the \'eeprom\' argument is not specified then the latest available image
+   is selected by calling \'rpi-eeprom-update -l\'.
+
+5. The `--edit` parameter behaves the same as `--apply` except that instead of
+   applying a predefined configuration file the default text editor ($EDITOR) is
+   launched with the contents of the current EEPROM configuration.
+
+   Since this command launches rpi-eeprom-update to schedule the EERPOM update
+   it must be run as root.
+
+   The configuration file will be taken from:
+       * The `eeprom` file - if specified.
+       * The current pending update - typically /boot/pieeprom.upd
+       * The cached bootloader configuration 'vcgencmd bootloader_config'
+
+   sudo rpi-eeprom-config --edit [pieeprom.bin]
+
+See 'rpi-eeprom-update -h' for more information about the available EEPROM
+images.
+"""
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     description=description)
+
+    parser.add_argument('-a', '--apply', required=False,
+                        help='Updates the bootloader to the given config plus latest available EEPROM release.')
+    parser.add_argument('-c', '--config', help='Name of bootloader configuration file', required=False)
+    parser.add_argument('-e', '--edit', action='store_true', default=False, help='Edit the current EEPROM config')
+    parser.add_argument('-o', '--out', help='Name of output file', required=False)
+    parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
 
-    image = BootloaderImage(args.eeprom, args.out)
-    if args.config is not None:
-        image.write(args.config)
-    else:
-        image.read()
+
+    if (args.edit or args.apply is not None) and os.getuid() != 0:
+        exit_error("--edit/--apply must be run as root")
+
+    if args.edit:
+        edit_config(args.eeprom)
+    elif args.apply is not None:
+        if not os.path.exists(args.apply):
+            exit_error("config file '%s' not found" % args.apply)
+        apply_update(args.apply, args.eeprom, args.apply)
+    elif args.eeprom is not None:
+        image = BootloaderImage(args.eeprom, args.out)
+        if args.config is not None:
+            if not os.path.exists(args.config):
+                exit_error("config file '%s' not found" % args.config)
+            image.write(args.config)
+        else:
+            image.read()
+    elif args.config is None and args.eeprom is None:
+        current_config = read_current_config()
+        if args.out is not None:
+            open(args.out, 'w').write(current_config)
+        else:
+            sys.stdout.write(current_config)
 
 if __name__ == '__main__':
+    atexit.register(exit_handler)
     main()
