@@ -262,7 +262,7 @@ Operating modes:
 
    rpi-eeprom-config [--out boot.conf]
 
-2. Extracts the configuration file from the given \'eeprom\' file and outputs
+2. Extracts the configuration file from the given 'eeprom' file and outputs
    the result to STDOUT or the output file if --output is specified.
 
    rpi-eeprom-config pieeprom.bin [--out boot.conf]
@@ -283,22 +283,25 @@ Operating modes:
 
    sudo rpi-eeprom-config --apply boot.conf [pieeprom.bin]
 
-   If the \'eeprom\' argument is not specified then the latest available image
-   is selected by calling \'rpi-eeprom-update -l\'.
+   If the 'eeprom' argument is not specified then the latest available image
+   is selected by calling 'rpi-eeprom-update -l'.
 
-5. The `--edit` parameter behaves the same as `--apply` except that instead of
-   applying a predefined configuration file the default text editor ($EDITOR) is
-   launched with the contents of the current EEPROM configuration.
+5. The '--edit' parameter behaves the same as '--apply' except that instead of
+   applying a predefined configuration file a text editor is launched with the
+   contents of the current EEPROM configuration.
 
    Since this command launches rpi-eeprom-update to schedule the EERPOM update
    it must be run as root.
 
    The configuration file will be taken from:
-       * The `eeprom` file - if specified.
+       * The 'eeprom' file - if specified.
        * The current pending update - typically /boot/pieeprom.upd
        * The cached bootloader configuration 'vcgencmd bootloader_config'
 
-   sudo rpi-eeprom-config --edit [pieeprom.bin]
+   sudo -E rpi-eeprom-config --edit [pieeprom.bin]
+
+   The default text editor is nano and may be overriden by setting the 'EDITOR'
+   environment variable and passing '-E' to 'sudo' to preserve the environment.
 
 See 'rpi-eeprom-update -h' for more information about the available EEPROM
 images.
