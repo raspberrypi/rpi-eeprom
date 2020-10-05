@@ -1,3 +1,27 @@
+rpi-eeprom (10.0-1) buster; urgency=medium
+
+  [ andrum99 ]
+  * Fix package architecture
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Use multiple sources for BOARD_INFO
+  * rpi-eeprom-update: Restrict package checksums to EEPROM images.
+  * rpi-eeprom-update: Add -l option to resolve the latest bootloader image
+  * rpi-eeprom-config: Add new option to apply config and update in one
+    operation
+  * rpi-eeprom-config: Add --edit for interactive editor style operation
+  * Implement review comments Update --apply --edit to allow the eeprom image
+    to be specified. Add some error checking around chmod in rpi-eeprom-update
+  * Fix doc comments and ignore package checksums
+  * rpi-eeprom-update: Add -b flag to output BOOTFS path
+  * rpi-eeprom-config: Update --edit to read config from pending updates
+  * rpi-eeprom-config: Trap errors when deleting previous update files
+  * Require 'sudo' for --edit or --apply instead of spawning sudo command
+  * rpi-eeprom-update: Move .bin filter for checksums into subshell
+  * rpi-eeprom-config: Update help for --edit
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 05 Oct 2020 12:53:57 +0100
+
 rpi-eeprom (9.0-1) buster; urgency=medium
 
   [ Tim Gover ]
