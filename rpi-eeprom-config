@@ -76,7 +76,7 @@ def shell_cmd(args):
         exit_error("%s failed: %d\n %s\n %s\n" %
                    (arg_str, result.returncode, result.stdout.read(), result.stderr.read()))
     else:
-        return result.stdout.read()
+        return result.stdout.read().decode('utf-8')
 
 def get_latest_eeprom():
     """
@@ -131,7 +131,7 @@ def edit_config(eeprom=None):
         if os.path.exists(pending):
             config_src = pending
             image = BootloaderImage(pending)
-            current_config = image.get_config()
+            current_config = image.get_config().decode('utf-8')
         else:
             config_src = 'vcgencmd bootloader_config'
             current_config = read_current_config()
@@ -140,7 +140,7 @@ def edit_config(eeprom=None):
         # then get the current config from there.
         image = BootloaderImage(eeprom)
         config_src = eeprom
-        current_config = image.get_config()
+        current_config = image.get_config().decode('utf-8')
 
     create_tempdir()
     tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
