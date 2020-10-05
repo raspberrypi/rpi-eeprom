@@ -71,8 +71,12 @@ VL805_UPDATE_VERSION=
 # The update actions selected by the version check
 ACTION_UPDATE_BOOTLOADER=0
 ACTION_UPDATE_VL805=0
+CHECKSUMS=''
 
 cleanup() {
+   if [ -f "${CHECKSUMS}" ]; then
+      rm -f "${CHECKSUMS}"
+   fi
    if [ -f "${TMP_EEPROM_IMAGE}" ]; then
       rm -f "${TMP_EEPROM_IMAGE}"
    fi
@@ -143,6 +147,7 @@ applyRecoveryUpdate()
    [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || [ -n "${VL805_UPDATE_IMAGE}" ] || die "No update images specified"
 
    findBootFS
+   echo "BOOTFS ${BOOTFS}"
 
    # A '.sig' file is created so that recovery.bin can check that the
    # EEPROM image has not been created (e.g. SD card corruption).
@@ -166,16 +171,20 @@ applyRecoveryUpdate()
                 || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
 
         # For NFS mounts ensure that the files are readable to the TFTP user
-        chmod -f go+r "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
+        chmod -f go+r "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig" \
+                || die "Failed to set permissions on eeprom update files"
    fi
 
    if [ -n "${VL805_UPDATE_IMAGE}" ]; then
         sha256sum "${VL805_UPDATE_IMAGE}" | awk '{print $1}' > "${BOOTFS}/vl805.sig" \
                 || die "Failed to create ${BOOTFS}/vl805.sig"
-        cp -f "${VL805_UPDATE_IMAGE}" "${BOOTFS}/vl805.bin"
+
+        cp -f "${VL805_UPDATE_IMAGE}" "${BOOTFS}/vl805.bin" \
+                || die "Failed to copy ${VL805_UPDATE_IMAGE} to ${BOOTFS/vl805.bin}"
 
         # For NFS mounts ensure that the files are readable to the TFTP user
-        chmod -f go+r "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
+        chmod -f go+r "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig" \
+                || die "Failed to set permissions on eeprom update files"
    fi
 
    cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" \
@@ -183,18 +192,26 @@ applyRecoveryUpdate()
 }
 
 applyUpdate() {
-   checksums_file="/var/lib/dpkg/info/rpi-eeprom.md5sums"
-
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
-   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ] && [ -f "${checksums_file}" ]; then
+   if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ]; then
       (
+         package_info_dir="/var/lib/dpkg/info/"
+         package_checksums_file="${package_info_dir}/rpi-eeprom.md5sums"
+
+         if ! grep -qE '\.bin$' "${package_info_dir}/rpi-eeprom.md5sums"; then
+            # Try the old rpi-eeprom-images package
+            package_checksums_file="${package_info_dir}/rpi-eeprom-images.md5sums"
+         fi
+
+         CHECKSUMS=$(mktemp)
+         cat "${package_checksums_file}" | grep -E '\.bin$' > "${CHECKSUMS}"
          cd /
-         if ! md5sum -c "${checksums_file}" > /dev/null 2>&1; then
-            md5sum -c "${checksums_file}"
+         if ! md5sum -c "${CHECKSUMS}" > /dev/null 2>&1; then
+            md5sum -c "${CHECKSUMS}"
             die "rpi-eeprom checksums failed - try reinstalling this package"
          fi
-      )
+      ) || die "Unable to validate EEPROM image package checksums"
    fi
 
    if [ "${USE_FLASHROM}" = 0 ]; then
@@ -268,7 +285,15 @@ getBootloaderUpdateVersion() {
 }
 
 checkDependencies() {
-   BOARD_INFO="$(od -v -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' \n')"
+
+   if [ -f "/sys/firmware/devicetree/base/system/linux,revision" ]; then
+      BOARD_INFO="$(od -v -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' \n')"
+   elif grep -q Revision /proc/cpuinfo; then
+      BOARD_INFO="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+   else
+      BOARD_INFO="$(vcgencmd otp_dump | grep '30:' | sed 's/.*://')"
+   fi
+
    if [ $(((0x$BOARD_INFO >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_INFO >> 12) & 15)) -eq 3 ]; then
       echo "BCM2711 detected"
    else
@@ -370,6 +395,7 @@ retained.
 Options:
    -a Automatically install bootloader and USB (VLI) EEPROM updates.
    -A Specify which type of EEPROM to automatically update (vl805 or bootloader)
+   -b Outputs the path that pending EEPROM updates will be written to.
    -d Use the default bootloader config, or if a file is specified using the -f
       flag use the config in that file. This option only applies when a
       bootloader EEPROM update is needed; if the bootloader EEPROM is up-to-date
@@ -380,6 +406,8 @@ Options:
    -h Display help text and exit
    -i Ignore package checksums - for rpi-eeprom developers.
    -j Write status information using JSON notation
+   -l Returns the full path to the latest available EEPROM image file according
+      to the FIRMWARE_RELEASE_STATUS and FIRMWARE_IMAGE_DIR settings.
    -m Write status information to the given file when run without -a or -f
    -r Removes temporary EEPROM update files from the boot partition.
    -u Install the specified VL805 (USB EEPROM) image file.
@@ -493,9 +521,7 @@ findBootFS()
    # If BOOTFS is not a directory or doesn't contain any .elf files then
    # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
-   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" -gt 0 ]; then
-      echo "BOOTFS ${BOOTFS}"
-   else
+   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" = 0 ]; then
       echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
    fi
 }
@@ -611,14 +637,16 @@ removePreviousUpdates()
    if [ "$(id -u)" = "0" ]; then
       findBootFS
 
-      # Remove any stale recovery.bin files or EEPROM images
-      # N.B. recovery.bin is normally ignored by the ROM if is not a valid
-      # executable but it's best to not have the file at all.
-      rm -f "${BOOTFS}/recovery.bin"
-      rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
-      rm -f "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
-      # Case insensitive for FAT bootfs
-      find "${BOOTFS}" -maxdepth 1 -type f -follow -iname "recovery.*" -regex '.*\.[0-9][0-9][0-9]$' -exec rm -f {} \;
+      (
+         # Remove any stale recovery.bin files or EEPROM images
+         # N.B. recovery.bin is normally ignored by the ROM if is not a valid
+         # executable but it's best to not have the file at all.
+         rm -f "${BOOTFS}/recovery.bin"
+         rm -f "${BOOTFS}/pieeprom.bin" "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig"
+         rm -f "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig"
+         # Case insensitive for FAT bootfs
+         find "${BOOTFS}" -maxdepth 1 -type f -follow -iname "recovery.*" -regex '.*\.[0-9][0-9][0-9]$' -exec rm -f {} \;
+      ) || die "Failed to remove previous update files"
    fi
 }
 
@@ -680,7 +708,7 @@ MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 IGNORE_DPKG_CHECKSUMS=$LOCAL_MODE
 
-while getopts A:adhif:m:ju:r option; do
+while getopts A:abdhilf:m:ju:r option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -694,6 +722,11 @@ while getopts A:adhif:m:ju:r option; do
    a) AUTO_UPDATE_BOOTLOADER=1
       AUTO_UPDATE_VL805=1
       ;;
+   b) 
+      findBootFS    
+      echo ${BOOTFS}
+      exit 0
+      ;;
    d) OVERWRITE_CONFIG=1
       ;;
    f) BOOTLOADER_UPDATE_IMAGE="${OPTARG}"
@@ -701,6 +734,11 @@ while getopts A:adhif:m:ju:r option; do
    i) IGNORE_DPKG_CHECKSUMS=1
       ;;
    j) JSON_OUTPUT="yes"
+      ;;
+   l)
+      getBootloaderUpdateVersion
+      echo "${BOOTLOADER_UPDATE_IMAGE}"
+      exit 0
       ;;
    m) MACHINE_OUTPUT="${OPTARG}"
       ;;
