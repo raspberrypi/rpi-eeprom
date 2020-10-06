@@ -1,3 +1,10 @@
+rpi-eeprom (10.1-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-config: Use decode('utf-8') to convert subprocess txt
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 06 Oct 2020 10:45:07 +0100
+
 rpi-eeprom (10.0-1) buster; urgency=medium
 
   [ andrum99 ]
