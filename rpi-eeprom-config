@@ -22,6 +22,9 @@ MAX_BOOTCONF_SIZE = 2024
 # The number, order and size of the sections depends on the bootloader version
 # but the following mask can be used to test for section headers and skip
 # unknown data.
+#
+# The last 4KB of the EEPROM image is reserved for internal use by the
+# bootloader and may be overwritten during the update process.
 MAGIC = 0x55aaf00f
 MAGIC_MASK = 0xfffff00f
 FILE_MAGIC = 0x55aaf11f # id for modifiable file, currently only bootconf.txt

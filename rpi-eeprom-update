@@ -151,9 +151,15 @@ applyRecoveryUpdate()
 
    # A '.sig' file is created so that recovery.bin can check that the
    # EEPROM image has not been created (e.g. SD card corruption).
-   # The .sig file format is currently just a SHA256 in ASCII hex. In future,
-   # if an actual public key signature is required then that plus any other
-   # data would be appended after the SHA256 signature.
+   # Format of the .sig file.
+   # --
+   # SHA256\n
+   # ts: UPDATE-TIMESTAMP\n
+   # --
+   # SHA256 is a 64 character hex string
+   # UPDATE-TIMESTAMP is an unsigned decimal.
+   #
+   # The 'filename' output from sha256 MUST be omitted.
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
         [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
 
@@ -166,6 +172,15 @@ applyRecoveryUpdate()
         # EEPROM image instead.
         sha256sum "${TMP_EEPROM_IMAGE}" | awk '{print $1}' > "${BOOTFS}/pieeprom.sig" \
                 || die "Failed to create ${BOOTFS}/pieeprom.sig"
+
+        # Appends the update creation timestamp on a newline in pieeprom.sig
+        # During an self-update mode the bootloader examines the update timestamp
+        # and # will only update itself if it is newer than than the current update
+        # timestamp.
+        #
+        # The update-timestamp is indendent of the bootloader version and
+        # and does not have to be timestamp.
+        echo "ts: $(date -u +%s)" >> "${BOOTFS}/pieeprom.sig"
 
         cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
                 || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
