@@ -196,12 +196,11 @@ applyUpdate() {
 
    if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ]; then
       (
-         package_info_dir="/var/lib/dpkg/info/"
-         package_checksums_file="${package_info_dir}/rpi-eeprom.md5sums"
+         package_checksums_file="${PACKAGE_INFO_DIR}/rpi-eeprom.md5sums"
 
-         if ! grep -qE '\.bin$' "${package_info_dir}/rpi-eeprom.md5sums"; then
+         if ! grep -qE '\.bin$' "${PACKAGE_INFO_DIR}/rpi-eeprom.md5sums"; then
             # Try the old rpi-eeprom-images package
-            package_checksums_file="${package_info_dir}/rpi-eeprom-images.md5sums"
+            package_checksums_file="${PACKAGE_INFO_DIR}/rpi-eeprom-images.md5sums"
          fi
 
          CHECKSUMS=$(mktemp)
@@ -706,7 +705,12 @@ AUTO_UPDATE_BOOTLOADER=0
 AUTO_UPDATE_VL805=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
-IGNORE_DPKG_CHECKSUMS=$LOCAL_MODE
+IGNORE_DPKG_CHECKSUMS=${LOCAL_MODE}
+PACKAGE_INFO_DIR="/var/lib/dpkg/info/"
+if [ ! -d "${PACKAGE_INFO_DIR}" ]; then
+   IGNORE_DPKG_CHECKSUMS=1
+fi
+
 
 while getopts A:abdhilf:m:ju:r option; do
    case "${option}" in
