@@ -3,6 +3,52 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-10-28 Defer HDMI diagnostics display, update-timestamps, tryboot support
+   * Skip rendering of the diagnostics screen for HDMI_DELAY seconds (default 5).
+     This means that for SD-card and USB MSD flash boot devices the diagnostics
+     screen will not be visible.
+   * On Pi 4B 1.4 (8GB) initialise SDRAM whilst waiting for the USB port power
+     off time. This makes booting slightly faster.
+   * Remove HDMI console messages where the information is duplicated elsewhere
+     on the display.
+   * Improve compatiblity with external USB 3.0 disk enclosures by enumerating
+     the downstream hubs before executing the USB port power off.
+     N.B. Pi4 8GB automatically powers off the USB ports during chip-reset and
+     does not need this change.
+   * Don't timeout a USB MSD device after USB_MSD_LUN_TIMEOUT if there are no other
+     MSD devices or LUNs to tries. This avoids unecessary timeouts on very slow
+     to initialise disk drives e.g. USB HDDs designed for backups.
+   * Fix failover to partition zero if the partition number is invalid. For USB
+     MSD boot a start.elf update is also required.
+   * SD-Card - Change default retries from 0 to 1 to improve reliability with
+     some old SD v1 cards.
+   * Fix issue where boot would stop if partition type 0x83 was encountered
+     before the first FAT partition.
+   * SELF_UPDATE mode (Network, USB MSD boot) now reads the timestamp information
+     in pieeprom.sig created by rpi-eeprom-update to see if the updated is
+     newer than the current 'update-timestamp'. If not, the update is skipped
+     to avoid stale updates on network or USB disks being installed by accident.
+
+     recovery.bin updates (from the SD card) do not check the timestamp because
+     recovery.bin renames itself once the update is completed. However, it still
+     writes the update-timestamp to the EEPROM.
+
+     The update-timestamp is the timestamp when the update is created is
+     independent of the build-timestamp for the bootloader executable. See
+     rpi-eeprom-udpate -h
+   * Add support for the 'tryboot' feature that enables operating systems to
+     implement a fallback mechanism if an OS upgrade fails. This works with all
+     bootable media types but requires updated firmware and OS software.
+
+     This feature should be viewed as EXPERIMENTAL and may change depenending upon
+     feedback from other OS/distro maintainer.
+     https://github.com/raspberrypi/linux/commit/757666748ebf69dc161a262faa3717a14d68e5aa
+
+
+## 2020-10-02 Include CM4 manufacturing bootloader image.
+   * Include the release image for reference. This contains some minor changes
+     to support manufacture test.
+
 ## 2020-09-14 Promote the 2020-09-03 release to be the default EEPROM images.
    * Promote the 2020-09-03 bootloader EEPROM and VLI 0138A1 as the default
      release (critical folder).

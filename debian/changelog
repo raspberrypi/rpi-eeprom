@@ -1,3 +1,18 @@
+rpi-eeprom (10.2-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Fix shellcheck warnings
+  * rpi-eeprom-update: Skip checksums if there is no dpkg info directory
+  * Add the timestamp of the update to the pieeprom.sig file.
+
+  [ Andrew Scheller ]
+  * typos
+
+  [ Tim Gover ]
+  * pieeprom-2020-10-28: Defer HDMI diagnostics display, update-timestamps, tryboot support
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 02 Nov 2020 14:15:16 +0000
+
 rpi-eeprom (10.1-1) buster; urgency=medium
 
   [ Tim Gover ]
