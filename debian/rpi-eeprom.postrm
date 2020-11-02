@@ -20,9 +20,6 @@ set -e
 
 
 case "$1" in
-    purge)
-        rm -rf /var/lib/raspberrypi/bootloader/backup/
-    ;;
     remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
     ;;
 
