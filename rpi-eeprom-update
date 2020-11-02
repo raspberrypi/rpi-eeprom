@@ -104,7 +104,7 @@ die() {
 
 prepareImage()
 {
-   [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image \'${BOOTLOADER_UPDATE_IMAGE}\' not found"
+   [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image '${BOOTLOADER_UPDATE_IMAGE}' not found"
    TMP_EEPROM_IMAGE="$(mktemp)"
    TMP_EEPROM_CONFIG="$(mktemp)"
    NEW_EEPROM_CONFIG="$(mktemp)"
@@ -150,10 +150,16 @@ applyRecoveryUpdate()
    echo "BOOTFS ${BOOTFS}"
 
    # A '.sig' file is created so that recovery.bin can check that the
-   # EEPROM image has not been created (e.g. SD card corruption).
-   # The .sig file format is currently just a SHA256 in ASCII hex. In future,
-   # if an actual public key signature is required then that plus any other
-   # data would be appended after the SHA256 signature.
+   # EEPROM image has not been corrupted (e.g. SD card corruption).
+   # Format of the .sig file.
+   # --
+   # SHA256\n
+   # ts: UPDATE-TIMESTAMP\n
+   # --
+   # SHA256 is a 64 character hex string
+   # UPDATE-TIMESTAMP is an unsigned decimal.
+   #
+   # The 'filename' output from sha256 MUST be omitted.
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
         [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
 
@@ -166,6 +172,15 @@ applyRecoveryUpdate()
         # EEPROM image instead.
         sha256sum "${TMP_EEPROM_IMAGE}" | awk '{print $1}' > "${BOOTFS}/pieeprom.sig" \
                 || die "Failed to create ${BOOTFS}/pieeprom.sig"
+
+        # Appends the update creation timestamp on a newline in pieeprom.sig
+        # During a self-update mode the bootloader examines the update-timestamp
+        # and will only update itself if it is newer than the current update
+        # timestamp.
+        #
+        # The update-timestamp is independent of the bootloader version and
+        # does not have to be timestamp.
+        echo "ts: $(date -u +%s)" >> "${BOOTFS}/pieeprom.sig"
 
         cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
                 || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
@@ -180,7 +195,7 @@ applyRecoveryUpdate()
                 || die "Failed to create ${BOOTFS}/vl805.sig"
 
         cp -f "${VL805_UPDATE_IMAGE}" "${BOOTFS}/vl805.bin" \
-                || die "Failed to copy ${VL805_UPDATE_IMAGE} to ${BOOTFS/vl805.bin}"
+                || die "Failed to copy ${VL805_UPDATE_IMAGE} to ${BOOTFS}/vl805.bin"
 
         # For NFS mounts ensure that the files are readable to the TFTP user
         chmod -f go+r "${BOOTFS}/vl805.bin" "${BOOTFS}/vl805.sig" \
@@ -196,16 +211,15 @@ applyUpdate() {
 
    if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ]; then
       (
-         package_info_dir="/var/lib/dpkg/info/"
-         package_checksums_file="${package_info_dir}/rpi-eeprom.md5sums"
+         package_checksums_file="${PACKAGE_INFO_DIR}/rpi-eeprom.md5sums"
 
-         if ! grep -qE '\.bin$' "${package_info_dir}/rpi-eeprom.md5sums"; then
+         if ! grep -qE '\.bin$' "${PACKAGE_INFO_DIR}/rpi-eeprom.md5sums"; then
             # Try the old rpi-eeprom-images package
-            package_checksums_file="${package_info_dir}/rpi-eeprom-images.md5sums"
+            package_checksums_file="${PACKAGE_INFO_DIR}/rpi-eeprom-images.md5sums"
          fi
 
          CHECKSUMS=$(mktemp)
-         cat "${package_checksums_file}" | grep -E '\.bin$' > "${CHECKSUMS}"
+         grep -E '\.bin$' "${package_checksums_file}" > "${CHECKSUMS}"
          cd /
          if ! md5sum -c "${CHECKSUMS}" > /dev/null 2>&1; then
             md5sum -c "${CHECKSUMS}"
@@ -304,7 +318,7 @@ checkDependencies() {
    BOARD_TYPE=$(((0x$BOARD_INFO >> 4) & 0xff))
    BOARD_REVISION=$((0x$BOARD_INFO & 0xf))
 
-   if [ ${BOARD_TYPE} -eq 20 ] && [ ${CM4_ENABLE_RPI_EEPROM_UPDATE} != '1' ]; then
+   if [ ${BOARD_TYPE} -eq 20 ] && [ "${CM4_ENABLE_RPI_EEPROM_UPDATE}" != '1' ]; then
       # For CM4, USB device boot is the recommended method for EEPROM updates.
       echo "rpi-eeprom-update is not enabled by default on CM4"
       exit ${EXIT_SUCCESS}
@@ -706,7 +720,12 @@ AUTO_UPDATE_BOOTLOADER=0
 AUTO_UPDATE_VL805=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
-IGNORE_DPKG_CHECKSUMS=$LOCAL_MODE
+IGNORE_DPKG_CHECKSUMS=${LOCAL_MODE}
+PACKAGE_INFO_DIR="/var/lib/dpkg/info/"
+if [ ! -d "${PACKAGE_INFO_DIR}" ]; then
+   IGNORE_DPKG_CHECKSUMS=1
+fi
+
 
 while getopts A:abdhilf:m:ju:r option; do
    case "${option}" in
@@ -722,9 +741,9 @@ while getopts A:abdhilf:m:ju:r option; do
    a) AUTO_UPDATE_BOOTLOADER=1
       AUTO_UPDATE_VL805=1
       ;;
-   b) 
-      findBootFS    
-      echo ${BOOTFS}
+   b)
+      findBootFS
+      echo "${BOOTFS}"
       exit 0
       ;;
    d) OVERWRITE_CONFIG=1
