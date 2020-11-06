@@ -3,7 +3,7 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
-## 2020-10-28 Defer HDMI diagnostics display, update-timestamps, tryboot support
+## 2020-10-28 Defer HDMI diagnostics display, update-timestamps, tryboot support - BETA
    * Skip rendering of the diagnostics screen for HDMI_DELAY seconds (default 5).
      This means that for SD-card and USB MSD flash boot devices the diagnostics
      screen will not be visible.
