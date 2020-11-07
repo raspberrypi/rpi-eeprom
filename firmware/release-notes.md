@@ -16,7 +16,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
      N.B. Pi4 8GB automatically powers off the USB ports during chip-reset and
      does not need this change.
    * Don't timeout a USB MSD device after USB_MSD_LUN_TIMEOUT if there are no other
-     MSD devices or LUNs to tries. This avoids unecessary timeouts on very slow
+     MSD devices or LUNs to try. This avoids unecessary timeouts on very slow
      to initialise disk drives e.g. USB HDDs designed for backups.
    * Fix failover to partition zero if the partition number is invalid. For USB
      MSD boot a start.elf update is also required.
