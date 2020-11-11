@@ -70,7 +70,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
 
 ## 2020-09-03 Only use green LED for error status in bootloader - BETA
    * Turn the green LED on and leave it on unless an error code occurs.
-     Previously, SD activity was displayed but that plus mixing with the
+     Previously, SD activity was displayed but that plus muxing with the
      SPI CS made the LED activity confusing.
      The HDMI diagnostics screen now provides much better information
      for determining if the bootloader is running or frozen.
@@ -109,7 +109,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
      issue which does not impact Model B
    * Update the VL805 embedded / standalone FW version to 0138A1
       *  User settings of the ASPM bits in the PCI configuration space
-         link control registers are now maintained
+         link control register are now maintained
       * Better full-speed Isochronous endpoint support
    * Add eeprom_write_protect config.txt variable which if set configures
      the non-volatile status register bits to define the write protect
