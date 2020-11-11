@@ -326,7 +326,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
 
     * Avoid resetting TFTP prefix after retries or if start4.elf is not found.
     * Add MAC_ADDRESS option which allows the OTP Ethernet MAC address to be
-      overridden. An VideoCore firmware update will propagate this forced
+      overridden. A VideoCore firmware update will propagate this forced
       mac address to device-tree/cmdline in the near future.
     * Various internal refactorings to prepare for USB MSD storage boot in
       the next beta-series.
