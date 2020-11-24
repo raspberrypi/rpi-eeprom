@@ -3,6 +3,33 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-11-24 BCM2711 xHC boot support - BETA
+   * Add support for booting from the BCM2711 XHCI controller which is the
+     USB-C socket on Pi 4B / Pi 400 and the type A sockets on Compute Module 4
+     IO board. The controller only supports USB 2.0 and the primary usage is
+     for USB-MSD support on CM 4 boards without requiring a PCIe XHCI controller.
+
+     To use this add '5' to the BOOT_ORDER in the EEPROM config for BCM_USB_MSD boot.
+
+     This requires the latest rpi-update firmware.
+     
+     If start.elf is loaded via the BCM2711 XHCI (BOOT_ORDER 5) then the config.txt
+     otg_mode setting will be set to 1 so that the OS can continue booting
+     using the BCM2711 XHCI. This means that the device/gadget mode is not available
+     when booted in this mode and there is no support for switching back to 
+     the DWC2 controller from the BCM2711 XHCI controller.
+
+   * Update halt behavior on Pi 400 to re-enable 'power on' button if the OS
+     did a reset rather than using the standard mailbox shutdown commands. This
+     overrides WAKE_ON_GPIO / POWER_OFF_ON_HALT settings on Pi 400 because
+     it has a dedicated power button.
+     If a button on GPIO3 really is requried then it can be re-enabled by setting
+     WAKE_ON_GPIO=2 but that will consume more power.
+   * Fix short blink before one-shot error pattern - #251
+   * Validate SDRAM in recovery mode.
+   * XHCI protocol layer fixes for non-VLI controllers.
+   * Updated 'tryboot' for new version which also supports Pi3 and earlier.
+
 ## 2020-10-28 Defer HDMI diagnostics display, update-timestamps, tryboot support - BETA
    * Skip rendering of the diagnostics screen for HDMI_DELAY seconds (default 5).
      This means that for SD-card and USB MSD flash boot devices the diagnostics
