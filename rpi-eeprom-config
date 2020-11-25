@@ -52,7 +52,7 @@ def create_tempdir():
 
 def exit_error(msg):
     """
-    Trapped a fatal arror, output message to stderr and exit with non-zero
+    Trapped a fatal error, output message to stderr and exit with non-zero
     return code.
     """
     sys.stderr.write("ERROR: %s\n" % msg)
@@ -106,8 +106,10 @@ def apply_update(config, eeprom=None, config_src=None):
     config_str = open(config).read()
     if config_src is None:
         config_src = ''
-    sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig_src: %s\nconfig: %s\n%s\n" %
-                     (eeprom_image, config_src, config, config_str))
+    sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig_src: %s\nconfig: %s\n%s\n%s\n%s\n" %
+                     (eeprom_image, config_src, config, '#' * 80, config_str, '#' * 80))
+
+    sys.stdout.write("\n*** To cancel this update run 'sudo rpi-eeprom-update -r' ***\n\n")
 
     # Ignore APT package checksums so that this doesn't fail when used
     # with EEPROMs with configs delivered outside of APT.
@@ -118,7 +120,7 @@ def apply_update(config, eeprom=None, config_src=None):
 
 def edit_config(eeprom=None):
     """
-    Implements something like visudo for editing EEPROM configs.
+    Implements something like 'git commit' for editing EEPROM configs.
     """
     # Default to nano if $EDITOR is not defined.
     editor = 'nano'
@@ -126,24 +128,18 @@ def edit_config(eeprom=None):
         editor = os.environ['EDITOR']
 
     config_src = ''
-    if eeprom is None:
-        # If an EEPROM has not been specified but there is a pending
-        # update then use that as the current EEPROM image.
-        bootfs = shell_cmd(['rpi-eeprom-update', '-b']).rstrip()
-        pending = os.path.join(bootfs, 'pieeprom.upd')
-        if os.path.exists(pending):
-            config_src = pending
-            image = BootloaderImage(pending)
-            current_config = image.get_config().decode('utf-8')
-        else:
-            config_src = 'vcgencmd bootloader_config'
-            current_config = read_current_config()
-    else:
-        # If an EEPROM image is specified OR there is pending update
-        # then get the current config from there.
-        image = BootloaderImage(eeprom)
-        config_src = eeprom
+    # If there is a pending update then use the configuration from
+    # that in order to support incremental updates. Otherwise,
+    # use the current EEPROM configuration.
+    bootfs = shell_cmd(['rpi-eeprom-update', '-b']).rstrip()
+    pending = os.path.join(bootfs, 'pieeprom.upd')
+    if os.path.exists(pending):
+        config_src = pending
+        image = BootloaderImage(pending)
         current_config = image.get_config().decode('utf-8')
+    else:
+        config_src = 'vcgencmd bootloader_config'
+        current_config = read_current_config()
 
     create_tempdir()
     tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
@@ -281,7 +277,7 @@ Operating modes:
 4. Applies a given config file to an EEPROM image and invokes rpi-eeprom-update
    to schedule an update of the bootloader when the system is rebooted.
 
-   Since this command launches rpi-eeprom-update to schedule the EERPOM update
+   Since this command launches rpi-eeprom-update to schedule the EEPROM update
    it must be run as root.
 
    sudo rpi-eeprom-config --apply boot.conf [pieeprom.bin]
@@ -293,17 +289,18 @@ Operating modes:
    applying a predefined configuration file a text editor is launched with the
    contents of the current EEPROM configuration.
 
-   Since this command launches rpi-eeprom-update to schedule the EERPOM update
+   Since this command launches rpi-eeprom-update to schedule the EEPROM update
    it must be run as root.
 
    The configuration file will be taken from:
-       * The 'eeprom' file - if specified.
-       * The current pending update - typically /boot/pieeprom.upd
        * The cached bootloader configuration 'vcgencmd bootloader_config'
+       * The current pending update - typically /boot/pieeprom.upd
 
    sudo -E rpi-eeprom-config --edit [pieeprom.bin]
 
-   The default text editor is nano and may be overriden by setting the 'EDITOR'
+   To cancel the pending update run 'sudo rpi-eeprom-update -r'
+
+   The default text editor is nano and may be overridden by setting the 'EDITOR'
    environment variable and passing '-E' to 'sudo' to preserve the environment.
 
 See 'rpi-eeprom-update -h' for more information about the available EEPROM

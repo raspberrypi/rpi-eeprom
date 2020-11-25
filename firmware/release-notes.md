@@ -3,7 +3,34 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
-## 2020-10-28 Defer HDMI diagnostics display, update-timestamps, tryboot support
+## 2020-11-24 BCM2711 xHC boot support - BETA
+   * Add support for booting from the BCM2711 XHCI controller which is the
+     USB-C socket on Pi 4B / Pi 400 and the type A sockets on Compute Module 4
+     IO board. The controller only supports USB 2.0 and the primary usage is
+     for USB-MSD support on CM 4 boards without requiring a PCIe XHCI controller.
+
+     To use this add '5' to the BOOT_ORDER in the EEPROM config for BCM_USB_MSD boot.
+
+     This requires the latest rpi-update firmware.
+     
+     If start.elf is loaded via the BCM2711 XHCI (BOOT_ORDER 5) then the config.txt
+     otg_mode setting will be set to 1 so that the OS can continue booting
+     using the BCM2711 XHCI. This means that the device/gadget mode is not available
+     when booted in this mode and there is no support for switching back to 
+     the DWC2 controller from the BCM2711 XHCI controller.
+
+   * Update halt behavior on Pi 400 to re-enable 'power on' button if the OS
+     did a reset rather than using the standard mailbox shutdown commands. This
+     overrides WAKE_ON_GPIO / POWER_OFF_ON_HALT settings on Pi 400 because
+     it has a dedicated power button.
+     If a button on GPIO3 really is requried then it can be re-enabled by setting
+     WAKE_ON_GPIO=2 but that will consume more power.
+   * Fix short blink before one-shot error pattern - #251
+   * Validate SDRAM in recovery mode.
+   * XHCI protocol layer fixes for non-VLI controllers.
+   * Updated 'tryboot' for new version which also supports Pi3 and earlier.
+
+## 2020-10-28 Defer HDMI diagnostics display, update-timestamps, tryboot support - BETA
    * Skip rendering of the diagnostics screen for HDMI_DELAY seconds (default 5).
      This means that for SD-card and USB MSD flash boot devices the diagnostics
      screen will not be visible.
@@ -11,12 +38,12 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
      off time. This makes booting slightly faster.
    * Remove HDMI console messages where the information is duplicated elsewhere
      on the display.
-   * Improve compatiblity with external USB 3.0 disk enclosures by enumerating
+   * Improve compatibility with external USB 3.0 disk enclosures by enumerating
      the downstream hubs before executing the USB port power off.
      N.B. Pi4 8GB automatically powers off the USB ports during chip-reset and
      does not need this change.
    * Don't timeout a USB MSD device after USB_MSD_LUN_TIMEOUT if there are no other
-     MSD devices or LUNs to tries. This avoids unecessary timeouts on very slow
+     MSD devices or LUNs to try. This avoids unnecessary timeouts on very slow
      to initialise disk drives e.g. USB HDDs designed for backups.
    * Fix failover to partition zero if the partition number is invalid. For USB
      MSD boot a start.elf update is also required.
@@ -35,13 +62,13 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
 
      The update-timestamp is the timestamp when the update is created is
      independent of the build-timestamp for the bootloader executable. See
-     rpi-eeprom-udpate -h
+     rpi-eeprom-update -h
    * Add support for the 'tryboot' feature that enables operating systems to
      implement a fallback mechanism if an OS upgrade fails. This works with all
      bootable media types but requires updated firmware and OS software.
 
-     This feature should be viewed as EXPERIMENTAL and may change depenending upon
-     feedback from other OS/distro maintainer.
+     This feature should be viewed as EXPERIMENTAL and may change depending upon
+     feedback from other OS/distro maintainers.
      https://github.com/raspberrypi/linux/commit/757666748ebf69dc161a262faa3717a14d68e5aa
 
 
@@ -73,29 +100,29 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
      Previously, SD activity was displayed but that plus muxing with the
      SPI CS made the LED activity confusing.
      The HDMI diagnostics screen now provides much better information
-     for determing if the bootloader is running or frozen.
+     for determining if the bootloader is running or frozen.
    * CM4 enable GPIO for SD power.
    * Filename should be 2020-09-03
 
 ## 2020-08-31 Disable self-update from SD card - BETA
-   * Since the ROM will load recovery.bin from the SD card self update is not
+   * Since the ROM will load recovery.bin from the SD card self-update is not
      required. Although it functions correctly there is a small risk stale
      pieeprom.upd files would be installed automatically e.g. if the
      rpi-eeprom-update service has been disabled.
 
 ## 2020-08-10 Promote 2020-07-31 release to STABLE
    * The USB port power management change from the last BETA improves
-     compatiblity for devices which during reset with no regressions reported.
+     compatibility for devices which during reset with no regressions reported.
      Make this the latest stable release.
 
-## 2020-07-31 Standardize USB port power control accross board revisions - BETA
+## 2020-07-31 Standardize USB port power control across board revisions - BETA
    * Turn off USB port power for 1-second regardless of boot-mode. This appears
      to resolve an issue on R1.3 and older board revisions where some USB
      devices would fail upon reboot. On R1.4 USB port power is turned off
      automatically by the PMIC so this is just held in reset for longer. For
      earlier board revisions the USB port power is explicitly turned off via
      XHCI.
-     This can be overriden via USB_MSD_PWR_OFF_TIME in the EEPROM config.
+     This can be overridden via USB_MSD_PWR_OFF_TIME in the EEPROM config.
    * Update to the latest Broadcom memsys FW - no significant functional change.
 
 ## 2020-07-20 Promote 2020-07-16 bootloader and VL805 0138A1 FW to stable - STABLE
@@ -175,7 +202,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
    * Increase USB MSD timeout from 10 to 20 seconds.
    * Max retries now default to zero because the default BOOT_ORDER includes
      restart (0xf). Therefore, each boot-mode is now tried once before moving
-     to the next mode. The retries mechanism is largely redudant now that
+     to the next mode. The retries mechanism is largely redundant now that
      the loop/restart mode exists.
    * If TFTP fails and network boot retries > 0 then wait 5 seconds before
      retrying to avoid overloading a misconfigured TFTP server.
@@ -207,7 +234,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
 ## 2020-05-15 Add pieeprom-2020-05-15 beta with USB boot
     * USB mass storage boot will NOT work without the updated firmware
       start.elf binaries. These will probably be released via rpi-update
-      in a few days time.
+      in a few days’ time.
       This release simply helps to validate if there are regressions in
       the current SD and Network boot modes.
 
@@ -237,7 +264,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
       Fix recovery.bin to reboot in this case. The current 'critical'
       release does not have this problem.
     * Fix uart_2ndstage logging in beta/stable recovery image.
-    * Change recovery.bin to reboot instead of displaying an error patern
+    * Change recovery.bin to reboot instead of displaying an error pattern
       if there are no EEPROM images. The Raspberry Pi Image makes it very
       difficult to create a broken rescue image but a stray recovery.bin
       could stop Raspbian from booting.
@@ -281,7 +308,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
       is enabled by setting DHCP_OPTION97=0 which simply repeats the serial
       number 4 times.
     * SELF_UPDATE. If SELF_UPDATE is set to 1 in the EEPROM configuration AND
-      config.txt contains bootloader_update=1 then the bootloader will looking
+      config.txt contains bootloader_update=1 then the bootloader will be looking
       for pieeprom.upd and vl805.bin and apply these firmware files if
       they are different to the current image, before doing a watchdog reset.
       This should make it easier to update the bootloader for network
@@ -326,7 +353,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
 
     * Avoid resetting TFTP prefix after retries or if start4.elf is not found.
     * Add MAC_ADDRESS option which allows the OTP Ethernet MAC address to be
-      overriden. An VideoCore firmware update will propagate this forced
+      overridden. A VideoCore firmware update will propagate this forced
       mac address to device-tree/cmdline in the near future.
     * Various internal refactorings to prepare for USB MSD storage boot in
       the next beta-series.
