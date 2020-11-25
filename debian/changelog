@@ -1,3 +1,17 @@
+rpi-eeprom (10.3-1) buster; urgency=medium
+
+  [ andrum99 ]
+  * Update release-notes.md
+
+  [ Sebastian Rivera ]
+  * Update release-notes.md
+
+  [ Tim Gover ]
+  * rpi-eeprom-config: Change --edit to use the current EEPROM config
+  * pieeprom-2020-11-24: Enable booting from BCM2711 XHCI controller - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 25 Nov 2020 17:45:08 +0000
+
 rpi-eeprom (10.2-1) buster; urgency=medium
 
   [ Tim Gover ]
