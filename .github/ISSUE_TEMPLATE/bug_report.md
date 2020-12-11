@@ -1,12 +1,14 @@
 ---
 name: Bug report
-about: Create a bug report for the bootloader EEPROM or rpi-eeprom-update scripts.  Please consult the [Boot Problems](https://www.raspberrypi.org/forums/viewtopic.php?p=437084) forum post first.
+about: Create a bug report for the bootloader EEPROM or rpi-eeprom-update scripts. Please use the Raspberry Pi General Discussion forum for general questions about the bootloader.
 
 ---
 
 This repository tracks bugs for the Raspberry Pi 4 bootloader EEPROM and Linux update scripts.
 
-**Support questions or should be posted on the Raspberry Pi [General Discussion](https://www.raspberrypi.org/forums/viewforum.php?f=63)**
+* If you suspect a hardware problem then please read the [Boot Problems](https://www.raspberrypi.org/forums/viewtopic.php?p=437084) post first before contacting the reseller.
+* Support questions or should be posted on the Raspberry Pi [General Discussion](https://www.raspberrypi.org/forums/viewforum.php?f=63)**
+
 
 **Mandatory information**
 * Raspberry Pi model
