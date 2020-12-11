@@ -3,6 +3,16 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-12-11 - CM4/PI400 conditional filters - BETA
+   * Add support for [cm4] and [pi400] config conditionals filters.
+   * Tidyup RPIBOOT USB descriptors.
+   * Add a gap before displaying LED error pattern and change the default state
+     to off after displaying the first error pattern.
+   * Generate 0xffff instead of 0x0 if the checksum of the UDP packet to be
+     transmitted is 0x0.
+   * Rename USB-DEV to RPIBOOT in boot-mode strings. Bootmode was renamed to
+     avoid confusion with USB MSD boot.
+
 ## 2020-11-24 BCM2711 xHC boot support - BETA
    * Add support for booting from the BCM2711 XHCI controller which is the
      USB-C socket on Pi 4B / Pi 400 and the type A sockets on Compute Module 4
