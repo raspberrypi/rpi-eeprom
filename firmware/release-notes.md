@@ -3,6 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2020-12-14 - Promote pieeprom-2020-12-11.bin to stable - STABLE
+   * Feature freeze to support stable release of BCM2711 XHCI boot, tryboot,
+     HDMI_DELAY, USB MSD improvements.
+
 ## 2020-12-11 - CM4/PI400 conditional filters - BETA
    * Add support for [cm4] and [pi400] config conditionals filters.
    * Tidyup RPIBOOT USB descriptors.
