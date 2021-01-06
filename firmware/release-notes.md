@@ -3,7 +3,7 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
-## 2021-01-05 - USB MSD interop improvements for Pi 4B < R1.4
+## 2021-01-05 - USB MSD interop improvements for Pi 4B < R1.4 - BETA
    * Revert the USB port power delay on R1.1 boards to be more like the Sep 2020
      production release. Verified with Geekworm X835, Orico NVME M.2 USB adapter
      and Microsoft Wireless keyboad.
