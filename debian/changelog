@@ -1,3 +1,10 @@
+rpi-eeprom (11.1-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-01-05: USB MSD interoperability improvements for Pi 4B < R1.4
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 06 Jan 2021 11:43:09 +0000
+
 rpi-eeprom (11.0-1) buster; urgency=medium
 
   [ Tim Gover ]
