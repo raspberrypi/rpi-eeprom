@@ -34,6 +34,8 @@ BOOTFS=${BOOTFS:-/boot}
 VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 
+DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
+
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
 EXIT_FAILED=2
@@ -267,7 +269,10 @@ applyUpdate() {
 # this via flashrom to avoid unnecessary audio glitches.
 BOOTLOADER_CURRENT_VERSION=
 getBootloaderCurrentVersion() {
-   if vcgencmd bootloader_version | grep -q timestamp; then
+   if [ -f "${DT_BOOTLOADER_TS}" ]; then
+      # Prefer device-tree to vcgencmd
+      BOOTLOADER_CURRENT_VERSION=$(printf "%d" "0x$(od "${DT_BOOTLOADER_TS}" -v -An -t x1 | tr -d ' ' )")
+   elif vcgencmd bootloader_version | grep -q timestamp; then
       BOOTLOADER_CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
       if [ "${BOOTLOADER_CURRENT_VERSION}" = "0" ]; then
          # If a timestamp of zero is returned then it's new firmware but an
@@ -332,8 +337,12 @@ checkDependencies() {
       HAVE_VL805_EEPROM=0
    fi
 
-   if ! command -v vcgencmd  > /dev/null; then
-      die "vcgencmd not found. On Debian, try installing the libraspberrypi-bin package."
+   # vcgencmd bootloader_version is deprecated. Use device-tree if available to
+   # reduce the number of dependencies on VCHI.
+   if ! [ -f "${DT_BOOTLOADER_TS}" ]; then
+      if ! command -v vcgencmd > /dev/null; then
+         die "vcgencmd not found. On Debian, try installing the libraspberrypi-bin package."
+      fi
    fi
 
    if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
