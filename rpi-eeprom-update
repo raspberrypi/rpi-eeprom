@@ -296,7 +296,7 @@ BOOTLOADER_UPDATE_VERSION=0
 getBootloaderUpdateVersion() {
    BOOTLOADER_UPDATE_VERSION=0
    match=".*/pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin"
-   latest="$(find "${FIRMWARE_IMAGE_DIR}" -maxdepth 1 -type f -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
+   latest="$(find "${FIRMWARE_IMAGE_DIR}/" -maxdepth 1 -type f -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
    if [ -f "${latest}" ]; then
       BOOTLOADER_UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
       BOOTLOADER_UPDATE_IMAGE="${latest}"
@@ -345,13 +345,13 @@ checkDependencies() {
       fi
    fi
 
-   if [ ! -d "${FIRMWARE_IMAGE_DIR}" ]; then
+   if [ ! -e "${FIRMWARE_IMAGE_DIR}" ]; then
       die "EEPROM updates directory ${FIRMWARE_IMAGE_DIR} not found."
    fi
 
    # If a board revision specific firmware directory is defined then use that
    # in preference to the generic directory.
-   if [ -d "${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}" ]; then
+   if [ -e "${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}" ]; then
       FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}"
    fi
 
