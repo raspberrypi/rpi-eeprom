@@ -1,3 +1,10 @@
+rpi-eeprom (11.3-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Add trailing / so find follows the FW symlink
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 12 Jan 2021 16:53:15 +0000
+
 rpi-eeprom (11.2-1) buster; urgency=medium
 
   [ andrum99 ]
