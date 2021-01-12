@@ -1,3 +1,19 @@
+rpi-eeprom (11.2-1) buster; urgency=medium
+
+  [ andrum99 ]
+  * release-notes.md: label 2020-01-05 release as BETA
+
+  [ Andrew Scheller ]
+  * typo
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Get bootloader build-timestamp from device-tree
+  * rpi-eeprom-update: Add default/latest symlinks to reflect raspi-config
+     naming
+  * pieeprom-2021-01-11: Timeout stalled USB MSD devices - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 12 Jan 2021 14:17:11 +0000
+
 rpi-eeprom (11.1-1) buster; urgency=medium
 
   [ Tim Gover ]
