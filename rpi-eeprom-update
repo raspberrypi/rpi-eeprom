@@ -23,8 +23,8 @@ else
    FIRMWARE_ROOT="${script_dir}/firmware"
 fi
 
-# May be used to select beta or stable releases instead of the default critical updates.
-FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-critical}
+# Selects the release sub-directory
+FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-default}
 FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
 ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
@@ -462,26 +462,39 @@ those devices to stop working until after the system is reboot.
 
 FIRMWARE_RELEASE_STATUS
 
-Specifies the release status of the firmware to apply. The default is 'critical'.
+Specifies the release status of the firmware to apply.
 
 Before selecting a firmware release directory this script checks whether there
-is a board revision specific variant e.g. critical-c03111. If present then the
+is a board revision specific variant e.g. default-c03111. If present then the
 board-revision specific version is used in preference.
 
 Release status:
+Bootloader releases follow a pipeline where images are released to the 'beta'
+directory first. The binaries are then promoted to 'latest' and finally 'default'
+so the 'default' binary is always the most tested release.
 
-critical: The latest production release plus important security or hardware compatibility bug fixes.
+default:
+The default bootloader image which is updated once new features in
+'latest' are stable or for critical hardware or security updates.
 
-stable: Contains new features that have already undergone some beta testing.
-These are candidates for new production releases.
+Raspberry Pi OS automatically updates the bootloader when a newer 'default' image
+is available following an APT update to the rpi-eeprom package.
 
-beta: New features, bug fixes for development/test purposes. Use at your own
-risk!
+latest:
+Contains the latest features which have undergone testing via the 'beta'
+release. The configuration parameters are stable.
+
+beta:
+Contains experimental features and bug fixes. Configuration parameters may
+change in subsequent 'beta' releases.
 
 As far as rpi-eeprom-update is concerned FIRMWARE_RELEASE_STATUS is just
 the subdirectory mapping under ${FIRMWARE_ROOT}. Therefore, custom release
 directories are supported by creating the relevant directory and changing
 the FIRMWARE_RELEASE_STATUS environment variable.
+
+The 'default' and 'latest' release names are symlinks to the old directory
+names of 'critical' / 'stable'.
 
 Examples:
 To extract the configuration file from an EEPROM image:
