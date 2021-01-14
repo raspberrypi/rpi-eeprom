@@ -1,3 +1,11 @@
+rpi-eeprom (11.4-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Update docs and default ENV for release names
+  * Promote pieeprom-2021-01-11 to STABLE (LATEST)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 14 Jan 2021 12:47:35 +0000
+
 rpi-eeprom (11.3-1) buster; urgency=medium
 
   [ Tim Gover ]
