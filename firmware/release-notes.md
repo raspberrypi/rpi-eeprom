@@ -3,6 +3,8 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-01-14 - Promote pieeprom-2021-01-11 to STABLE (LATEST)
+
 ## 2021-01-11 - Timeout stalled USB MSD devices - BETA
    * Timeout USB MSD commands and move to the next boot mode if a device stops responding.
    * Reset the GPIO expander at power on.
