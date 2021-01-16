@@ -3,6 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-01-16 - Fix 1V8 SD voltage reset for Pi 4B R1.1 LATEST + BETA
+   * Fix regression for GPIO expander reset change which caused PMIC reset
+     to get card out of 1V8 mode to be missed.
+
 ## 2021-01-14 - Promote pieeprom-2021-01-11 to STABLE (LATEST)
 
 ## 2021-01-11 - Timeout stalled USB MSD devices - BETA
