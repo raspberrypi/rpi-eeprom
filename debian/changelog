@@ -1,3 +1,10 @@
+rpi-eeprom (11.5-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-01-16: Fix SD 1V8 reset - LATEST + BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Sat, 16 Jan 2021 16:26:47 +0000
+
 rpi-eeprom (11.4-1) buster; urgency=medium
 
   [ Tim Gover ]
