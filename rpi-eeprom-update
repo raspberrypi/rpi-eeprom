@@ -28,7 +28,6 @@ FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-default}
 FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
 ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
-USE_FLASHROM=${USE_FLASHROM:-0}
 RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recovery.bin}
 BOOTFS=${BOOTFS:-/boot}
 VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
@@ -60,10 +59,6 @@ BOARD_TYPE=
 # Recovery.bin and the the SPI bootloader ignore vl805.bin files on boards
 # without a dedicate VL805 EEPROM.
 HAVE_VL805_EEPROM=0
-
-# Simple bootloader which is able to load start.elf in the event of a power
-# cut. This runs SDRAM at low speed and may have reduced functionality but
-# should be enough to run flashrom again.
 
 TMP_EEPROM_IMAGE=""
 TMP_BOOTFS_MNT=""
@@ -259,43 +254,9 @@ applyUpdate() {
       ) || die "Unable to validate EEPROM image package checksums"
    fi
 
-   if [ "${USE_FLASHROM}" = 0 ]; then
-      applyRecoveryUpdate
-      return
-   fi
-
-   if [ -f "${BOOTLOADER_UPDATE_IMAGE}" ]; then
-      echo "WARNING: USE_FLASHROM is deprecated."
-      # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
-      # LDO first to avoid sending noise to analog audio.
-      "${VCMAILBOX}" 0x00030056 4 4 0 > /dev/null || true
-      dtparam audio=off
-
-      # Switch the SPI pins to boot EEPROM
-      dtoverlay spi-gpio40-45
-      modprobe spidev
-      modprobe spi-bcm2835
-
-      prepareImage "${BOOTLOADER_UPDATE_IMAGE}"
-
-      echo "Applying bootloader update ${BOOTLOADER_UPDATE_IMAGE}"
-      flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=${SPI_SPEED}" -w "${TMP_EEPROM_IMAGE}" || die "flashrom EEPROM update failed"
-
-      dtparam -R spi-gpio40-45
-      dtparam audio=on
-      ${VCMAILBOX} 0x00030056 4 4 1 > /dev/null || true
-   fi
-
-   if [ -f "${VL805_UPDATE_IMAGE}" ]; then
-      echo "Applying VL805 image ${VL805_UPDATE_IMAGE}"
-      vl805 -w "${VL805_UPDATE_IMAGE}"
-   fi
-
-   echo "Applying bootloader update ${BOOTLOADER_UPDATE_IMAGE}"
+   applyRecoveryUpdate
 }
 
-# Use the version reported by the loaded EEPROM instead of attempting to retrieve
-# this via flashrom to avoid unnecessary audio glitches.
 BOOTLOADER_CURRENT_VERSION=
 getBootloaderCurrentVersion() {
    if [ -f "${DT_BOOTLOADER_TS}" ]; then
@@ -393,23 +354,7 @@ checkDependencies() {
       die "sha256sum not found. On Debian, try installing the coreutilities package"
    fi
 
-   if ! command -v flashrom  > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
-      die "flashrom not found. On Debian, try installing the flashrom package."
-   fi
-
-   if [ ! -x "${VCMAILBOX}" ] && [ "${USE_FLASHROM}" = 1 ]; then
-      die "vcmailbox not found. On Debian, try installing the libraspberrypi-bin package."
-   fi
-
-   if ! command -v dtparam > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
-      die "dtparam not found. On Debian, try installing the libraspberrypi-bin package."
-   fi
-
-   if ! command -v dtoverlay > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
-      die "dtoverlay not found. On Debian, try installing the libraspberrypi-bin package."
-   fi
-
-   if [ "${USE_FLASHROM}" = 0 ] && [ ! -f "${RECOVERY_BIN}" ]; then
+   if [ ! -f "${RECOVERY_BIN}" ]; then
       die "${RECOVERY_BIN} not found."
    fi
 }
@@ -474,21 +419,6 @@ Specifies the path of an optional script which post-processes the
 configuration file before it is applied to the new image. The modified
 output must contain at least 3 lines and should contain WAKE_ON_GPIO
 and POWER_OFF_ON_HALT settings.
-
-USE_FLASHROM
-
-USE_FLASHROM is deprecated and there is no support for this. The muxing
-of the SPI pins causes too many issues for this to ever be reliable.
-
-The flashrom update mechanism may be enabled by setting USE_FLASHROM=1. This
-also selects the vl805 tool instead of using recovery.bin to perform the
-update. This may be desirable if an immediate update is required or if an
-SD card is not present.
-However, this not recommended because the SPI pins are muxed with audio and other
-device drivers may be using SPI (e.g. HATs). This is also not safe in the
-event of a power failure during the update of the EEPROM.
-Changing the VL805 firmware whilst USB devices are attached may also cause
-those devices to stop working until after the system is reboot.
 
 FIRMWARE_RELEASE_STATUS
 
