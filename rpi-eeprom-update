@@ -104,6 +104,34 @@ die() {
    exit ${EXIT_FAILED}
 }
 
+getBootloaderConfig() {
+   # Prefer extracting bootloader's config from DT.
+   #
+   # In order to find the right nvmem device, we build the sysfs path of the
+   # bootloader reserved memory DT node to then match that path against all
+   # nvmem device's ofnode path.
+   #
+   # If the path isn't there, default to using vcgencmd.
+
+   local blconfig_alias="/sys/firmware/devicetree/base/aliases/blconfig"
+   local blconfig_nvmem_path=""
+
+   if [ -f "${blconfig_alias}" ]; then
+      local blconfig_ofnode_path="/sys/firmware/devicetree/base"$(strings "${blconfig_alias}")""
+      local blconfig_ofnode_link=$(find -L /sys/bus/nvmem -samefile "${blconfig_ofnode_path}" 2>/dev/null)
+
+      if [ -e "${blconfig_ofnode_link}" ]; then
+         blconfig_nvmem_path=$(dirname "${blconfig_ofnode_link}")
+      fi
+   fi
+
+   if [ -n "${blconfig_nvmem_path}" ]; then
+      cat "${blconfig_nvmem_path}"/nvmem
+   else
+      vcgencmd bootloader_config
+   fi
+}
+
 prepareImage()
 {
    [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "EEPROM image '${BOOTLOADER_UPDATE_IMAGE}' not found"
@@ -114,7 +142,7 @@ prepareImage()
    mkdir -p "${FIRMWARE_BACKUP_DIR}"
 
    # Backup the configuration of the currently loaded bootloader
-   vcgencmd bootloader_config > "${TMP_EEPROM_CONFIG}"
+   getBootloaderConfig > "${TMP_EEPROM_CONFIG}"
    backup="${FIRMWARE_BACKUP_DIR}/pieeprom-backup-$(date +%Y%m%d-%H%M%S).conf"
    cp -f "${TMP_EEPROM_CONFIG}" "${backup}"
 
@@ -355,8 +383,8 @@ checkDependencies() {
       FIRMWARE_IMAGE_DIR="${FIRMWARE_IMAGE_DIR}-${BOARD_INFO}"
    fi
 
-   if vcgencmd bootloader_config | grep -qi "Command not registered"; then
-      die "vcgencmd: 'bootloader_config' command not supported. Please update VC firmware and reboot."
+   if ! getBootloaderConfig > /dev/null; then
+      die "Unable to get bootloader config, please update VC firmware and reboot."
    fi
 
    if ! command -v sha256sum > /dev/null; then
@@ -800,7 +828,7 @@ done
 
 checkDependencies
 if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ "${AUTO_UPDATE_VL805}" = 1 ]; then
-   if vcgencmd bootloader_config | grep FREEZE_VERSION=1; then
+   if getBootloaderConfig | grep FREEZE_VERSION=1; then
       echo "EEPROM version is frozen. Skipping update"
       exit ${EXIT_EEPROM_FROZEN}
    else
