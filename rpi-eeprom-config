@@ -138,8 +138,7 @@ def edit_config(eeprom=None):
         image = BootloaderImage(pending)
         current_config = image.get_config().decode('utf-8')
     else:
-        config_src = 'vcgencmd bootloader_config'
-        current_config = read_current_config()
+        current_config, config_src = read_current_config()
 
     create_tempdir()
     tmp_conf = os.path.join(TEMP_DIR, 'boot.conf')
@@ -160,7 +159,17 @@ def read_current_config():
     """
     Reads the configuration used by the current bootloader.
     """
-    return shell_cmd(['vcgencmd', 'bootloader_config'])
+    fw_base = "/sys/firmware/devicetree/base/"
+    nvmem_base = "/sys/bus/nvmem/devices/"
+
+    if os.path.exists(fw_base + "/aliases/blconfig"):
+        with open(fw_base + "/aliases/blconfig", "rb") as f:
+            nvmem_ofnode_path = fw_base + f.read().decode('utf-8')
+            for d in os.listdir(nvmem_base):
+                if os.path.realpath(nvmem_base + d + "/of_node") in os.path.normpath(nvmem_ofnode_path):
+                    return (open(nvmem_base + d + "/nvmem", "rb").read().decode('utf-8'), "blconfig device")
+
+    return (shell_cmd(['vcgencmd', 'bootloader_config']), "vcgencmd bootloader_config")
 
 class BootloaderImage(object):
     def __init__(self, filename, output=None):
@@ -293,6 +302,7 @@ Operating modes:
    it must be run as root.
 
    The configuration file will be taken from:
+       * The blconfig reserved memory nvmem device
        * The cached bootloader configuration 'vcgencmd bootloader_config'
        * The current pending update - typically /boot/pieeprom.upd
 
@@ -336,7 +346,7 @@ images.
         else:
             image.read()
     elif args.config is None and args.eeprom is None:
-        current_config = read_current_config()
+        current_config, config_src = read_current_config()
         if args.out is not None:
             open(args.out, 'w').write(current_config)
         else:
