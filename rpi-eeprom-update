@@ -33,6 +33,7 @@ RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recover
 BOOTFS=${BOOTFS:-/boot}
 VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
+RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
 
@@ -545,6 +546,9 @@ EOF
 
 printVersions()
 {
+   echo "Checking for updates in ${FIRMWARE_IMAGE_DIR}"
+   echo "Use ${RPI_EEPROM_UPDATE_CONFIG_TOOL} to select either the default-production release or latest update."
+
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
       echo "BOOTLOADER: update available"
    else
@@ -553,7 +557,7 @@ printVersions()
 
    echo "CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
    echo " LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-   echo " FW DIR: ${FIRMWARE_IMAGE_DIR}"
+   echo "RELEASE: ${FIRMWARE_RELEASE_STATUS}"
 
    if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
       echo "VL805: update available"
