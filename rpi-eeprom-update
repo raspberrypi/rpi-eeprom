@@ -346,6 +346,7 @@ checkDependencies() {
       echo "BCM2711 detected"
    else
       # Not a BCM2711, no EEPROMs to update.
+      echo "This tool only works with a Raspberry Pi 4"
       exit ${EXIT_SUCCESS}
    fi
 
