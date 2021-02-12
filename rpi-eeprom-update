@@ -316,7 +316,7 @@ checkDependencies() {
 
    if [ ${BOARD_TYPE} -eq 20 ] && [ "${CM4_ENABLE_RPI_EEPROM_UPDATE}" != '1' ]; then
       # For CM4, USB device boot is the recommended method for EEPROM updates.
-      echo "rpi-eeprom-update is not enabled by default on CM4"
+      echo "rpi-eeprom-update is not enabled by default on CM4. Run -h for more information"
       exit ${EXIT_SUCCESS}
    fi
 
@@ -470,6 +470,31 @@ The syntax is the same as config.txt See online documentation for the list of pa
 
 The official documentation for the Raspberry Pi bootloader EEPROM is available at
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
+
+Compute Module 4 (CM4):
+
+CM4 is designed to support embedded applications where physical access to the CM4
+may be limited.  An invalid bootloader configuration or software bug could
+cause the system to fail to boot so automatic updates are disabled. We also
+recommend write protecting the SPI EPPROM after flashing it using usbboot.
+
+CM4 bootloader and EEPROM update instructions.
+https://www.raspberrypi.org/documentation/hardware/computemodule/cm-emmc-flashing.md
+
+usbboot instructions for flashing CM4 EMMC and bootloader EEPROM.
+https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
+
+The CM4 ROM does not support running recovery.bin from the EMMC on CM4 so this service
+is disabled by default. SELF_UPDATE from USB or Network boot is supported but this
+must first be enabled by removing ENABLE_SELF_UPDATE=0 from the EEPROM config
+via usbboot.
+
+After enabling self-update set the CM4_ENABLE_RPI_EEPROM_UPDATE=1 environment
+variable or define it in /etc/default/rpi-eeprom-update.
+
+N.B. If there is a power failure during SELF_UDPATE the EEPROM write may fail and
+usbboot must be used to flash the bootloader EEPROM. SELF_UDPATE is not recommended
+for updating the bootloader on remote systems.
 
 EOF
   exit ${EXIT_SUCCESS}
