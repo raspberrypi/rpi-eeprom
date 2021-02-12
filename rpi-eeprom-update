@@ -476,7 +476,7 @@ Compute Module 4 (CM4):
 CM4 is designed to support embedded applications where physical access to the CM4
 may be limited.  An invalid bootloader configuration or software bug could
 cause the system to fail to boot so automatic updates are disabled. We also
-recommend write protecting the SPI EPPROM after flashing it using usbboot.
+recommend write-protecting the SPI EPPROM after flashing it using usbboot.
 
 CM4 bootloader and EEPROM update instructions:
    https://www.raspberrypi.org/documentation/hardware/computemodule/cm-emmc-flashing.md
@@ -492,8 +492,8 @@ via usbboot.
 After enabling self-update set the CM4_ENABLE_RPI_EEPROM_UPDATE=1 environment
 variable or define it in /etc/default/rpi-eeprom-update.
 
-N.B. If there is a power failure during SELF_UDPATE the EEPROM write may fail and
-usbboot must be used to flash the bootloader EEPROM. SELF_UDPATE is not recommended
+N.B. If there is a power failure during SELF_UPDATE the EEPROM write may fail and
+usbboot must be used to flash the bootloader EEPROM. SELF_UPDATE is not recommended
 for updating the bootloader on remote systems.
 
 EOF
