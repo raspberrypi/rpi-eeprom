@@ -3,7 +3,13 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
-## 2021-01-16 - Fix 1V8 SD voltage reset for Pi 4B R1.1 LATEST + BETA
+## 2021-02-16 - Change VC version info & TFTP fix - BETA
+   * Display the VC_BUILD strings instead of the sha256 of the .elf file so that
+     the information is the same as "vcgencmd version"
+   * Change TFTP to ACK data blocks which it has already ACK'd instead of ignoring them.
+   * Change network boot to use the same "RXID" configuration as the 5.10 kernel.
+
+## 2021-01-16 - Fix 1V8 SD voltage reset for Pi 4B R1.1 - LATEST + BETA
    * Fix regression for GPIO expander reset change which caused PMIC reset
      to get card out of 1V8 mode to be missed.
 

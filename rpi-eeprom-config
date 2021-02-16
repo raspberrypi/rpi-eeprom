@@ -32,6 +32,15 @@ FILE_HDR_LEN = 20
 FILENAME_LEN = 12
 TEMP_DIR = None
 
+def rpi4():
+    compatible_path = "/sys/firmware/devicetree/base/compatible"
+    if os.path.exists(compatible_path):
+        with open(compatible_path, "rb") as f:
+            compatible = f.read().decode('utf-8')
+            if "bcm2711" in compatible:
+                return True
+    return False
+
 def exit_handler():
     """
     Delete any temporary files.
@@ -327,9 +336,11 @@ images.
     parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
 
-
     if (args.edit or args.apply is not None) and os.getuid() != 0:
         exit_error("--edit/--apply must be run as root")
+
+    if (args.edit or args.apply is not None) and not rpi4():
+        exit_error("--edit/--apply must run on a Raspberry Pi 4")
 
     if args.edit:
         edit_config(args.eeprom)

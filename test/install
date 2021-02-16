@@ -22,7 +22,7 @@ CONFIG="/etc/default/rpi-eeprom-update"
 cp -rfv "${FIRMWARE_DIR}"/* /lib/firmware/raspberrypi/bootloader
 cp -fv "${script_dir}/../rpi-eeprom-config" /usr/bin
 cp -fv "${script_dir}/../rpi-eeprom-update" /usr/bin
-cp -fv "${script_dir}/../firmware/vl805" /usr/bin
+rm -f /usr/bin/vl805
 
 cp -fv "${script_dir}/../rpi-eeprom-update-default" /etc/default/rpi-eeprom-update
 
