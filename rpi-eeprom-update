@@ -328,11 +328,15 @@ checkDependencies() {
       HAVE_VL805_EEPROM=0
    fi
 
+   if ! command -v lspci > /dev/null; then
+      die "lspci not found. Try installing the pciutils package."
+   fi
+
    # vcgencmd bootloader_version is deprecated. Use device-tree if available to
    # reduce the number of dependencies on VCHI.
    if ! [ -f "${DT_BOOTLOADER_TS}" ]; then
       if ! command -v vcgencmd > /dev/null; then
-         die "vcgencmd not found. On Debian, try installing the libraspberrypi-bin package."
+         die "vcgencmd not found. Try installing the libraspberrypi-bin package."
       fi
    fi
 
@@ -351,7 +355,7 @@ checkDependencies() {
    fi
 
    if ! command -v sha256sum > /dev/null; then
-      die "sha256sum not found. On Debian, try installing the coreutilities package"
+      die "sha256sum not found. Try installing the coreutilities package."
    fi
 
    if [ ! -f "${RECOVERY_BIN}" ]; then
@@ -557,11 +561,7 @@ getVL805CurrentVersion()
    # root then treat the version as unknown and skip VLI updates.
    VL805_CURRENT_VERSION=""
    if [ "$(id -u)" = "0" ]; then
-      if command -v lspci >/dev/null; then
          vlver="$(lspci -d 1106:3483 -xxx | awk '/^50:/ { print "VL805 FW version: " $5 $4 $3 $2 }')"
-      else
-         vlver="$(vl805 | grep "VL805 FW version")"
-      fi
       if [ -n "${vlver}" ]; then
          VL805_CURRENT_VERSION="${vlver#*: }"
       fi
