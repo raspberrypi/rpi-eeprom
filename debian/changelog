@@ -1,3 +1,23 @@
+rpi-eeprom (11.7-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Reference raspi-config from version message
+
+  [ Nicolas Saenz Julienne ]
+  * rpi-eeprom-config/update: Exit cleanly when not run on rpi4
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Remove deprecated flashrom script options.
+
+  [ timg236 ]
+  * rpi-eeprom-update: Expand help to describe CM4 bootloader updates (#293)
+
+  [ Tim Gover ]
+  * vl805: Move to old following removal of USE_FLASHROM option
+  * pieeprom-2021-02-16: Change VC version info & TFTP ACK fix BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 16 Feb 2021 16:28:43 +0000
+
 rpi-eeprom (11.6-1) buster; urgency=medium
 
   [ Nicolas Saenz Julienne ]

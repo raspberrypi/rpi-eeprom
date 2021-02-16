@@ -28,11 +28,11 @@ FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-default}
 FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
 ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
-USE_FLASHROM=${USE_FLASHROM:-0}
 RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recovery.bin}
 BOOTFS=${BOOTFS:-/boot}
 VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
+RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
 
@@ -59,10 +59,6 @@ BOARD_TYPE=
 # Recovery.bin and the the SPI bootloader ignore vl805.bin files on boards
 # without a dedicate VL805 EEPROM.
 HAVE_VL805_EEPROM=0
-
-# Simple bootloader which is able to load start.elf in the event of a power
-# cut. This runs SDRAM at low speed and may have reduced functionality but
-# should be enough to run flashrom again.
 
 TMP_EEPROM_IMAGE=""
 TMP_BOOTFS_MNT=""
@@ -258,43 +254,9 @@ applyUpdate() {
       ) || die "Unable to validate EEPROM image package checksums"
    fi
 
-   if [ "${USE_FLASHROM}" = 0 ]; then
-      applyRecoveryUpdate
-      return
-   fi
-
-   if [ -f "${BOOTLOADER_UPDATE_IMAGE}" ]; then
-      echo "WARNING: USE_FLASHROM is deprecated."
-      # Bootloader EEPROM chip-select is muxed with audio pin so disable audio
-      # LDO first to avoid sending noise to analog audio.
-      "${VCMAILBOX}" 0x00030056 4 4 0 > /dev/null || true
-      dtparam audio=off
-
-      # Switch the SPI pins to boot EEPROM
-      dtoverlay spi-gpio40-45
-      modprobe spidev
-      modprobe spi-bcm2835
-
-      prepareImage "${BOOTLOADER_UPDATE_IMAGE}"
-
-      echo "Applying bootloader update ${BOOTLOADER_UPDATE_IMAGE}"
-      flashrom -p "linux_spi:dev=/dev/spidev0.0,spispeed=${SPI_SPEED}" -w "${TMP_EEPROM_IMAGE}" || die "flashrom EEPROM update failed"
-
-      dtparam -R spi-gpio40-45
-      dtparam audio=on
-      ${VCMAILBOX} 0x00030056 4 4 1 > /dev/null || true
-   fi
-
-   if [ -f "${VL805_UPDATE_IMAGE}" ]; then
-      echo "Applying VL805 image ${VL805_UPDATE_IMAGE}"
-      vl805 -w "${VL805_UPDATE_IMAGE}"
-   fi
-
-   echo "Applying bootloader update ${BOOTLOADER_UPDATE_IMAGE}"
+   applyRecoveryUpdate
 }
 
-# Use the version reported by the loaded EEPROM instead of attempting to retrieve
-# this via flashrom to avoid unnecessary audio glitches.
 BOOTLOADER_CURRENT_VERSION=
 getBootloaderCurrentVersion() {
    if [ -f "${DT_BOOTLOADER_TS}" ]; then
@@ -345,6 +307,7 @@ checkDependencies() {
       echo "BCM2711 detected"
    else
       # Not a BCM2711, no EEPROMs to update.
+      echo "This tool only works with a Raspberry Pi 4"
       exit ${EXIT_SUCCESS}
    fi
 
@@ -353,7 +316,7 @@ checkDependencies() {
 
    if [ ${BOARD_TYPE} -eq 20 ] && [ "${CM4_ENABLE_RPI_EEPROM_UPDATE}" != '1' ]; then
       # For CM4, USB device boot is the recommended method for EEPROM updates.
-      echo "rpi-eeprom-update is not enabled by default on CM4"
+      echo "rpi-eeprom-update is not enabled by default on CM4. Run with -h for more information."
       exit ${EXIT_SUCCESS}
    fi
 
@@ -365,11 +328,15 @@ checkDependencies() {
       HAVE_VL805_EEPROM=0
    fi
 
+   if ! command -v lspci > /dev/null; then
+      die "lspci not found. Try installing the pciutils package."
+   fi
+
    # vcgencmd bootloader_version is deprecated. Use device-tree if available to
    # reduce the number of dependencies on VCHI.
    if ! [ -f "${DT_BOOTLOADER_TS}" ]; then
       if ! command -v vcgencmd > /dev/null; then
-         die "vcgencmd not found. On Debian, try installing the libraspberrypi-bin package."
+         die "vcgencmd not found. Try installing the libraspberrypi-bin package."
       fi
    fi
 
@@ -388,26 +355,10 @@ checkDependencies() {
    fi
 
    if ! command -v sha256sum > /dev/null; then
-      die "sha256sum not found. On Debian, try installing the coreutilities package"
+      die "sha256sum not found. Try installing the coreutilities package."
    fi
 
-   if ! command -v flashrom  > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
-      die "flashrom not found. On Debian, try installing the flashrom package."
-   fi
-
-   if [ ! -x "${VCMAILBOX}" ] && [ "${USE_FLASHROM}" = 1 ]; then
-      die "vcmailbox not found. On Debian, try installing the libraspberrypi-bin package."
-   fi
-
-   if ! command -v dtparam > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
-      die "dtparam not found. On Debian, try installing the libraspberrypi-bin package."
-   fi
-
-   if ! command -v dtoverlay > /dev/null && [ "${USE_FLASHROM}" = 1 ]; then
-      die "dtoverlay not found. On Debian, try installing the libraspberrypi-bin package."
-   fi
-
-   if [ "${USE_FLASHROM}" = 0 ] && [ ! -f "${RECOVERY_BIN}" ]; then
+   if [ ! -f "${RECOVERY_BIN}" ]; then
       die "${RECOVERY_BIN} not found."
    fi
 }
@@ -473,21 +424,6 @@ configuration file before it is applied to the new image. The modified
 output must contain at least 3 lines and should contain WAKE_ON_GPIO
 and POWER_OFF_ON_HALT settings.
 
-USE_FLASHROM
-
-USE_FLASHROM is deprecated and there is no support for this. The muxing
-of the SPI pins causes too many issues for this to ever be reliable.
-
-The flashrom update mechanism may be enabled by setting USE_FLASHROM=1. This
-also selects the vl805 tool instead of using recovery.bin to perform the
-update. This may be desirable if an immediate update is required or if an
-SD card is not present.
-However, this not recommended because the SPI pins are muxed with audio and other
-device drivers may be using SPI (e.g. HATs). This is also not safe in the
-event of a power failure during the update of the EEPROM.
-Changing the VL805 firmware whilst USB devices are attached may also cause
-those devices to stop working until after the system is reboot.
-
 FIRMWARE_RELEASE_STATUS
 
 Specifies the release status of the firmware to apply.
@@ -539,12 +475,40 @@ The syntax is the same as config.txt See online documentation for the list of pa
 The official documentation for the Raspberry Pi bootloader EEPROM is available at
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md
 
+Compute Module 4 (CM4):
+
+CM4 is designed to support embedded applications where physical access to the CM4
+may be limited.  An invalid bootloader configuration or software bug could
+cause the system to fail to boot so automatic updates are disabled. We also
+recommend write-protecting the SPI EPPROM after flashing it using usbboot.
+
+CM4 bootloader and EEPROM update instructions:
+   https://www.raspberrypi.org/documentation/hardware/computemodule/cm-emmc-flashing.md
+
+usbboot instructions for flashing CM4 EMMC and bootloader EEPROM:
+   https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
+
+The CM4 ROM does not support running recovery.bin from the EMMC on CM4 so this service
+is disabled by default. SELF_UPDATE from USB or Network boot is supported but this
+must first be enabled by removing ENABLE_SELF_UPDATE=0 from the EEPROM config
+via usbboot.
+
+After enabling self-update set the CM4_ENABLE_RPI_EEPROM_UPDATE=1 environment
+variable or define it in /etc/default/rpi-eeprom-update.
+
+N.B. If there is a power failure during SELF_UPDATE the EEPROM write may fail and
+usbboot must be used to flash the bootloader EEPROM. SELF_UPDATE is not recommended
+for updating the bootloader on remote systems.
+
 EOF
   exit ${EXIT_SUCCESS}
 }
 
 printVersions()
 {
+   echo "Checking for updates in ${FIRMWARE_IMAGE_DIR}"
+   echo "Use ${RPI_EEPROM_UPDATE_CONFIG_TOOL} to select either the default-production release or latest update."
+
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
       echo "BOOTLOADER: update available"
    else
@@ -553,7 +517,7 @@ printVersions()
 
    echo "CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
    echo " LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-   echo " FW DIR: ${FIRMWARE_IMAGE_DIR}"
+   echo "RELEASE: ${FIRMWARE_RELEASE_STATUS}"
 
    if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
       echo "VL805: update available"
@@ -597,11 +561,7 @@ getVL805CurrentVersion()
    # root then treat the version as unknown and skip VLI updates.
    VL805_CURRENT_VERSION=""
    if [ "$(id -u)" = "0" ]; then
-      if command -v lspci >/dev/null; then
          vlver="$(lspci -d 1106:3483 -xxx | awk '/^50:/ { print "VL805 FW version: " $5 $4 $3 $2 }')"
-      else
-         vlver="$(vl805 | grep "VL805 FW version")"
-      fi
       if [ -n "${vlver}" ]; then
          VL805_CURRENT_VERSION="${vlver#*: }"
       fi
