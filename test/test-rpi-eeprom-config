@@ -59,6 +59,29 @@ check_reduce_size()
 
 }
 
+check_signed_loopback()
+{
+   echo "check_signed $1 $2"
+
+   image="${script_dir}/$1"
+   conf="${script_dir}/$2"
+   digest="${script_dir}/$3"
+   pubkey="${script_dir}/$4"
+
+   # Replace the config, config.sig and pubkey and verify that the output is the same
+   TMP_EEPROM="$(mktemp)"
+   "${script_dir}/../rpi-eeprom-config" \
+      "${image}" \
+      --config "${conf}" \
+      --digest "${digest}" \
+      --pubkey "${pubkey}" \
+      --out "${TMP_EEPROM}"
+
+   expected_md5="$(md5sum "${image}" | awk '{print $1}')"
+   actual_md5="$(md5sum "${TMP_EEPROM}" | awk '{print $1}')"
+   [ "${actual_md5}" = "${expected_md5}" ] || die "EEPROM signed-loopback: checksum mismatch"
+}
+
 check_loopback()
 {
    echo "check_loopback $1 $2"
@@ -147,6 +170,11 @@ for ver in ${versions}; do
    check_loopback "../firmware/old/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
    cleanup
 done
+
+echo "Test lookback with a signed EEPROM image"
+check_loopback pieeprom-signed.bin bootconf.txt
+check_signed_loopback pieeprom-signed.bin bootconf.txt bootconf.sig public.pem
+cleanup
 
 check_update "../firmware/old/beta/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15-freeze.bin" "bootconf-2019-07-15-freeze.txt"
 cleanup
