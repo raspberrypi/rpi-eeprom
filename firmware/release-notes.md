@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-02-22 - Promote 2021-02-16 to stable - STABLE (LATEST)
+   * Freezing for default/critical update.
+
 ## 2021-02-16 - Change VC version info & TFTP fix - BETA
    * Display the VC_BUILD strings instead of the sha256 of the .elf file so that
      the information is the same as "vcgencmd version"
