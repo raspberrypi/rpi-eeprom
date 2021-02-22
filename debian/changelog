@@ -1,3 +1,16 @@
+rpi-eeprom (11.8-1) buster; urgency=medium
+
+  [ Nicolas Saenz Julienne ]
+  * rpi-eeprom-update: Use 'tr' instead of 'strings'
+
+  [ Tim Gover ]
+  * pieeprom-2021-02-16: Promote to STABLE
+
+  [ Serge Schneider ]
+  * Packaging: remove binutils dependency
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 22 Feb 2021 17:53:15 +0000
+
 rpi-eeprom (11.7-1) buster; urgency=medium
 
   [ Tim Gover ]
