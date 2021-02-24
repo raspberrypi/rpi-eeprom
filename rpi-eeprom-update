@@ -44,8 +44,6 @@ EXIT_EEPROM_FROZEN=3
 # EXIT_PREVIOUS_UPDATE_FAILED=4
 
 OVERWRITE_CONFIG=0
-# Maximum safe SPI speed for EEPROM access 16000, slower is ok.
-SPI_SPEED=16000
 # Timestamp for first release which doesn't have a timestamp field
 BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
