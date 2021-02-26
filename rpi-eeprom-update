@@ -44,8 +44,6 @@ EXIT_EEPROM_FROZEN=3
 # EXIT_PREVIOUS_UPDATE_FAILED=4
 
 OVERWRITE_CONFIG=0
-# Maximum safe SPI speed for EEPROM access 16000, slower is ok.
-SPI_SPEED=16000
 # Timestamp for first release which doesn't have a timestamp field
 BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
@@ -113,7 +111,7 @@ getBootloaderConfig() {
    local blconfig_nvmem_path=""
 
    if [ -f "${blconfig_alias}" ]; then
-      local blconfig_ofnode_path="/sys/firmware/devicetree/base"$(tr -cd [:print:] < "${blconfig_alias}")""
+      local blconfig_ofnode_path="/sys/firmware/devicetree/base"$(strings "${blconfig_alias}")""
       local blconfig_ofnode_link=$(find -L /sys/bus/nvmem -samefile "${blconfig_ofnode_path}" 2>/dev/null)
 
       if [ -e "${blconfig_ofnode_link}" ]; then
@@ -288,7 +286,7 @@ getBootloaderUpdateVersion() {
    match=".*/pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin"
    latest="$(find "${FIRMWARE_IMAGE_DIR}/" -maxdepth 1 -type f -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
    if [ -f "${latest}" ]; then
-      BOOTLOADER_UPDATE_VERSION=$(tr -c [:print:] "\n" < "${latest}" | sed '/^BUILD_TIMESTAMP=/s/.*=//p;d')
+      BOOTLOADER_UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
       BOOTLOADER_UPDATE_IMAGE="${latest}"
    fi
 }
