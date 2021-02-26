@@ -1,3 +1,20 @@
+rpi-eeprom (11.9-1) buster; urgency=medium
+
+  [ Nicolas Saenz Julienne ]
+  * rpi-eeprom-update: Surround [:print:] with quotes
+
+  [ Tim Gover ]
+  * Remove SPI_SPEED variable now that flashrom has been removed.
+
+  [ Serge Schneider ]
+  * Revert "Remove binutils dependency"
+
+  [ Tim Gover ]
+  * Revert "rpi-eeprom-update: Surround [:print:] with quotes"
+  * Revert "rpi-eeprom-update: Use 'tr' instead of 'strings'"
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 26 Feb 2021 14:16:55 +0000
+
 rpi-eeprom (11.8-1) buster; urgency=medium
 
   [ Nicolas Saenz Julienne ]

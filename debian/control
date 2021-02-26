@@ -11,7 +11,7 @@ Vcs-Git: https://github.com/raspberrypi/rpi-eeprom.git
 Package: rpi-eeprom
 Architecture: armhf arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, libraspberrypi-bin, python3,
- raspberrypi-bootloader (>= 1.20190819), pciutils
+ binutils, raspberrypi-bootloader (>= 1.20190819), pciutils
 Breaks: rpi-eeprom-images (<<7.2)
 Replaces: rpi-eeprom-images (<<7.2)
 Recommends: flashrom
