@@ -1,0 +1,65 @@
+#!/bin/sh
+
+# Generates three variants of the rpi-eeprom-recovery.zip file for
+# SD, USB and NETWORK priority matching the raspi-config options.
+
+set -e
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+tmp_dir=""
+
+die() {
+   echo "$@" >&2
+   exit 1
+}
+
+cleanup() {
+   if [ -d "${tmp_dir}" ]; then
+      rm -rf "${tmp_dir}"
+   fi
+   tmp_dir=""
+}
+
+gen_release() {
+   config="${1}"
+   out="${2}"
+
+   [ -f "${config}" ] || die "File not found \"${config}\""
+
+   (
+      tmp_dir="$(mktemp -d)"
+      cd "${tmp_dir}"
+      cp "${script_dir}/vl805.bin" .
+      cp "${script_dir}/README.txt" .
+      sha256sum vl805.bin | awk '{print $1}' > vl805.sig
+
+      "${script_dir}/../rpi-eeprom-config" \
+         --config "${script_dir}/${config}" --out pieeprom.bin \
+         "${script_dir}/pieeprom.bin" || die "Failed to create update EEPROM config with  \"${config}\""
+      sha256sum pieeprom.bin | awk '{print $1}' > pieeprom.sig
+      echo "Creating ${out}"
+      zip "${out}" *
+   )
+}
+
+usage() {
+cat <<EOF
+   make-release <tag>
+
+   Example tag "2020-09-03-vl805-000138a1"
+EOF
+exit
+}
+
+trap cleanup EXIT
+tag="${1}"
+[ -n "${tag}" ] || usage
+release_dir="${script_dir}/release"
+rm -rf "${release_dir}"
+mkdir "${release_dir}"
+
+# Build the different boot priority flavours
+gen_release boot-conf-default.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}.zip"
+gen_release boot-conf-sd.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}-sd.zip"
+gen_release boot-conf-usb.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}-usb.zip"
+gen_release boot-conf-network.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}-network.zip"
