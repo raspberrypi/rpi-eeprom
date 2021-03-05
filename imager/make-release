@@ -1,11 +1,16 @@
 #!/bin/sh
 
 # Generates three variants of the rpi-eeprom-recovery.zip file for
-# SD, USB and NETWORK priority matching the raspi-config options.
+# SD, USB and NETWORK priority matching the raspi-config options,
+# plus a default (same as SD)
 
 set -e
 
+FIRMWARE_RELEASE="critical"
+OUTPUT_BASENAME="rpi-boot-eeprom-recovery"
+
 script_dir=$(cd "$(dirname "$0")" && pwd)
+firmware_dir=${script_dir}/../firmware/${FIRMWARE_RELEASE}
 tmp_dir=""
 
 die() {
@@ -27,40 +32,46 @@ gen_release() {
    [ -f "${config}" ] || die "File not found \"${config}\""
 
    (
-      tmp_dir="$(mktemp -d)"
+      tmp_dir="$(mktemp -d --tmpdir tmp.rpi-eeprom.XXXXXXXXXX)"
       cd "${tmp_dir}"
-      cp "${script_dir}/recovery.bin" .
-      cp "${script_dir}/vl805.bin" .
       cp "${script_dir}/README.txt" .
+      cp "${firmware_dir}/recovery.bin" .
+      cp "${firmware_dir}/vl805-${vl805_version}.bin" vl805.bin
       sha256sum vl805.bin | awk '{print $1}' > vl805.sig
 
       "${script_dir}/../rpi-eeprom-config" \
          --config "${script_dir}/${config}" --out pieeprom.bin \
-         "${script_dir}/pieeprom.bin" || die "Failed to create update EEPROM config with  \"${config}\""
+         "${firmware_dir}/pieeprom-${pieeprom_version}.bin" || die "Failed to create updated EEPROM config with  \"${config}\""
       sha256sum pieeprom.bin | awk '{print $1}' > pieeprom.sig
       echo "Creating ${out}"
       zip "${out}" *
+      cleanup
    )
 }
 
 usage() {
 cat <<EOF
-   make-release <tag>
+   make-release <pieeprom_version> <vl805_version>
 
-   Example tag "2020-09-03-vl805-000138a1"
+   Example: make-release 2020-09-03 000138a1
 EOF
 exit
 }
 
 trap cleanup EXIT
-tag="${1}"
-[ -n "${tag}" ] || usage
+pieeprom_version="${1}"
+vl805_version="${2}"
+[ -n "${pieeprom_version}" ] || usage
+[ -n "${vl805_version}" ] || usage
+[ -f "${firmware_dir}/pieeprom-${pieeprom_version}.bin" ] || (echo "${FIRMWARE_RELEASE}/pieeprom-${pieeprom_version}.bin doesn't exist" && exit 1)
+[ -f "${firmware_dir}/vl805-${vl805_version}.bin" ] || (echo "${FIRMWARE_RELEASE}/vl805-${vl805_version}.bin doesn't exist" && exit 1)
+tag="${pieeprom_version}-vl805-${vl805_version}"
 release_dir="${script_dir}/release"
 rm -rf "${release_dir}"
 mkdir "${release_dir}"
 
 # Build the different boot priority flavours
-gen_release boot-conf-default.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}.zip"
-gen_release boot-conf-sd.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}-sd.zip"
-gen_release boot-conf-usb.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}-usb.zip"
-gen_release boot-conf-network.txt "${release_dir}/rpi-boot-eeprom-recovery-${tag}-network.zip"
+gen_release boot-conf-default.txt "${release_dir}/${OUTPUT_BASENAME}-${tag}.zip"
+for variant in sd usb network; do
+   gen_release boot-conf-${variant}.txt "${release_dir}/${OUTPUT_BASENAME}-${tag}-${variant}.zip"
+done
