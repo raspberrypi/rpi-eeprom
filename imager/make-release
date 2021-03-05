@@ -29,6 +29,7 @@ gen_release() {
    (
       tmp_dir="$(mktemp -d)"
       cd "${tmp_dir}"
+      cp "${script_dir}/recovery.bin" .
       cp "${script_dir}/vl805.bin" .
       cp "${script_dir}/README.txt" .
       sha256sum vl805.bin | awk '{print $1}' > vl805.sig
