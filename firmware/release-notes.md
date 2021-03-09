@@ -3,6 +3,20 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-03-04 - NVMe boot support - BETA
+   * Adds support for NVMe to the bootloader with a new NVMe boot mode "6"
+     NVMe currently only works for controller 0 on namespace 1 with a page size of 4096 bytes
+     and block size of 512 bytes
+   * The default boot order has been updated to F641 for cm4 ONLY, so NVMe boot is
+     attempted after SD and USB
+
+     To use the new NVMe add "6" to the BOOT_ORDER.
+
+     This requires the latest rpi-update firmware to work or else you will see a compatibility
+     error on boot. You also need the latest kernel from rpi-update to load rootfs from NVMe
+     see https://github.com/Hexxeh/rpi-firmware/commit/48570ba954a318feee348d4e642ebd2b58d9dd97
+     and https://github.com/Hexxeh/rpi-firmware/commit/e150906874ff8b9fb6271971fa4238997369f790
+
 ## 2021-02-22 - Promote 2021-02-16 to stable - STABLE (LATEST)
    * Freezing for default/critical update.
 
