@@ -4,7 +4,7 @@ set -e
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
 
-firmware_status=beta
+firmware_status=${firmware_status:-"beta"}
 firmware_dir=${script_dir}/../firmware/${firmware_status}
 pieeprom_version=$(basename $(ls ${firmware_dir}/pieeprom-*.bin | sort -V | tail -1) .bin | cut -d- -f2-5)
 vl805_version=$(basename $(ls ${firmware_dir}/vl805-*.bin | sort -V | tail -1) .bin | cut -d- -f2)
