@@ -1,0 +1,7 @@
+#!/bin/sh
+
+set -e
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
+${script_dir}/make-release critical 2020-09-03 000138a1 "${script_dir}" release rpi-boot-eeprom-recovery

@@ -1,0 +1,88 @@
+#!/bin/sh
+
+# Generates three variants of the rpi-eeprom-recovery.zip file for
+# SD, USB and NETWORK priority matching the raspi-config options,
+# plus a default (same as SD)
+
+set -e
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+tmp_dir=""
+
+die() {
+   echo "$@" >&2
+   exit 1
+}
+
+cleanup() {
+   if [ -d "${tmp_dir}" ]; then
+      rm -rf "${tmp_dir}"
+   fi
+   tmp_dir=""
+}
+
+gen_release() {
+   config="${1}"
+   out="${2}"
+
+   [ -f "${config}" ] || die "File not found \"${config}\""
+
+   (
+      tmp_dir="$(mktemp -d --tmpdir tmp.rpi-eeprom.XXXXXXXXXX)"
+      cd "${tmp_dir}"
+      cp "${script_dir}/README.txt" .
+      cp "${firmware_dir}/recovery.bin" .
+      cp "${firmware_dir}/vl805-${vl805_version}.bin" vl805.bin
+      sha256sum vl805.bin | awk '{print $1}' > vl805.sig
+
+      "${script_dir}/../rpi-eeprom-config" \
+         --config "${config}" --out pieeprom.bin \
+         "${firmware_dir}/pieeprom-${pieeprom_version}.bin" || die "Failed to create updated EEPROM config with \"${config}\""
+      sha256sum pieeprom.bin | awk '{print $1}' > pieeprom.sig
+      echo "Creating ${out}"
+      zip "${out}" *
+      cleanup
+   )
+}
+
+usage() {
+cat <<EOF
+   make-release <firmware_status> <pieeprom_version> <vl805_version> <config_dir> <output_dir> <output_basename>
+
+   Example: make-release critical 2020-09-03 000138a1 . release rpi-boot-eeprom-recovery
+EOF
+exit
+}
+
+trap cleanup EXIT
+firmware_status="${1}"
+pieeprom_version="${2}"
+vl805_version="${3}"
+config_dir="${4}"
+output_dir="${5}"
+output_basename="${6}"
+
+[ -n "${firmware_status}" ] || usage
+[ -n "${pieeprom_version}" ] || usage
+[ -n "${vl805_version}" ] || usage
+[ -n "${config_dir}" ] || usage
+[ -n "${output_dir}" ] || usage
+[ -n "${output_basename}" ] || usage
+
+firmware_dir=${script_dir}/../firmware/${firmware_status}
+[ -d "${firmware_dir}" ] || (echo "${firmware_dir} doesn't exist" && exit 1)
+[ -f "${firmware_dir}/pieeprom-${pieeprom_version}.bin" ] || (echo "${firmware_status}/pieeprom-${pieeprom_version}.bin doesn't exist" && exit 1)
+[ -f "${firmware_dir}/vl805-${vl805_version}.bin" ] || (echo "${firmware_status}/vl805-${vl805_version}.bin doesn't exist" && exit 1)
+[ -d "${config_dir}" ] || (echo "${config_dir} doesn't exist" && exit 1)
+tag="${pieeprom_version}-vl805-${vl805_version}"
+# use realpath to ensure paths are absolute
+config_dir=$(realpath "${config_dir}")
+output_dir=$(realpath "${output_dir}")
+rm -rf "${output_dir}"
+mkdir "${output_dir}"
+
+# Build the different boot priority flavours
+gen_release "${config_dir}/boot-conf-default.txt" "${output_dir}/${output_basename}-${tag}.zip"
+for variant in sd usb network; do
+   gen_release "${config_dir}/boot-conf-${variant}.txt" "${output_dir}/${output_basename}-${tag}-${variant}.zip"
+done
