@@ -1,3 +1,21 @@
+rpi-eeprom (11.10-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * make-release: Add a script for generating Raspberry Pi Imager releases
+  * Add recovery.bin to make-release
+
+  [ peter.harper ]
+  * pieeprom-2021-03-04.bin - NVMe boot support - BETA
+
+  [ Andrew Scheller ]
+  * Add make-beta-release as a wrapper around make-release
+  * Allow a custom firmware_status to be set via env-var
+  * Refactor the imager script to reduce duplication and remove reliance on symlinks
+  * Make make-release more flexible, and add make-imager-release as a wrapper script around it
+  * Typos
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 12 Mar 2021 10:49:44 +0000
+
 rpi-eeprom (11.9-1) buster; urgency=medium
 
   [ Nicolas Saenz Julienne ]
