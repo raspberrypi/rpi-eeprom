@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-03-17 - Fix issue with PCIe bridges in Linux - BETA
+   * NVMe BETA boot support broke PCIe bridges in Linux. This should fix the problem
+
 ## 2021-03-04 - NVMe boot support - BETA
    * Adds support for NVMe to the bootloader with a new NVMe boot mode "6"
      NVMe currently only works for controller 0 on namespace 1 with a page size of 4096 bytes
