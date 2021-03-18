@@ -1,3 +1,13 @@
+rpi-eeprom (11.11-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * remove +x bit on beta recovery.bin and 2021-04-03 release
+
+  [ Peter Harper ]
+  * pieeprom-2021-03-17.bin - Fix problem with PCIe bridges - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 17 Mar 2021 16:14:59 +0000
+
 rpi-eeprom (11.10-1) buster; urgency=medium
 
   [ Tim Gover ]
