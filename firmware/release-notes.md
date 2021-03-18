@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-03-18 - Fix occasional reboot fail on Pi4B pre 1.4 - STABLE
+   * Fix GPIO expander reset issue on some Pi4B 1.1 to 1.3 boards
+
 ## 2021-03-17 - Fix issue with PCIe bridges in Linux - BETA
    * NVMe BETA boot support broke PCIe bridges in Linux. This should fix the problem
 
