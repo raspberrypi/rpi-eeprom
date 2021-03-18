@@ -1,3 +1,10 @@
+rpi-eeprom (11.12-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-03-18 Fix reboot issue on older Pi 4B boards - STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 18 Mar 2021 17:01:51 +0000
+
 rpi-eeprom (11.11-1) buster; urgency=medium
 
   [ Tim Gover ]
