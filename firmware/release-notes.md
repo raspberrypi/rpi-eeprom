@@ -3,6 +3,20 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-04-19 - Promote 2021-03-18 from LATEST to DEFAULT - DEFAULT
+   Interesting changes since the last default release:-
+   * Display VC_BUILD_ID strings instead of the SHA256 hash
+   * Add support for [cm4] and [pi400] config conditionals filters.
+   * Change network boot to use the same "RXID" Ethernet PHY configuration as the 5.10 kernel
+   * TFTP - reply to duplicate ACKS
+   * Skip rendering of HDMI diagnostics display for the first 8 seconds unless an error occurs.
+   * UDP checksum fixes
+   * Add support for the BCM2711 XHCI controller - BOOT_ORDER 0x5
+   * XHCI protocol layer fixes for non-VLI controllers
+   * Avoid USB MSD timeout of there is only one device
+   * Implement tryboot for OS upgrade fallback
+   * Check the update-timestamp before applying an update in SELF-UPDATE mode
+
 ## 2021-04-13 - Fix error pattern for HDMI and SDRAM failures - BETA/STABLE
    * Fix recovery.bin error handler so that the LED error pattern is still
      displayed even if HDMI or SDRAM fail.
