@@ -12,6 +12,6 @@ The [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) provides GUI f
 * [Config.txt boot options](https://www.raspberrypi.org/documentation/configuration/config-txt/boot.md)
 * [Bootloader EEPROM](https://www.raspberrypi.org/documentation/hardware/raspberrypi/booteeprom.md)
 * [Bootloader configuration](https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md)
-* [Flashing the Compute Module eMMC](https://www.raspberrypi.org/documentation/hardware/computemodule/cm-emmc-flashing.md)
+* [Updating the Compute Module 4 bootloader](https://www.raspberrypi.org/documentation/hardware/computemodule/cm-emmc-flashing.md#cm4bootloader)
 * [Release notes](firmware/release-notes.md)
 * [Releases](releases.md)
