@@ -34,6 +34,10 @@ VCMAILBOX=${VCMAILBOX:-/opt/vc/bin/vcmailbox}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
 
+# Automatic, critical updates are not applied unless the current bootloader version
+# is older than pieeprom-2020-09-03
+BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1599135103}"
+
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
 
 EXIT_SUCCESS=0
@@ -301,9 +305,7 @@ checkDependencies() {
       BOARD_INFO="$(vcgencmd otp_dump | grep '30:' | sed 's/.*://')"
    fi
 
-   if [ $(((0x$BOARD_INFO >> 23) & 1)) -ne 0 ] && [ $(((0x$BOARD_INFO >> 12) & 15)) -eq 3 ]; then
-      echo "BCM2711 detected"
-   else
+   if [ $(((0x$BOARD_INFO >> 23) & 1)) -eq 0 ] || [ $(((0x$BOARD_INFO >> 12) & 15)) -ne 3 ]; then
       # Not a BCM2711, no EEPROMs to update.
       echo "This tool only works with a Raspberry Pi 4"
       exit ${EXIT_SUCCESS}
@@ -319,10 +321,8 @@ checkDependencies() {
    fi
 
    if [ ${BOARD_TYPE} -eq 17 ] && [ ${BOARD_REVISION} -lt 4 ]; then
-      echo "Dedicated VL805 EEPROM detected"
       HAVE_VL805_EEPROM=1
    else
-      echo "VL805 firmware in bootloader EEPROM"
       HAVE_VL805_EEPROM=0
    fi
 
@@ -409,7 +409,11 @@ Options:
    -l Returns the full path to the latest available EEPROM image file according
       to the FIRMWARE_RELEASE_STATUS and FIRMWARE_IMAGE_DIR settings.
    -m Write status information to the given file when run without -a or -f
-   -r Removes temporary EEPROM update files from the boot partition.
+   -r Removes temporary EEPROM update files from the boot partition. This also
+      reverts a pending update.
+   -s Skips silent, automatic upgrades for default releases if the current
+      bootloader release is newer than the the version specified by
+      BOOTLOADER_AUTO_UPDATE_MIN_VERSION ${BOOTLOADER_AUTO_UPDATE_MIN_VERSION}
    -u Install the specified VL805 (USB EEPROM) image file.
 
 Environment:
@@ -436,19 +440,18 @@ directory first. The binaries are then promoted to 'latest' and finally 'default
 so the 'default' binary is always the most tested release.
 
 default:
-The default bootloader image which is updated once new features in
-'latest' are stable or for critical hardware or security updates.
-
-Raspberry Pi OS automatically updates the bootloader when a newer 'default' image
-is available following an APT update to the rpi-eeprom package.
+The default bootloader image which supports all current models and hardware
+revisions.
+If a critical bug fix is required then the minimum default version number
+(BOOTLOADER_AUTO_UPDATE_MIN_VERSION) in the rpi-eeprom package is updated
+causing the bootloader to be automatically updated.
 
 latest:
 Contains the latest features which have undergone testing via the 'beta'
-release. The configuration parameters are stable.
-
-beta:
-Contains experimental features and bug fixes. Configuration parameters may
-change in subsequent 'beta' releases.
+release. Backwards compatiblity for configuration parameters is maintained
+once a feature is in the latest release directory.
+If the 'latest' release is selected then bootloader is automatically upgraded
+when the rpi-eeprom package is updated.
 
 As far as rpi-eeprom-update is concerned FIRMWARE_RELEASE_STATUS is just
 the subdirectory mapping under ${FIRMWARE_ROOT}. Therefore, custom release
@@ -504,31 +507,35 @@ EOF
 
 printVersions()
 {
-   echo "Checking for updates in ${FIRMWARE_IMAGE_DIR}"
-   echo "Use ${RPI_EEPROM_UPDATE_CONFIG_TOOL} to select either the default-production release or latest update."
-
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
       echo "BOOTLOADER: update available"
    else
       echo "BOOTLOADER: up-to-date"
    fi
 
-   echo "CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
-   echo " LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-   echo "RELEASE: ${FIRMWARE_RELEASE_STATUS}"
+   echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   echo "    LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
+   echo "   RELEASE: ${FIRMWARE_RELEASE_STATUS} (${FIRMWARE_IMAGE_DIR})"
+   echo "            Use ${RPI_EEPROM_UPDATE_CONFIG_TOOL} to change the release."
 
+   echo ""
+   if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
+      echo "  VL805_FW: Dedicated VL805 EEPROM"
+   else
+      echo "  VL805_FW: Using bootloader EEPROM"
+   fi
    if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
-      echo "VL805: update available"
+      echo "   VL805: update available"
    else
       if [ "$(id -u)" = "0" ]; then
-         echo "VL805: up-to-date"
+         echo "     VL805: up-to-date"
       else
-         echo "VL805: version unknown. Try sudo rpi-eeprom-update"
+         echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
       fi
    fi
 
-   echo "CURRENT: ${VL805_CURRENT_VERSION}"
-   echo " LATEST: ${VL805_UPDATE_VERSION}"
+   echo "   CURRENT: ${VL805_CURRENT_VERSION}"
+   echo "    LATEST: ${VL805_UPDATE_VERSION}"
 }
 
 findBootFS()
@@ -591,10 +598,28 @@ lookupVersionInfo()
 
    getVL805CurrentVersion
 
+   ACTION_UPDATE_BOOTLOADER=0
+   ACTION_UPDATE_VL805=0
+
    if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       ACTION_UPDATE_BOOTLOADER=1
    else
       BOOTLOADER_UPDATE_IMAGE=""
+   fi
+
+   # If the '-s' flag for silent updates is specified then only update the
+   # bootloader if the current version is older than the minimum version.
+   if [ "${SILENT_UPDATE}" = 1 ] && [ -n "${BOOTLOADER_AUTO_UPDATE_MIN_VERSION}" ] && [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
+      if [ "${FIRMWARE_RELEASE_STATUS}" = "critical" ] || [ "${FIRMWARE_RELEASE_STATUS}" = "default" ]; then
+         if [ "${BOOTLOADER_CURRENT_VERSION}" -ge "${BOOTLOADER_AUTO_UPDATE_MIN_VERSION}" ]; then
+            echo "Skipping automatic bootloader upgrade. current ${BOOTLOADER_CURRENT_VERSION} >= min ${BOOTLOADER_AUTO_UPDATE_MIN_VERSION}"
+            echo ""
+
+            # Clear the update requried flag
+            ACTION_UPDATE_BOOTLOADER=0
+            BOOTLOADER_UPDATE_IMAGE=""
+         fi
+      fi
    fi
 
    if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
@@ -629,9 +654,13 @@ checkAndApply()
 
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
       echo "*** INSTALLING EEPROM UPDATES ***"
+      echo ""
+
       printVersions
       applyUpdate
+      echo ""
       echo "EEPROM updates pending. Please reboot to apply the update."
+      echo "To cancel a pending update run \"sudo rpi-eeprom-update -r\"."
    else
       printVersions
    fi
@@ -676,7 +705,7 @@ checkVersion()
 {
    lookupVersionInfo
 
-   if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
+   if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
       echo "*** UPDATE AVAILABLE ***"
       printVersions
       write_status_info "EXIT_UPDATE_REQUIRED"
@@ -697,11 +726,13 @@ write_status_info()
    bootloader_new="${BOOTLOADER_UPDATE_VERSION:-0}"
    vl805_cur="${VL805_CURRENT_VERSION}"
    vl805_new="${VL805_UPDATE_VERSION}"
+   min_ver=${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-0}
 
     if [ "${JSON_OUTPUT}" = "no" ]; then
       [ "${HAVE_VL805_EEPROM}" = "0" ] && vl805_eeprom="no" || vl805_eeprom="yes"
       cat > "${MACHINE_OUTPUT}" <<EOF
 EXITCODE="${exit_code}"
+BOOTLOADER_AUTO_UPDATE_MIN_VERSION=${min_ver}
 BOOTLOADER_CURRENT=${bootloader_cur}
 BOOTLOADER_LATEST=${bootloader_new}
 VL805_CURRENT="${vl805_cur}"
@@ -713,6 +744,7 @@ EOF
       cat > "${MACHINE_OUTPUT}" <<EOF
 {
   "EXITCODE": "${exit_code}",
+  "BOOTLOADER_AUTO_UPDATE_MIN_VERSION": ${min_ver},
   "BOOTLOADER_CURRENT": ${bootloader_cur},
   "BOOTLOADER_LATEST": ${bootloader_new},
   "VL805_CURRENT": "${vl805_cur}",
@@ -726,6 +758,7 @@ EOF
 
 AUTO_UPDATE_BOOTLOADER=0
 AUTO_UPDATE_VL805=0
+SILENT_UPDATE=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
 IGNORE_DPKG_CHECKSUMS=${LOCAL_MODE}
@@ -735,7 +768,7 @@ if [ ! -d "${PACKAGE_INFO_DIR}" ]; then
 fi
 
 
-while getopts A:abdhilf:m:ju:r option; do
+while getopts A:abdhilf:m:ju:rs option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -776,6 +809,8 @@ while getopts A:abdhilf:m:ju:r option; do
       removePreviousUpdates
       exit 0
       ;;
+   s) SILENT_UPDATE=1
+      ;;
    u) VL805_UPDATE_IMAGE="${OPTARG}"
       ;;
    *) echo "Unknown argument \"${option}\""
@@ -787,7 +822,7 @@ done
 checkDependencies
 if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ "${AUTO_UPDATE_VL805}" = 1 ]; then
    if getBootloaderConfig | grep FREEZE_VERSION=1; then
-      echo "EEPROM version is frozen. Skipping update"
+      echo "EEPROM version is frozen. Skipping automatic update"
       exit ${EXIT_EEPROM_FROZEN}
    else
       checkAndApply
