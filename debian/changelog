@@ -1,3 +1,19 @@
+rpi-eeprom (12.0-1) buster; urgency=medium
+
+  [ andrum99 ]
+  * releases.md: improve page title, add missing full stops
+
+  [ Tim Gover ]
+  * test: Extend loopback test to cover old beta releases.
+  * rpi-eeprom-update: Specifiy a minimum version number for automatic updates
+  * Update README.md
+  * Update releases.md
+
+  [ Serge Schneider ]
+  * rpi-eeprom-update.service: run rpi-eeprom-update in silent mode
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 25 Mar 2021 17:10:55 +0000
+
 rpi-eeprom (11.12-1) buster; urgency=medium
 
   [ Tim Gover ]
