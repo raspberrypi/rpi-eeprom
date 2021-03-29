@@ -5,7 +5,7 @@ This repository contains the scripts and pre-compiled binaries used to create th
 Please check the Raspberry Pi [general discussion forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) if you have a support question. 
 
 # Reset to factory defaults
-We recommend using [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) to reset your EEPROMs: this will install the latest bootloader and USB controller EEPROM images, and reset the configuration back to the default.
+[Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) can be used to restore your Raspberry Pi 4 EEPROMs to the factory defaults: the current default EEPROM images will be installed, and the configuration reset to factory defaults. Choose `misc utility images` from the list of operating systems, then `bootloader`, then select the desired boot order.
 
 # Bootloader documentation
 * [The boot folder](https://www.raspberrypi.org/documentation/configuration/boot_folder.md)
