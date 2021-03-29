@@ -1,5 +1,5 @@
 # rpi-eeprom
-This repository contains the scripts and pre-compiled binaries used to create the `rpi-eeprom` package which is used to update the Raspberry Pi 4B, 400 and CM4 bootloader and VLI USB xHCI controller EEPROMs.
+This repository contains the scripts and pre-compiled binaries used to create the `rpi-eeprom` package which is used to update the Raspberry Pi 4 and VLI USB xHCI controller EEPROMs.
 
 # Support
 Please check the Raspberry Pi [general discussion forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) if you have a support question. 
