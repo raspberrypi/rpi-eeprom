@@ -1,11 +1,11 @@
 # rpi-eeprom
-This repository contains the scripts and pre-compiled binaries used to create the `rpi-eeprom` package which is used to update the Raspberry Pi 4 bootloader and VLI USB xHCI controller EEPROMs.
+This repository contains the scripts and pre-compiled binaries used to create the `rpi-eeprom` package which is used to update the Raspberry Pi 4 bootloader and VLI USB controller EEPROMs.
 
 # Support
 Please check the Raspberry Pi [general discussion forum](https://www.raspberrypi.org/forums/viewforum.php?f=63) if you have a support question. 
 
 # Reset to factory defaults
-The [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) provides GUI for creating a GUI to update the bootloader and configure the default boot-mode.
+To reset the bootloader back to factory defaults use [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/) to write an EEPROM update image to a spare SD card. Select `Misc utility images` under the `Operating System` tab.
 
 # Bootloader documentation
 * [The boot folder](https://www.raspberrypi.org/documentation/configuration/boot_folder.md)
