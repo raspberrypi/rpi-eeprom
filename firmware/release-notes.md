@@ -3,7 +3,7 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
-## 2021-04-13 - Fix error pattern in recovery.bin BETA/STABLE
+## 2021-04-13 - Fix error pattern for HDMI and SDRAM failures - BETA/STABLE
    * Fix recovery.bin error handler so that the LED error pattern is still
      displayed even if HDMI or SDRAM fail.
 
