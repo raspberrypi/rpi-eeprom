@@ -23,7 +23,7 @@ trap cleanup EXIT
 check_reduce_size()
 {
    # Verify that unused bytes are set to 0xff if the size of the config file is reduced.
-   echo "check_update $1 $2"
+   echo "check_reduce_size $1 $2"
 
    image="${script_dir}/$1"
    conf="${script_dir}/$2"
@@ -61,7 +61,7 @@ check_reduce_size()
 
 check_loopback()
 {
-   echo "check_update $1 $2"
+   echo "check_loopback $1 $2"
 
    image="${script_dir}/$1"
    conf="${script_dir}/$2"
