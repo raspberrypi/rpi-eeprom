@@ -1,3 +1,14 @@
+rpi-eeprom (12.1-1) buster; urgency=medium
+
+  [ Andrew Scheller ]
+  * Fix typos in test script
+
+  [ Tim Gover ]
+  * Update README.md
+  * recovery.bin: Fix error pattern handling for HDMI/SDRAM failures
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 15 Apr 2021 12:27:10 +0100
+
 rpi-eeprom (12.0-1) buster; urgency=medium
 
   [ andrum99 ]
