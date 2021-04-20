@@ -400,6 +400,7 @@ Options:
       flag use the config in that file. This option only applies when a
       bootloader EEPROM update is needed; if the bootloader EEPROM is up-to-date
       then its config will not be changed.
+      Without this switch, the current bootloader config will be retained.
    -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
