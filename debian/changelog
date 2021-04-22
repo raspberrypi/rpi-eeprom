@@ -1,3 +1,13 @@
+rpi-eeprom (12.2-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * 2021-04-19 - Promote 2021-03-18 to the default/critical release
+
+  [ andrum99 ]
+  * rpi-eeprom-update: up-to-date -> up to date
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 22 Apr 2021 16:15:00 +0100
+
 rpi-eeprom (12.1-1) buster; urgency=medium
 
   [ Andrew Scheller ]
