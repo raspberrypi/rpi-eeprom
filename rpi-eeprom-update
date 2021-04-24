@@ -58,8 +58,8 @@ BOARD_TYPE=
 # Newer board revisions embed the VLI firmware in the bootloader EEPROM and
 # there is no way to separately update the VLI firmware. Consequently,
 # standalone vl805 update files do not trigger automatic updates.
-# Recovery.bin and the the SPI bootloader ignore vl805.bin files on boards
-# without a dedicate VL805 EEPROM.
+# recovery.bin and the SPI bootloader ignore vl805.bin files on boards
+# without a dedicated VL805 EEPROM.
 HAVE_VL805_EEPROM=0
 
 TMP_EEPROM_IMAGE=""
@@ -405,14 +405,14 @@ Options:
       firmware updates.
    -h Display help text and exit
    -i Ignore package checksums - for rpi-eeprom developers.
-   -j Write status information using JSON notation
+   -j Write status information using JSON notation (requires -m option)
    -l Returns the full path to the latest available EEPROM image file according
       to the FIRMWARE_RELEASE_STATUS and FIRMWARE_IMAGE_DIR settings.
    -m Write status information to the given file when run without -a or -f
    -r Removes temporary EEPROM update files from the boot partition. This also
-      reverts a pending update.
+      cancels a pending update.
    -s Skips silent, automatic upgrades for default releases if the current
-      bootloader release is newer than the the version specified by
+      bootloader release is newer than the version specified by
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION ${BOOTLOADER_AUTO_UPDATE_MIN_VERSION}
    -u Install the specified VL805 (USB EEPROM) image file.
 
@@ -484,10 +484,10 @@ cause the system to fail to boot so automatic updates are disabled. We also
 recommend write-protecting the SPI EPPROM after flashing it using usbboot.
 
 CM4 bootloader and EEPROM update instructions:
-   https://www.raspberrypi.org/documentation/hardware/computemodule/cm-emmc-flashing.md
+   https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
 usbboot instructions for flashing CM4 EMMC and bootloader EEPROM:
-   https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
+   https://www.raspberrypi.org/documentation/hardware/computemodule/cm-emmc-flashing.md
 
 The CM4 ROM does not support running recovery.bin from the EMMC on CM4 so this service
 is disabled by default. SELF_UPDATE from USB or Network boot is supported but this
