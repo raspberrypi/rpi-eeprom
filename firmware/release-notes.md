@@ -3,8 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-04-29 - Pi400 - Reduce MII clock freq when probing ethernet PHY - STABLE
+   * Pi400 - Reduce MII clock freq when probing ethernet PHY - STABLE
+
 ## 2021-04-19 - Promote 2021-03-18 from LATEST to DEFAULT - DEFAULT
-   Interesting changes since the last default release:-
    * Display VC_BUILD_ID strings instead of the SHA256 hash
    * Add support for [cm4] and [pi400] config conditionals filters.
    * Change network boot to use the same "RXID" Ethernet PHY configuration as the 5.10 kernel
