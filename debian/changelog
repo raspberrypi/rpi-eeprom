@@ -1,3 +1,12 @@
+rpi-eeprom (12.3-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-04-29.bin - Pi400 MII clock freq - STABLE
+  * pieeprom-2021-04-29: Update default release to this image
+  * Update imager-release to 2021-04-29
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 30 Apr 2021 12:57:28 +0100
+
 rpi-eeprom (12.2-1) buster; urgency=medium
 
   [ Tim Gover ]
