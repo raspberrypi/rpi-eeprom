@@ -368,7 +368,7 @@ rpi-eeprom-update [options]... [FILE]
 Bootloader EEPROM update tool for the Raspberry Pi 4.
 
 Checks whether the Raspberry Pi 4 bootloader and the VL805 USB controller
-EEPROMs are up-to-date and optionally updates the EEPROMs at the next reboot.
+EEPROMs are up to date and optionally updates the EEPROMs at the next reboot.
 
 The default update mechanism writes recovery.bin and the EEPROM update
 image(s) (pieeprom.upd and vl805.bin) to the boot partition.
@@ -398,7 +398,7 @@ Options:
    -b Outputs the path that pending EEPROM updates will be written to.
    -d Use the default bootloader config, or if a file is specified using the -f
       flag use the config in that file. This option only applies when a
-      bootloader EEPROM update is needed; if the bootloader EEPROM is up-to-date
+      bootloader EEPROM update is needed; if the bootloader EEPROM is up to date
       then its config will not be changed.
    -f Install the given file instead of the latest applicable update
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
@@ -510,7 +510,7 @@ printVersions()
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
       echo "BOOTLOADER: update available"
    else
-      echo "BOOTLOADER: up-to-date"
+      echo "BOOTLOADER: up to date"
    fi
 
    echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
@@ -528,7 +528,7 @@ printVersions()
       echo "   VL805: update available"
    else
       if [ "$(id -u)" = "0" ]; then
-         echo "     VL805: up-to-date"
+         echo "     VL805: up to date"
       else
          echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
       fi
