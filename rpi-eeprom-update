@@ -174,8 +174,18 @@ applyRecoveryUpdate()
 {
    [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || [ -n "${VL805_UPDATE_IMAGE}" ] || die "No update images specified"
 
+   getBootloaderCurrentVersion
+   BOOTLOADER_UPDATE_VERSION=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
+   if [ "${BOOTLOADER_CURRENT_VERSION}" -gt "${BOOTLOADER_UPDATE_VERSION}" ]; then
+      echo "   WARNING: Installing an older bootloader version."
+      echo "            Update the rpi-eeprom package to fetch the latest bootloader images."
+      echo
+   fi
+   echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   echo "    UPDATE: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
+
    findBootFS
-   echo "BOOTFS ${BOOTFS}"
+   echo "    BOOTFS: ${BOOTFS}"
 
    # A '.sig' file is created so that recovery.bin can check that the
    # EEPROM image has not been corrupted (e.g. SD card corruption).
@@ -232,6 +242,10 @@ applyRecoveryUpdate()
 
    cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" \
       || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
+
+   echo ""
+   echo "EEPROM updates pending. Please reboot to apply the update."
+   echo "To cancel a pending update run \"sudo rpi-eeprom-update -r\"."
 }
 
 applyUpdate() {
@@ -658,9 +672,6 @@ checkAndApply()
 
       printVersions
       applyUpdate
-      echo ""
-      echo "EEPROM updates pending. Please reboot to apply the update."
-      echo "To cancel a pending update run \"sudo rpi-eeprom-update -r\"."
    else
       printVersions
    fi
@@ -670,6 +681,7 @@ fileUpdate()
 {
    removePreviousUpdates
    echo "*** INSTALLING ${BOOTLOADER_UPDATE_IMAGE} ${VL805_UPDATE_IMAGE} ***"
+   echo
 
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
       [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "Bootloader image \"${BOOTLOADER_UPDATE_IMAGE}\" not found"
@@ -680,7 +692,6 @@ fileUpdate()
    fi
 
    applyUpdate
-   echo "EEPROM update pending. Please reboot to apply the update."
 }
 
 removePreviousUpdates()
