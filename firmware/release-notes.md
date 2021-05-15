@@ -3,6 +3,13 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-05-19 - Use the latest BRCM SDRAM settings - BETA
+   * Use the latest BRCM SDRAM settings.
+   * FAT12 support for small bootloader ramdisk images.
+   * Minor file-system performance optimisations.
+   * Added recovery.bin config.txt option (erase_eeprom=1) to perform an
+     SPI chip-erase operation instead of programming the bootloader image.
+
 ## 2021-04-30 - Update default version to 2021-04-29
    * The manufacturing release has been updated to pieeprom-2021-04-29 so update the default release to match this.
 
