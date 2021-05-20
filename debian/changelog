@@ -1,3 +1,14 @@
+rpi-eeprom (12.4-1) buster; urgency=medium
+
+  [ Andrew Scheller ]
+  * Typos and wording tweaks
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Display a warning when the bootloader is downgraded
+  * pieeprom-2021-05-19 - Use latest BRCM SDRAM setting
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 20 May 2021 17:17:47 +0100
+
 rpi-eeprom (12.3-1) buster; urgency=medium
 
   [ Tim Gover ]

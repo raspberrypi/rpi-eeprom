@@ -118,8 +118,6 @@ def apply_update(config, eeprom=None, config_src=None):
     sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig_src: %s\nconfig: %s\n%s\n%s\n%s\n" %
                      (eeprom_image, config_src, config, '#' * 80, config_str, '#' * 80))
 
-    sys.stdout.write("\n*** To cancel this update run 'sudo rpi-eeprom-update -r' ***\n\n")
-
     # Ignore APT package checksums so that this doesn't fail when used
     # with EEPROMs with configs delivered outside of APT.
     # The checksums are really just a safety check for automatic updates.
