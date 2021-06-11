@@ -3,6 +3,15 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-06-11 - Add USB_MSD_STARTUP_DELAY option - BETA
+   * Minor update to BRCM SDRAM settings.
+   * Add USB_MSD_STARTUP_DELAY option (default 0 option). This adds a configurable
+     delay (in milliseconds) the first time the USB host controller is initialised
+     before device enumeration.
+     Normally, this should not be required. However, some HDD enclosures may
+     require an extended startup delay in order to spinup drives. Without this
+     the get-capacity command may stall and timeout.
+
 ## 2021-05-19 - Use the latest BRCM SDRAM settings - BETA
    * Use the latest BRCM SDRAM settings.
    * FAT12 support for small bootloader ramdisk images.
