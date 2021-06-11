@@ -314,8 +314,11 @@ checkDependencies() {
       BOARD_INFO="$(od -v -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' \n')"
    elif grep -q Revision /proc/cpuinfo; then
       BOARD_INFO="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
-   else
+   elif command -v vcgencmd > /dev/null; then
       BOARD_INFO="$(vcgencmd otp_dump | grep '30:' | sed 's/.*://')"
+   else
+      echo "No Raspberry Pi board info found"
+      exit ${EXIT_SUCCESS}
    fi
 
    if [ $(((0x$BOARD_INFO >> 23) & 1)) -eq 0 ] || [ $(((0x$BOARD_INFO >> 12) & 15)) -ne 3 ]; then
