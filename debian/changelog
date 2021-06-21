@@ -1,3 +1,14 @@
+rpi-eeprom (12.5-1) buster; urgency=medium
+
+  [ Dave Jones ]
+  * Remove redundant vcmailbox reference
+  * Add a test to cause the script to exit cleanly on non-Pi hardware
+
+  [ Tim Gover ]
+  * pieeprom-2021-06-11 - Add USB_MSD_STARTUP_DELAY
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 11 Jun 2021 15:59:27 +0100
+
 rpi-eeprom (12.4-1) buster; urgency=medium
 
   [ Andrew Scheller ]
