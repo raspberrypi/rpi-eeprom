@@ -3,6 +3,11 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-06-17 - Avoid unnecessary PCIe probe on CM4 - BETA
+   * Avoid default PCIe / XHCI probe on CM4 unless required for the current boot
+     mode (USB_MSD or NVME).
+   * Leave PCIe RC in reset state when loading start.elf except for USB-MSD mode.
+
 ## 2021-06-11 - Add USB_MSD_STARTUP_DELAY option - BETA
    * Minor update to BRCM SDRAM settings.
    * Add USB_MSD_STARTUP_DELAY option (default 0 option). This adds a configurable
