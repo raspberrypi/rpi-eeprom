@@ -1,3 +1,14 @@
+rpi-eeprom (12.6-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-06-17 CM4 avoid touching PCIe - BETA
+    - Avoid default PCIe / XHCI probe on CM4 unless required for the
+      current boot mode (USB_MSD or NVME).
+    - Leave PCIe RC in reset state when loading start.elf except for
+      USB-MSD mode.
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 21 Jun 2021 16:01:30 +0100
+
 rpi-eeprom (12.5-1) buster; urgency=medium
 
   [ Dave Jones ]
