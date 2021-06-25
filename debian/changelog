@@ -1,3 +1,10 @@
+rpi-eeprom (12.7-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-06-25 - Support 256MB gpu_mem with boot.img ramdisk - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 25 Jun 2021 15:46:07 +0100
+
 rpi-eeprom (12.6-1) buster; urgency=medium
 
   [ Tim Gover ]
