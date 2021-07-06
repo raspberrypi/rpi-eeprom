@@ -3,6 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-07-06 - Tidyup PXE debug strings - BETA
+   * Remove redundant debug string - hexdump is more useful for debug.
+   * Minor internal changes for manufacturing test.
+
 ## 2021-06-25 - Support 256MB gpu_mem with boot ramdisk - BETA
    * Tweak the address map so that boot ramdisks (e.g. rpiboot -d imager)
      work with large amounts of GPU memory.
