@@ -3,6 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-07-07 - Promote pieeprom-2021-07-06 to stable - STABLE
+  * Promote the latest beta to stable. For CM4 users this adds NVMe
+    boot support to the stable release.
+
 ## 2021-07-06 - Tidyup PXE debug strings - BETA
    * Remove redundant debug string - hexdump is more useful for debug.
    * Minor internal changes for manufacturing test.

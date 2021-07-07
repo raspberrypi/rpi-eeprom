@@ -1,3 +1,10 @@
+rpi-eeprom (12.9-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-07-06: Promote to STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 07 Jul 2021 14:25:46 +0100
+
 rpi-eeprom (12.8-1) buster; urgency=medium
 
   [ Tim Gover ]
