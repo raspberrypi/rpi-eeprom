@@ -51,7 +51,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
    * UDP checksum fixes
    * Add support for the BCM2711 XHCI controller - BOOT_ORDER 0x5
    * XHCI protocol layer fixes for non-VLI controllers
-   * Avoid USB MSD timeout of there is only one device
+   * Avoid USB MSD timeout if there is only one device
    * Implement tryboot for OS upgrade fallback
    * Check the update-timestamp before applying an update in SELF-UPDATE mode
 
