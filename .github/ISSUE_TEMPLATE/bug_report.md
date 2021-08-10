@@ -46,8 +46,8 @@ Network boot bug normally require one or more of the following log types. [PiSer
  - Wireshark binary packet capture
  - UART logs with `uart_2ndstage=1` set in `config.txt`
 
-**USB boot (please complete the following information):**
-Boot from SD/EMMC then capture the following information about the NVme device.
+**NVMe boot (please complete the following information):**
+
 ```bash
 sudo apt-get install nvme-cli
 sudo nvme list
