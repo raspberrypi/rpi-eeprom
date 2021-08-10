@@ -32,14 +32,14 @@ vcgencmd bootloader_version
 vcgencmd bootloader_config
 ```
 
-**SD card boot (please complete the following information):**
+**SD card boot (please complete the following information):**  
  - SD card type
  - Partition information (sudo fdisk -l) if you are able to obtain this from another computer.
 
-**USB boot (please complete the following information):**
+**USB boot (please complete the following information):**  
 Verify that the the USB device works correctly when hot-plugged under Linux and attache the output of 'lsusb -vvv'
 
-**Network boot (please complete the following information):**
+**Network boot (please complete the following information):**  
 Network boot bug normally require one or more of the following log types. [PiServer](https://github.com/raspberrypi/piserver) is the officially supported network boot server.
 
  - DHCP server configuration files e.g. dnsmasq.conf
