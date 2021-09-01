@@ -59,5 +59,5 @@ sudo nvme id-ns -H /dev/nvme0 --namespace-id=1
 **Additional context**
 Add any other context about the problem here. 
 
-The [Bootloader configuration](https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md) page describes how to enable UART or NETCONSOLE logs. For complex USB boot issues NETCONSOLE logs are recommended.
+The [Bootloader configuration](https://www.raspberrypi.org/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration) page describes how to enable UART or NETCONSOLE logs. For complex USB boot issues NETCONSOLE logs are recommended.
 
