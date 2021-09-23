@@ -3,6 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-09-22 - Update recovery.bin to fix issue with large FAT partitions - BETA
+  * Fix an issue where the ROM fails to load larger recovery.bin files
+    on FAT partitions with large cluster sizes.
+
 ## 2021-07-07 - Promote pieeprom-2021-07-06 to stable - STABLE
   * Promote the latest beta to stable. For CM4 users this adds NVMe
     boot support to the stable release.
@@ -51,7 +55,7 @@ https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloade
    * UDP checksum fixes
    * Add support for the BCM2711 XHCI controller - BOOT_ORDER 0x5
    * XHCI protocol layer fixes for non-VLI controllers
-   * Avoid USB MSD timeout of there is only one device
+   * Avoid USB MSD timeout if there is only one device
    * Implement tryboot for OS upgrade fallback
    * Check the update-timestamp before applying an update in SELF-UPDATE mode
 
