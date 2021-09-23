@@ -1,3 +1,17 @@
+rpi-eeprom (12.10-1) buster; urgency=medium
+
+  [ Aman Gupta Karmani ]
+  * Fix typo
+
+  [ Andrew Scheller ]
+  * Update documentation link
+
+  [ Tim Gover ]
+  * recovery.bin: Fix recovery.bin loading on larger FAT partitions - BETA
+  * Update bug_report.md
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 23 Sep 2021 11:26:25 +0100
+
 rpi-eeprom (12.9-1) buster; urgency=medium
 
   [ Tim Gover ]
