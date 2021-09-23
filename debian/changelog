@@ -1,3 +1,10 @@
+rpi-eeprom (12.11-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Promote 22/09/2021 beta recovery.bin to stable
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 23 Sep 2021 15:50:52 +0100
+
 rpi-eeprom (12.10-1) buster; urgency=medium
 
   [ Aman Gupta Karmani ]
