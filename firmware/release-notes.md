@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-09-22 - Update recovery.bin to fix issue with large FAT partitions - STABLE
+  * Bump the latest recovery.bin under beta to stable.
+
 ## 2021-09-22 - Update recovery.bin to fix issue with large FAT partitions - BETA
   * Fix an issue where the ROM fails to load larger recovery.bin files
     on FAT partitions with large cluster sizes.
