@@ -1,3 +1,10 @@
+rpi-eeprom (12.12-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2021-09-23.bin:  Bootloader file-system updates - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 24 Sep 2021 15:30:58 +0100
+
 rpi-eeprom (12.11-1) buster; urgency=medium
 
   [ Tim Gover ]
