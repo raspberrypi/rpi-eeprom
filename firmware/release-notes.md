@@ -3,6 +3,18 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-09-23 - Bootloader file-system updates - BETA
+This release makes major changes to the bootloader file-system code in order
+to support new features and should be treated as a bleeding edge BETA release!
+  * Improve file-system performance to reduce boot time.
+  * Preliminary support for IPV6 TFTP. Requires an updated start4.elf.
+    Details to follow.
+  * Fix VL805=1 option for CM4 IO boards that follow the same XHCI
+    design as Pi4B. Start.elf will be updated in the next rpi-update release
+    and the latest CM4 DTBs are required for the 'XHCI reset controller'
+  * Preliminary support for loading signed boot image files.
+    Requires updated GPU firmware.
+
 ## 2021-09-22 - Update recovery.bin to fix issue with large FAT partitions - STABLE
   * Bump the latest recovery.bin under beta to stable.
 
