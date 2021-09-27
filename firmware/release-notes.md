@@ -3,6 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-09-27 - Fix recovery.bin rename issue and EEPROM netconsole - BETA
+  * Fix recovery.bin rename issue
+  * Update pieeprom-2021-09-27.bin to fix netconsole
+
 ## 2021-09-23 - Temporarily revert recovery.bin 2021-09-22 BETA/STABLE
   * Revert until fix for can be verified https://github.com/raspberrypi/rpi-eeprom/issues/367
 
