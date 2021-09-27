@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-09-23 - Temporarily revert recovery.bin 2021-09-22 BETA/STABLE
+  * Revert until fix for can be verified https://github.com/raspberrypi/rpi-eeprom/issues/367
+
 ## 2021-09-23 - Bootloader file-system updates - BETA
 This release makes major changes to the bootloader file-system code in order
 to support new features and should be treated as a bleeding edge BETA release!
