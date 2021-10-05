@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
 
+## 2021-10-05 - Update for latest Broadcom SDRAM settings - BETA
+  * Minor update for latest SDRAM tuning settings.
+
 ## 2021-10-04 - Add support for GPT FAT16 and increase USB timeouts - BETA
   * Update the FAT detection to support FAT16 for EFI/ESD paritions with
     GPT instead of assuming FAT32. The latest firmware is also required
