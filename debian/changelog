@@ -1,3 +1,13 @@
+rpi-eeprom (12.14-1) buster; urgency=medium
+
+  [ Tim Gover ]
+  * 2021-09-27 - Fix recovery.bin rename issue and EEPROM netconsole - BETA
+  * Additional fix to beta recovery.bin
+  * pieeprom-2021-10-04: Add support for GPT FAT16 and increase USB timeouts - BETA
+  * pieeprom-2021-10-05: Update for latest Broadcom SDRAM settings - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 05 Oct 2021 10:40:53 +0100
+
 rpi-eeprom (12.13-1) buster; urgency=medium
 
   [ Tim Gover ]
