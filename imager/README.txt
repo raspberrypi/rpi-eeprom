@@ -1,7 +1,7 @@
 Raspberry Pi 4 EEPROM bootloader rescue image
 *********************************************
 
-The Raspberry Pi 4 has a small EEPROM chip used to store the bootloader.
+The Raspberry Pi 4 contains a small EEPROM used to store the bootloader.
 
 This rescue image reverts the bootloader EEPROM to factory default settings.
 
