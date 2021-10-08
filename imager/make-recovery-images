@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -e
+
+die() {
+   echo "$@" >&2
+   exit 1
+}
+
+cleanup() {
+   if [ -d "${TMP_DIR}" ]; then
+      rm -rf "${TMP_DIR}"
+   fi
+}
+
+trap cleanup EXIT
+
+[ "$(id -u)" = "0" ] || die "Must be run as root"
+[ -n ${SUDO_UID} ] || die "SUDO_UID not defined"
+
+mkdir -p images
+chown ${SUDO_UID} images
+for src in $(ls release); do
+   img=$(echo "${src}" | sed 's/\.zip/.img/')
+   TMP_DIR=$(mktemp -d)
+   (
+      cp "release/${src}" "${TMP_DIR}"
+      mkdir "${TMP_DIR}/files"
+      cd "${TMP_DIR}/files"
+      unzip "../${src}"
+      cd "${TMP_DIR}"
+      dd if=/dev/zero bs=1M count=40 of=temp.img
+      /sbin/sfdisk temp.img <<EOF
+label: dos
+label-id: 0x0a7b5ac5
+device: temp.img
+unit: sectors
+
+./test.img1 : start=        2048, size=       70000, type=c
+EOF
+      file temp.img
+      kpartx -lv temp.img | head -n1 | awk '{print $1}'
+      LOOP="/dev/mapper/$(kpartx -lv temp.img | head -n1 | awk '{print $1}')"
+      kpartx -av temp.img
+      /sbin/mkfs.fat -F 32 "${LOOP}"
+      mkdir fs
+      mount "${LOOP}" fs
+      cp -v files/* fs
+      sync
+      umount fs
+      kpartx -dv temp.img
+   )
+   mv "${TMP_DIR}/temp.img" "images/${img}"
+   file "images/${img}"
+   zip "images/${src}" "images/${img}"
+   rm "images/${img}"
+   chown ${SUDO_UID} "images/${src}"
+done
