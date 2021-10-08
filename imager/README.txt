@@ -9,6 +9,11 @@ This rescue image also updates the USB 3 controller (VL805) firmware to the
 latest version, 138a1, which has better full-speed isochronous endpoint 
 support.
 
+Raspberry Pi 4 board revisions 1.1 and 1.2 contain a separate EEPROM 
+which contains firmware for the USB 3 controller (VL805): on newer revisions 
+the USB controller firmware is stored in the bootloader EEPROM along with 
+the bootloader.
+
 The easiest method for creating EEPROM rescue images, and formatting SD 
 cards, is to use Raspberry Pi Imager from https://raspberrypi.com/software.
 Raspberry Pi Imager provides a GUI for downloading the latest version of 
@@ -31,4 +36,7 @@ pattern corresponding to the specific error.
 If an HDMI display is attached, then the screen will display green for
 success or red if a failure occurs.
 
-Once the EEPROM is updated, the SD card can be removed.
+Once the EEPROM is updated, the SD card can be removed. In order to make
+the entire capacity of the SD card available again, you must then reformat
+the SD card using Raspberry Pi Imager by selecting the 'format card as 
+FAT32' option.
