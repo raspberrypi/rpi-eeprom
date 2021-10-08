@@ -1,33 +1,33 @@
 Raspberry Pi 4 EEPROM bootloader rescue image
 *********************************************
 
-The Raspberry Pi 4 has a small EEPROM used to store the bootloader.
+The Raspberry Pi 4 has a small EEPROM chip used to store the bootloader.
 
 This rescue image reverts the bootloader EEPROM to factory default settings.
 
 This rescue image also updates the USB 3.0 (VL805) firmware to the latest
-version (138a1) with better full-speed Isochronous endpoint support.
+version (138a1) with better full-speed isochronous endpoint support.
 
-This easiest method for creating EEPROM rescue images or formatting sdcards
-is to use the Raspberry Pi Imager from https://raspberrypi.com/software.
-The imager provides a GUI for downloading the latest version of this rescue
-image and flashing it to a spare SD CARD.
+The easiest method for creating EEPROM rescue images, and formatting SD cards,
+is to use Raspberry Pi Imager from https://raspberrypi.com/software.
+Imager provides a GUI for downloading the latest version of this rescue
+image and flashing it to a spare SD card.
 
 Alternatively, copy the contents of this zip file to a blank
-FAT formatted SD-CARD. The FAT partition must be < 32 GB.
+FAT formatted SD card. The FAT partition must be < 32 GB.
 
-To update the EEPROMs:
+To update the EEPROM:
 
 1. Power off the Raspberry Pi
-2. Insert the SD-CARD
-3. Power on Raspberry Pi
+2. Insert an SD card containing the files from this zip file
+3. Power on the Raspberry Pi
 4. Wait at least 10 seconds
 
-If successful, the green LED light will blink rapidly (forever), otherwise
-an error pattern will be displayed.
+If successful, the green LED light on the Raspberry Pi will blink rapidly forever.
+An unsuccessful update of the EEPROM is indicated by an alternate blinking pattern
+corresponding to the specific error.
 
-If a HDMI display is attached then the screen will display green for success
+If an HDMI display is attached, then the screen will display green for success
 or red if a failure occurs.
 
-The SD-CARD can now be removed and re-formatted using the Raspberry Pi Imager
-e.g. to install Raspberry Pi OS.
+Once the EEPROM is updated, the SD card can be removed.
