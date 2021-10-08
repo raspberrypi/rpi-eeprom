@@ -23,7 +23,7 @@ To update the EEPROM:
 3. Power on the Raspberry Pi
 4. Wait at least 10 seconds
 
-If successful, the green LED light on the Raspberry Pi will blink rapidly forever.
+If successful, the green LED on the Raspberry Pi will blink rapidly forever.
 An unsuccessful update of the EEPROM is indicated by a different blinking pattern
 corresponding to the specific error.
 
