@@ -11,7 +11,7 @@ version (138a1) with better full-speed isochronous endpoint support.
 The easiest method for creating EEPROM rescue images, and formatting SD cards,
 is to use Raspberry Pi Imager from https://raspberrypi.com/software.
 Imager provides a GUI for downloading the latest version of this rescue
-image and flashing it to a spare SD card.
+image and flashing it to an SD card.
 
 Alternatively, copy the contents of this zip file to a blank
 FAT formatted SD card. The FAT partition must be < 32 GB.
