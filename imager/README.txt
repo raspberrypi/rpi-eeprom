@@ -25,7 +25,7 @@ FAT formatted SD card. The FAT partition must be < 32 GB.
 To update the EEPROM:
 
 1. Power off the Raspberry Pi
-2. Insert an SD card containing the files from this zip file
+2. Insert the bootloader update SD card
 3. Power on the Raspberry Pi
 4. Wait at least 10 seconds
 
