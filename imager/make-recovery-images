@@ -15,12 +15,12 @@ cleanup() {
 
 trap cleanup EXIT
 
-[ "$(id -u)" = "0" ] || die "Must be run as root"
-[ -n ${SUDO_UID} ] || die "SUDO_UID not defined"
+[ "$(id -u)" = "0" ] || die "$(basename $0) must be run as root"
+[ -n "${SUDO_UID}" ] || die "SUDO_UID not defined"
+[ -n "${SUDO_GID}" ] || die "SUDO_GID not defined"
 
-mkdir -p images
-chown ${SUDO_UID} images
-for src in $(ls release); do
+for src in release/*.zip; do
+   src=$(basename "${src}")
    img=$(echo "${src}" | sed 's/\.zip/.img/')
    TMP_DIR=$(mktemp -d)
    (
@@ -50,9 +50,11 @@ EOF
       umount fs
       kpartx -dv temp.img
    )
+   mkdir -p images
+   chown "${SUDO_UID}:${SUDO_GID}" images
    mv "${TMP_DIR}/temp.img" "images/${img}"
    file "images/${img}"
    zip "images/${src}" "images/${img}"
    rm "images/${img}"
-   chown ${SUDO_UID} "images/${src}"
+   chown "${SUDO_UID}:${SUDO_GID}" "images/${src}"
 done
