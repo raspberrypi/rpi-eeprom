@@ -8,6 +8,7 @@ import argparse
 import atexit
 import os
 import subprocess
+import string
 import struct
 import sys
 import tempfile
@@ -15,7 +16,12 @@ import time
 
 IMAGE_SIZE = 512 * 1024
 
-MAX_BOOTCONF_SIZE = 2024
+# Larger files won't with with "vcgencmd bootloader_config"
+MAX_FILE_SIZE = 2024
+ALIGN_SIZE = 4096
+BOOTCONF_TXT = 'bootconf.txt'
+BOOTCONF_SIG = 'bootconf.sig'
+PUBKEY_BIN = 'pubkey.bin'
 
 # Each section starts with a magic number followed by a 32 bit offset to the
 # next section (big-endian).
@@ -26,11 +32,17 @@ MAX_BOOTCONF_SIZE = 2024
 # The last 4KB of the EEPROM image is reserved for internal use by the
 # bootloader and may be overwritten during the update process.
 MAGIC = 0x55aaf00f
+PAD_MAGIC = 0x55aafeef
 MAGIC_MASK = 0xfffff00f
-FILE_MAGIC = 0x55aaf11f # id for modifiable file, currently only bootconf.txt
+FILE_MAGIC = 0x55aaf11f # id for modifiable files
 FILE_HDR_LEN = 20
 FILENAME_LEN = 12
 TEMP_DIR = None
+
+DEBUG = False
+def debug(s):
+    if DEBUG:
+        sys.stderr.write(s + '\n')
 
 def rpi4():
     compatible_path = "/sys/firmware/devicetree/base/compatible"
@@ -58,6 +70,25 @@ def create_tempdir():
     global TEMP_DIR
     if TEMP_DIR is None:
         TEMP_DIR = tempfile.mkdtemp()
+
+def pemtobin(infile):
+    """
+    Converts an RSA public key into the format expected by the bootloader.
+    """
+    # Import the package here to make this a weak dependency.
+    from Cryptodome.PublicKey import RSA
+
+    arr = bytearray()
+    f = open(infile,'r')
+    key = RSA.importKey(f.read())
+
+    if key.size_in_bits() != 2048:
+        raise Exception("RSA key size must be 2048")
+
+    # Export N and E in little endian format
+    arr.extend(key.n.to_bytes(256, byteorder='little'))
+    arr.extend(key.e.to_bytes(8, byteorder='little'))
+    return arr
 
 def exit_error(msg):
     """
@@ -117,6 +148,8 @@ def apply_update(config, eeprom=None, config_src=None):
         config_src = ''
     sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig_src: %s\nconfig: %s\n%s\n%s\n%s\n" %
                      (eeprom_image, config_src, config, '#' * 80, config_str, '#' * 80))
+
+    sys.stdout.write("\n*** To cancel this update run 'sudo rpi-eeprom-update -r' ***\n\n")
 
     # Ignore APT package checksums so that this doesn't fail when used
     # with EEPROMs with configs delivered outside of APT.
@@ -178,6 +211,14 @@ def read_current_config():
 
     return (shell_cmd(['vcgencmd', 'bootloader_config']), "vcgencmd bootloader_config")
 
+class ImageSection:
+    def __init__(self, magic, offset, length, filename=''):
+        self.magic = magic
+        self.offset = offset
+        self.length = length
+        self.filename = filename
+        debug("ImageSection %x %x %x %s" % (magic, offset, length, filename))
+
 class BootloaderImage(object):
     def __init__(self, filename, output=None):
         """
@@ -185,6 +226,7 @@ class BootloaderImage(object):
         and optionally an output filename.
         """
         self._filename = filename
+        self._sections = []
         try:
             self._bytes = bytearray(open(filename, 'rb').read())
         except IOError as err:
@@ -196,47 +238,112 @@ class BootloaderImage(object):
         if len(self._bytes) != IMAGE_SIZE:
             exit_error("%s: Expected size %d bytes actual size %d bytes" %
                        (filename, IMAGE_SIZE, len(self._bytes)))
+        self.parse()
 
-    def find_config(self):
+    def parse(self):
+        """
+        Builds a table of offsets to the different sections in the EEPROM.
+        """
         offset = 0
         magic = 0
+        found = False
         while offset < IMAGE_SIZE:
             magic, length = struct.unpack_from('>LL', self._bytes, offset)
-            if (magic & MAGIC_MASK) != MAGIC:
-                raise Exception('EEPROM is corrupted')
+            if magic == 0x0 or magic == 0xffffffff:
+                break # EOF
+            elif (magic & MAGIC_MASK) != MAGIC:
+                raise Exception('EEPROM is corrupted %x %x %x' % (magic, magic & MAGIC_MASK, MAGIC))
 
+            filename = ''
             if magic == FILE_MAGIC: # Found a file
-                name = self._bytes[offset + 8: offset + FILE_HDR_LEN]
-                if name.decode('utf-8') == 'bootconf.txt':
-                    return (offset, length)
+                # Discard trailing null characters used to pad filename
+                filename = self._bytes[offset + 8: offset + FILE_HDR_LEN].decode('utf-8').replace('\0', '')
+            self._sections.append(ImageSection(magic, offset, length, filename))
 
             offset += 8 + length # length + type
             offset = (offset + 7) & ~7
 
-        raise Exception('EEPROM parse error: Bootloader config not found')
+    def find_file(self, filename):
+        """
+        Returns the offset, length and whether this is the last section in the
+        EEPROM for a modifiable file within the image.
+        """
+        ret = (-1, -1, False)
+        for i in range(0, len(self._sections)):
+            s = self._sections[i]
+            if s.magic == FILE_MAGIC and s.filename == filename:
+                is_last = (i == len(self._sections) - 1)
+                ret = (s.offset, s.length, is_last)
+                break
+        debug('%s offset %d length %d last %s' % (filename, ret[0], ret[1], ret[2]))
+        return ret
 
-    def write(self, new_config):
-        hdr_offset, length = self.find_config()
-        new_config_bytes = open(new_config, 'rb').read()
-        new_len = len(new_config_bytes) + FILENAME_LEN + 4
-        if len(new_config_bytes) > MAX_BOOTCONF_SIZE:
-            raise Exception("Config is too large (%d bytes). The maximum size is %d bytes."
-                            % (len(new_config_bytes), MAX_BOOTCONF_SIZE))
-        if hdr_offset + len(new_config_bytes) + FILE_HDR_LEN > IMAGE_SIZE:
+    def update(self, src_bytes, dst_filename):
+        """
+        Replaces a modifiable file with specified byte array.
+        """
+        hdr_offset, length, is_last = self.find_file(dst_filename)
+        if hdr_offset < 0:
+            raise Exception('Update target %s not found' % dst_filename)
+
+        if hdr_offset + len(src_bytes) + FILE_HDR_LEN > IMAGE_SIZE:
             raise Exception('EEPROM image size exceeded')
 
+        new_len = len(src_bytes) + FILENAME_LEN + 4
         struct.pack_into('>L', self._bytes, hdr_offset + 4, new_len)
-        struct.pack_into(("%ds" % len(new_config_bytes)), self._bytes,
-                         hdr_offset + 4 + FILE_HDR_LEN, new_config_bytes)
+        struct.pack_into(("%ds" % len(src_bytes)), self._bytes,
+                         hdr_offset + 4 + FILE_HDR_LEN, src_bytes)
 
-        # If the new config is smaller than the old config then set any old
+        # If the new file is smaller than the old file then set any old
         # data which is now unused to all ones (erase value)
-        pad_start = hdr_offset + 4 + FILE_HDR_LEN + len(new_config_bytes)
+        pad_start = hdr_offset + 4 + FILE_HDR_LEN + len(src_bytes)
+
+        # Add padding up to 8-byte boundary
+        while pad_start % 8 != 0:
+            struct.pack_into('B', self._bytes, pad_start, 0xff)
+            pad_start += 1
+
+        # Create a padding section unless the padding size is smaller than the
+        # size of a section head. Padding is allowed in the last section but
+        # by convention bootconf.txt is the last section and there's no need to
+        # pad to the end of the sector. This also ensures that the loopback
+        # config read/write tests produce identical binaries.
+        pad_bytes = ALIGN_SIZE - (pad_start % ALIGN_SIZE)
+        if pad_bytes > 8 and not is_last:
+            pad_bytes -= 8
+            struct.pack_into('>i', self._bytes, pad_start, PAD_MAGIC)
+            pad_start += 4
+            struct.pack_into('>i', self._bytes, pad_start, pad_bytes)
+            pad_start += 4
+
+        debug("pad %d" % pad_bytes)
         pad = 0
-        while pad < (length - len(new_config_bytes)):
+        while pad < pad_bytes:
             struct.pack_into('B', self._bytes, pad_start + pad, 0xff)
             pad = pad + 1
 
+    def update_key(self, src_pem, dst_filename):
+        """
+        Replaces the specified public key entry with the public key values extracted
+        from the source PEM file.
+        """
+        pubkey_bytes = pemtobin(src_pem)
+        self.update(pubkey_bytes, dst_filename)
+
+    def update_file(self, src_filename, dst_filename):
+        """
+        Replaces the contents of dst_filename in the EEPROM with the contents of src_file.
+        """
+        src_bytes = open(src_filename, 'rb').read()
+        if len(src_bytes) > MAX_FILE_SIZE:
+            raise Exception("src file %s is too large (%d bytes). The maximum size is %d bytes."
+                            % (src_filename, len(src_bytes), MAX_FILE_SIZE))
+        self.update(src_bytes, dst_filename)
+
+    def write(self):
+        """
+        Writes the updated EEPROM image to stdout or the specified output file.
+        """
         if self._out is not None:
             self._out.write(self._bytes)
             self._out.close()
@@ -246,14 +353,14 @@ class BootloaderImage(object):
             else:
                 sys.stdout.write(self._bytes)
 
-    def get_config(self):
-        hdr_offset, length = self.find_config()
+    def get_file(self, filename):
+        hdr_offset, length, is_last = self.find_file(filename)
         offset = hdr_offset + 4 + FILE_HDR_LEN
         config_bytes = self._bytes[offset:offset+length-FILENAME_LEN-4]
         return config_bytes
 
     def read(self):
-        config_bytes = self.get_config()
+        config_bytes = self.get_file('bootconf.txt')
         if self._out is not None:
             self._out.write(config_bytes)
             self._out.close()
@@ -320,8 +427,21 @@ Operating modes:
    The default text editor is nano and may be overridden by setting the 'EDITOR'
    environment variable and passing '-E' to 'sudo' to preserve the environment.
 
-See 'rpi-eeprom-update -h' for more information about the available EEPROM
-images.
+6. Signing the bootloader config file.
+   Updates an EEPROM binary with a signed config file (created by rpi-eeprom-digest) plus
+   the corresponding RSA public key.
+
+   Requires Python Cryptodomex libraries and OpenSSL. To install on Raspberry Pi OS run:-
+   sudo apt install openssl python-pip
+   sudo python3 -m pip install cryptodomex
+
+   rpi-eeprom-digest -k private.pem -i bootconf.txt -o bootconf.sig
+   rpi-eeprom-config --config bootconf.txt --digest bootconf.sig --pubkey public.pem --out pieeprom-signed.bin pieeprom.bin
+
+   Currently, the signing process is a separate step so can't be used with the --edit or --apply modes.
+
+
+See 'rpi-eeprom-update -h' for more information about the available EEPROM images.
 """
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
                                      description=description)
@@ -331,6 +451,8 @@ images.
     parser.add_argument('-c', '--config', help='Name of bootloader configuration file', required=False)
     parser.add_argument('-e', '--edit', action='store_true', default=False, help='Edit the current EEPROM config')
     parser.add_argument('-o', '--out', help='Name of output file', required=False)
+    parser.add_argument('-d', '--digest', help='Signed boot only. The name of the .sig file generated by rpi-eeprom-dgst for config.txt ', required=False)
+    parser.add_argument('-p', '--pubkey', help='Signed boot only. The name of the RSA public key file to store in the EEPROM', required=False)
     parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
 
@@ -351,7 +473,12 @@ images.
         if args.config is not None:
             if not os.path.exists(args.config):
                 exit_error("config file '%s' not found" % args.config)
-            image.write(args.config)
+            image.update_file(args.config, BOOTCONF_TXT)
+            if args.digest is not None:
+                image.update_file(args.digest, BOOTCONF_SIG)
+            if args.pubkey is not None:
+                image.update_key(args.pubkey, PUBKEY_BIN)
+            image.write()
         else:
             image.read()
     elif args.config is None and args.eeprom is None:
