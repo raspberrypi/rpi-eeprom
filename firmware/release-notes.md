@@ -1,7 +1,16 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
-https://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2711_bootloader_config.md
+https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration
+
+## 2021-10-27 - Secure boot improvements - BETA
+  * Improve the error logging if a file is too large and truncated.
+  * Increase the maximum size of the ramdisk to 96MB.
+  * Preliminary changes to expose the boot-mode used to load the ramdisk via device-tree.
+
+  N.B. Secure boot is only recommended for industrial customers and is currently
+  a beta release. This can only be enabled via RPIBOOT
+  https://github.com/raspberrypi/usbboot/blob/master/Readme.md
 
 ## 2021-10-05 - Update for latest Broadcom SDRAM settings - BETA
   * Minor update for latest SDRAM tuning settings.
