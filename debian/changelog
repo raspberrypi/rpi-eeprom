@@ -1,3 +1,27 @@
+rpi-eeprom (12.15-1~buster) buster; urgency=medium
+
+  [ Peter Harper ]
+  * Fix URLs in README
+
+  [ Tim Gover ]
+  * rpi-eeprom-config: require python3
+  * make-recovery-images: Build FAT32 disk-images for the imager zips
+  * Update a few more URLs to raspberrypi.com
+  * make-recovery-images: Set GID
+  * make-recovery-images: Change partition size to be 256MB
+  * 2021-10-27 - Secure boot improvements - BETA
+
+  [ andrum99 ]
+  * imager/README.txt: typo, grammar, style fixes
+  * Don't think we need to specify 'spare' - that's up to the user
+  * Update README.txt
+  * Update release-notes.md
+
+  [ Serge Schneider ]
+  * Remove python3 patch
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 15 Nov 2021 15:54:59 +0000
+
 rpi-eeprom (12.14-1) buster; urgency=medium
 
   [ Tim Gover ]
