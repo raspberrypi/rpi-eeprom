@@ -1,5 +1,6 @@
 rpi-eeprom-config usr/bin/
 rpi-eeprom-update usr/bin/
+rpi-eeprom-digest usr/bin/
 debian/default/ etc/
 
 firmware/default lib/firmware/raspberrypi/bootloader/
