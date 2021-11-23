@@ -140,9 +140,13 @@ def apply_update(config, eeprom=None, config_src=None):
     else:
         eeprom_image = get_latest_eeprom()
     create_tempdir()
+
+    # Replace the contents of bootconf.txt with the contents of the config file
     tmp_update = os.path.join(TEMP_DIR, 'pieeprom.upd')
     image = BootloaderImage(eeprom_image, tmp_update)
-    image.write(config)
+    image.update_file(config, BOOTCONF_TXT)
+    image.write()
+
     config_str = open(config).read()
     if config_src is None:
         config_src = ''
@@ -176,7 +180,7 @@ def edit_config(eeprom=None):
     if os.path.exists(pending):
         config_src = pending
         image = BootloaderImage(pending)
-        current_config = image.get_config().decode('utf-8')
+        current_config = image.get_file(BOOTCONF_TXT).decode('utf-8')
     else:
         current_config, config_src = read_current_config()
 
