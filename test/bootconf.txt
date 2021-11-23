@@ -1,0 +1,8 @@
+[all]
+BOOT_UART=1
+WAKE_ON_GPIO=1
+POWER_OFF_ON_HALT=0
+HDMI_DELAY=0
+# Load firmware and kernel from signed boot.img file
+SIGNED_BOOT=1
+

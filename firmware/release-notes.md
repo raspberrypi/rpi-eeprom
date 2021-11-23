@@ -3,6 +3,10 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration
 
+## 2021-11-22 - Fix for Sabrent rocket Nano NVMe reboot issue - BETA
+  * Fixes issue with Sabrent rocket Nano NVMe disk after a reboot.
+    Run pcie initialisation again if there's an error.
+
 ## 2021-10-27 - Secure boot improvements - BETA
   * Improve the error logging if a file is too large and truncated.
   * Increase the maximum size of the ramdisk to 96MB.
