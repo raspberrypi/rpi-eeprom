@@ -1,3 +1,21 @@
+rpi-eeprom (13.0-1~buster) buster; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-digest: Import script from rapsberrypi/usbboot
+  * rpi-eeprom-update: Use rpi-eeprom-digest to generate the .sig files
+  * rpi-eeprom-config: Update to the same version as raspberrypi/usbboot
+  * rpi-eeprom-digest: Add to test/install and specify -o in rpi-eeprom-update
+  * rpi-eeprom-config: Fix calls for reading/replacing bootconf.txt
+  * test: Add a simple loopback test for signed boot
+
+  [ Peter Harper ]
+  * 2021-11-22: Fix for Sabrent rocket Nano NVMe reboot issue - BETA
+
+  [ Serge Schneider ]
+  * Install rpi-eeprom-digest
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 23 Nov 2021 22:22:23 +0000
+
 rpi-eeprom (12.15-1~buster) buster; urgency=medium
 
   [ Peter Harper ]
