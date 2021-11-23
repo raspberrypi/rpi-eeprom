@@ -1,0 +1,108 @@
+#!/bin/sh
+
+# Helper script to generate .sig files for use with the Raspberry Pi bootloader.
+
+# This has been implemented in a separate script in order to have avoid having
+# a hard dependency on OpenSSL.
+
+set -e
+
+OPENSSL=${OPENSSl:-openssl}
+
+die() {
+   echo "$@" >&2
+   exit 1
+}
+
+TMP_DIR=""
+cleanup() {
+   if [ -f "${TMP_DIR}" ]; then
+      rm -rf "${TMP_DIR}"
+   fi
+}
+
+checkDependencies() {
+   if ! command -v sha256sum > /dev/null; then
+      die "sha256sum not found. Try installing the coreutilities package."
+   fi
+
+   if ! command -v openssl > /dev/null; then
+      die "openssl not found. Try installing the openssl package."
+   fi
+
+   if ! command -v xxd > /dev/null; then
+      die "xxd not found. Try installing the xxd package."
+   fi
+}
+
+usage() {
+cat <<EOF
+rpi-eeprom-digest [-k RSA_KEY] -i IMAGE -o OUTPUT
+
+Creates a .sig file containing the sha256 digest of the IMAGE and an optional
+RSA signature of that hash.
+
+Options:
+   -i The source image.
+   -o The name of the digest/signature file.
+   -k Optional RSA private key.
+
+RSA signing
+If a private key in PEM format is supplied then the RSA signature of the
+sha256 digest is included in the .sig file. Currently, the bootloader only
+supports sha256 digests signed with a 2048bit RSA key.
+The bootloader only verifies RSA signatures in signed boot mode
+(not available yet) and only for the EEPROM config file and the signed image.
+
+Examples:
+
+# Generate RSA signature for the EEPROM config file.
+rpi-eeprom-digest -k key.pem -i bootconf.txt  -o bootconf.sig
+
+# Generate the normal sha256 hash to guard against file-system corruption
+rpi-eeprom-digest -i pieeprom.bin -o pieeprom.sig
+rpi-eeprom-digest -i vl805.bin -o vl805.sig
+
+EOF
+exit 0
+}
+
+OUTPUT=""
+while getopts i:k:ho: option; do
+   case "${option}" in
+   i) IMAGE="${OPTARG}"
+      ;;
+   k) KEY="${OPTARG}"
+      ;;
+   o) OUTPUT="${OPTARG}"
+      ;;
+   h) usage
+      ;;
+   *) echo "Unknown argument \"${option}\""
+      usage
+      ;;
+   esac
+done
+
+[ -n "${IMAGE}" ] || usage
+[ -n "${OUTPUT}" ] || usage
+
+trap cleanup EXIT
+
+checkDependencies
+
+[ -f "${IMAGE}" ] || die "Source image \"${IMAGE}\" not found"
+
+TMP_DIR=$(mktemp -d)
+SIG_TMP="${TMP_DIR}/tmp.sig"
+sha256sum "${IMAGE}" | awk '{print $1}' > "${OUTPUT}"
+
+# Include the update-timestamp
+echo "ts: $(date -u +%s)" >> "${OUTPUT}"
+
+if [ -n "${KEY}" ]; then
+   [ -f "${KEY}" ] || die "RSA private \"${KEY}\" not found"
+
+   "${OPENSSL}" dgst -sign "${KEY}" -keyform PEM -sha256 -out "${SIG_TMP}" "${IMAGE}"
+   echo "rsa2048: $(xxd -c 4096 -p < "${SIG_TMP}")" >> "${OUTPUT}"
+fi

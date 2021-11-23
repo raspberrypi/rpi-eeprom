@@ -186,38 +186,15 @@ applyRecoveryUpdate()
    findBootFS
    echo "    BOOTFS: ${BOOTFS}"
 
-   # A '.sig' file is created so that recovery.bin can check that the
-   # EEPROM image has not been corrupted (e.g. SD card corruption).
-   # Format of the .sig file.
-   # --
-   # SHA256\n
-   # ts: UPDATE-TIMESTAMP\n
-   # --
-   # SHA256 is a 64 character hex string
-   # UPDATE-TIMESTAMP is an unsigned decimal.
-   #
-   # The 'filename' output from sha256 MUST be omitted.
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
         [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
 
         TMP_EEPROM_IMAGE="$(mktemp)"
         prepareImage
-        # If recovery.bin encounters pieeprom.upd then it will select it in
-        # preference to pieeprom.bin. The .upd file also causes recovery.bin
-        # to rename itself to recovery.000 and reboot if the update is successful.
-        # The rename causes the ROM to ignore this file and use the newly flashed
-        # EEPROM image instead.
-        sha256sum "${TMP_EEPROM_IMAGE}" | awk '{print $1}' > "${BOOTFS}/pieeprom.sig" \
-                || die "Failed to create ${BOOTFS}/pieeprom.sig"
 
-        # Appends the update creation timestamp on a newline in pieeprom.sig
-        # During a self-update mode the bootloader examines the update-timestamp
-        # and will only update itself if it is newer than the current update
-        # timestamp.
-        #
-        # The update-timestamp is independent of the bootloader version and
-        # does not have to be timestamp.
-        echo "ts: $(date -u +%s)" >> "${BOOTFS}/pieeprom.sig"
+        # Generate a .sig file containing the sha256 hash of the EEPROM image
+        # and the current timestamp.
+        rpi-eeprom-digest -i "${TMP_EEPROM_IMAGE}" -o "${BOOTFS}/pieeprom.sig"
 
         cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
                 || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
@@ -228,8 +205,7 @@ applyRecoveryUpdate()
    fi
 
    if [ -n "${VL805_UPDATE_IMAGE}" ]; then
-        sha256sum "${VL805_UPDATE_IMAGE}" | awk '{print $1}' > "${BOOTFS}/vl805.sig" \
-                || die "Failed to create ${BOOTFS}/vl805.sig"
+        rpi-eeprom-digest -i "${VL805_UPDATE_IMAGE}" -o "${BOOTFS}/vl805.sig"
 
         cp -f "${VL805_UPDATE_IMAGE}" "${BOOTFS}/vl805.bin" \
                 || die "Failed to copy ${VL805_UPDATE_IMAGE} to ${BOOTFS}/vl805.bin"
@@ -340,6 +316,10 @@ checkDependencies() {
       HAVE_VL805_EEPROM=1
    else
       HAVE_VL805_EEPROM=0
+   fi
+
+   if ! command -v rpi-eeprom-digest > /dev/null; then
+      die "rpi-eeprom-digest not found. Try re-installing the rpi-eeprom package"
    fi
 
    if ! command -v lspci > /dev/null; then
