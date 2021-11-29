@@ -3,6 +3,13 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration
 
+## 2021-11-29 - Promote the 2021-11-22 beta release to LATEST/STABLE
+Interesting changes since the last stable release:-
+   * NVMe / PCIe reset fixes
+   * GPT / FAT enhancements
+   * FAT performance improvements
+   * Secure-boot for industrial customers (see usbboot repo)
+
 ## 2021-11-22 - Fix for Sabrent rocket Nano NVMe reboot issue - BETA
   * Fixes issue with Sabrent rocket Nano NVMe disk after a reboot.
     Run pcie initialisation again if there's an error.
