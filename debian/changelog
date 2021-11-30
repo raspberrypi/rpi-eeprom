@@ -1,3 +1,10 @@
+rpi-eeprom (13.1-1~buster) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Promote pieeprom-2021-11-22 beta release to stable
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 30 Nov 2021 11:42:49 +0000
+
 rpi-eeprom (13.0-1~buster) buster; urgency=medium
 
   [ Tim Gover ]
