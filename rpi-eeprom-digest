@@ -7,7 +7,7 @@
 
 set -e
 
-OPENSSL=${OPENSSl:-openssl}
+OPENSSL=${OPENSSL:-openssl}
 
 die() {
    echo "$@" >&2
@@ -26,12 +26,14 @@ checkDependencies() {
       die "sha256sum not found. Try installing the coreutilities package."
    fi
 
-   if ! command -v openssl > /dev/null; then
-      die "openssl not found. Try installing the openssl package."
-   fi
+   if [ -n "${KEY}" ]; then
+      if ! command -v ${OPENSSL} > /dev/null; then
+         die "${OPENSSL} not found. Try installing the openssl package."
+      fi
 
-   if ! command -v xxd > /dev/null; then
-      die "xxd not found. Try installing the xxd package."
+      if ! command -v xxd > /dev/null; then
+         die "xxd not found. Try installing the xxd package."
+      fi
    fi
 }
 
