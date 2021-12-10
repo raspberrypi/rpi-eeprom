@@ -1,3 +1,14 @@
+rpi-eeprom (13.2-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-digest: Don't require xxd/openssl unless RSA signing is requested.
+  * Update default recovery.bin to the latest stable release
+
+  [ Peter Harper ]
+  * 2021-12-02: Fix MTB detection for factory test - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 10 Dec 2021 14:23:50 +0000
+
 rpi-eeprom (13.1-1) bullseye; urgency=medium
 
   [ Tim Gover ]
