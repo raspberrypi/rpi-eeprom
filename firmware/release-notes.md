@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration
 
+## 2021-12-02 - Promote the 2021-12-02 beta release to LATEST/STABLE
+   * Just fixes a regression with MTB detection affecting factory testing
+
 ## 2021-12-02 - Fix MTB detection for factory test - BETA
    * Just fixes a regression with MTB detection affecting factory testing
 
