@@ -12,7 +12,7 @@ This repository tracks bugs for the Raspberry Pi 4 bootloader EEPROM and Linux u
 **Mandatory information**
 * Raspberry Pi model
 * Board revision (`cat /proc/cpuinfo | grep Revision`)
-* Operating system version .
+* Operating system version
 * Details of any hardware attached e.g. links to USB 
 * Photo of the HDMI diagnostics screen, UART trace.
 
@@ -34,13 +34,13 @@ vcgencmd bootloader_config
 
 **SD card boot (please complete the following information):**  
  - SD card type
- - Partition information (`sudo fdisk -l`) if you are able to obtain this from another computer.
+ - Partition information (`sudo fdisk -l`) if you are able to obtain this from another computer
 
 **USB boot (please complete the following information):**  
-Verify that the the USB device works correctly when hot-plugged under Linux and attach the output of 'lsusb -vvv'
+Verify that the the USB device works correctly when hot-plugged under Linux and attach the output of 'lsusb -vvv'.
 
 **Network boot (please complete the following information):**  
-Network boot bug normally require one or more of the following log types. [PiServer](https://github.com/raspberrypi/piserver) is the officially supported network boot server.
+Network boot bug normally requires one or more of the following log types. [PiServer](https://github.com/raspberrypi/piserver) is the officially supported network boot server.
 
  - DHCP server configuration files e.g. `dnsmasq.conf`
  - Wireshark binary packet capture
