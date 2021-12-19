@@ -7,11 +7,11 @@ about: Create a bug report for the bootloader EEPROM or rpi-eeprom-update script
 This repository tracks bugs for the Raspberry Pi 4 bootloader EEPROM and Linux update scripts.
 
 * If you suspect a hardware problem then please read the [Boot Problems](https://www.raspberrypi.org/forums/viewtopic.php?p=437084) post first before contacting the reseller.
-* Support questions or should be posted on the Raspberry Pi [General Discussion](https://www.raspberrypi.org/forums/viewforum.php?f=63)**
+* Support questions or should be posted on the Raspberry Pi [General Discussion](https://www.raspberrypi.org/forums/viewforum.php?f=63) forum
 
 **Mandatory information**
 * Raspberry Pi model
-* Board revision (cat /proc/cpuinfo | grep Revision)
+* Board revision (`cat /proc/cpuinfo | grep Revision`)
 * Operating system version .
 * Details of any hardware attached e.g. links to USB 
 * Photo of the HDMI diagnostics screen, UART trace.
@@ -34,15 +34,15 @@ vcgencmd bootloader_config
 
 **SD card boot (please complete the following information):**  
  - SD card type
- - Partition information (sudo fdisk -l) if you are able to obtain this from another computer.
+ - Partition information (`sudo fdisk -l`) if you are able to obtain this from another computer.
 
 **USB boot (please complete the following information):**  
-Verify that the the USB device works correctly when hot-plugged under Linux and attache the output of 'lsusb -vvv'
+Verify that the the USB device works correctly when hot-plugged under Linux and attach the output of 'lsusb -vvv'
 
 **Network boot (please complete the following information):**  
 Network boot bug normally require one or more of the following log types. [PiServer](https://github.com/raspberrypi/piserver) is the officially supported network boot server.
 
- - DHCP server configuration files e.g. dnsmasq.conf
+ - DHCP server configuration files e.g. `dnsmasq.conf`
  - Wireshark binary packet capture
  - UART logs with `uart_2ndstage=1` set in `config.txt`
 
