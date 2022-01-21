@@ -1,3 +1,13 @@
+rpi-eeprom (13.4-1~buster) buster; urgency=medium
+
+  [ Andrew Scheller ]
+  * fix typo and tweak formatting (#390)
+
+  [ Peter Harper ]
+  *  2022-01-20: Some NVMe boot fixes - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 21 Jan 2022 11:08:46 +0000
+
 rpi-eeprom (13.3-1~buster) buster; urgency=medium
 
   [ Peter Harper ]
