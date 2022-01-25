@@ -3,6 +3,9 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration
 
+## 2022-01-25 - Create new release from 2022-01-20 - LATEST/STABLE
+   * Rebuild 2022-01-20 for new stable release
+
 ## 2022-01-20 - Some NVMe boot fixes - BETA
    * PCIe retry on error
    * NVMe logging changes
