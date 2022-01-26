@@ -3,10 +3,17 @@
 USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
 https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration
 
+## 2022-01-25 - Create new release from 2022-01-20 - LATEST/STABLE
+   * Rebuild 2022-01-20 for new stable release
+
 ## 2022-01-20 - Some NVMe boot fixes - BETA
    * PCIe retry on error
    * NVMe logging changes
    * NVMe attempts to boot twice
+   * Increase the maximum GPU memory size from 256MB to 512MB so long as
+     boot_ramdisk=0. This should only be used with the legacy camera
+     application and FKMS for very memory intensive camera operations.
+     N.B. The new libcamera and KMS driver use CMA instead of GPU memory.
 
 ## 2021-12-02 - Promote the 2021-12-02 beta release to LATEST/STABLE
    * Just fixes a regression with MTB detection affecting factory testing
