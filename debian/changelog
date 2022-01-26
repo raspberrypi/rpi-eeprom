@@ -1,3 +1,11 @@
+rpi-eeprom (13.5-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * Add note about GPU memory in latest beta
+  * pieeprom-2022-01-25: Create stable release from pieeprom-2022-01-20
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 26 Jan 2022 12:05:38 +0000
+
 rpi-eeprom (13.4-1) bullseye; urgency=medium
 
   [ Andrew Scheller ]
