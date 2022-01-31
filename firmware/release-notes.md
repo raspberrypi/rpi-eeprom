@@ -1,7 +1,13 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-USB MSD boot also requires the firmware from Raspberry Pi OS 2020-08-20 or newer.
-https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration
+## 2022-01-25 - Promote pieeprom-222-01-25 to the DEFAULT release
+Interesting changes since the last default release
+   * Support and bug fixes for all Compute Module variants.
+   * NVMe interoperability fixes
+   * FAT/GPT fixes and file-system performance improvements.
+   * Add secure-boot support for industrial applications
+     See https://github.com/raspberrypi/usbboot/blob/master/secure-boot-recovery/README.md
+   * Added ramdisk / boot.img - for RPIBOOT and secure-boot.
 
 ## 2022-01-25 - Create new release from 2022-01-20 - LATEST/STABLE
    * Rebuild 2022-01-20 for new stable release
