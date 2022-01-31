@@ -1,6 +1,6 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-## 2022-01-25 - Promote pieeprom-222-01-25 to the DEFAULT release
+## 2022-01-25 - Promote pieeprom-2022-01-25 to the DEFAULT release
 Interesting changes since the last default release
    * Support and bug fixes for all Compute Module variants.
    * NVMe interoperability fixes
