@@ -38,7 +38,7 @@ gen_release() {
       "${script_dir}/../rpi-eeprom-config" \
          --config "${config}" --out pieeprom.bin \
          "${firmware_dir}/pieeprom-${pieeprom_version}.bin" || die "Failed to create updated EEPROM config with \"${config}\""
-      sha256sum pieeprom.bin | awk '{print $1}' > pieeprom.sig
+      ${script_dir}/../rpi-eeprom-digest -i pieeprom.bin -o pieeprom.sig
       echo "Creating ${out}"
       zip "${out}" *
       cleanup
