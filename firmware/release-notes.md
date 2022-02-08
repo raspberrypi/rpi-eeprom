@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-02-04 - Network Install - BETA
+   * New network install feature for the bootloader
+
 ## 2022-01-25 - Promote pieeprom-2022-01-25 to the DEFAULT release
 Interesting changes since the last default release
    * Support and bug fixes for all Compute Module variants.
