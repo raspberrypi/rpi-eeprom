@@ -1,7 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
 ## 2022-02-04 - Network Install - BETA
-   * New network install feature for the bootloader
+   * New network install feature for the bootloader. To disable network install
+     (e.g. in an industrial product) set NET_INSTALL_ENABLED=0 in the EEPROM
+     config or HDMI_DISABLE=1.
+   * Self update mode is now enabled during SD/EMMC boot. This enables
+     rpi-eeprom-update to be used on a CM4 / CM4-lite because recovery.bin
+     is not required. For industrial products we recommend disabling
+     self-update after initial setup by setting ENABLE_SELF_UPDATE=0 in
+     the EEPROM config.
+   * The PARTITION number can now be specified as an EEPROM property. This
+     might be used to boot maintenance software if a button connected to
+     a GPIO is pressed. The partition number specified via the reboot
+     command or autoboot.txt are a higher precedence than the EEPROM
+     property.
 
 ## 2022-01-25 - Promote pieeprom-2022-01-25 to the DEFAULT release
 Interesting changes since the last default release
