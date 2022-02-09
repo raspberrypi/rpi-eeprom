@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-02-08 - Fix secure-boot boot failure - STABLE
+   * Fix boot failure regression on boards which had the OTP secure boot bits set.
+
 ## 2022-02-04 - Network Install - BETA
    * New network install feature for the bootloader. To disable network install
      (e.g. in an industrial product) set NET_INSTALL_ENABLED=0 in the EEPROM
