@@ -1,3 +1,11 @@
+rpi-eeprom (13.8-1~buster) buster; urgency=medium
+
+  [ Tim Gover ]
+  * Update release-notes for network-install BETA
+  * pieeprom-2022-02-08: Fix secure-boot boot failure - STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 10 Feb 2022 16:00:20 +0000
+
 rpi-eeprom (13.7-1~buster) buster; urgency=medium
 
   [ Peter Harper ]
