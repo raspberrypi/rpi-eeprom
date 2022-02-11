@@ -81,13 +81,11 @@ body:
     label: NVMe boot
     description: |
        Before using NVMe as the boot device it's advisble to verify that the NVMe storage is working reliably when mounted from Linux. Please specify the make and model and also  capture the following information from a working system when reporting NVMe issues.
-```bash
-sudo apt-get install nvme-cli
-sudo nvme list
-sudo nvme id-ctrl -H /dev/nvme0
-sudo nvme list-ns /dev/nvme0
-sudo nvme id-ns -H /dev/nvme0 --namespace-id=1
-```       
+       * `sudo apt-get install nvme-cli`
+       * `sudo nvme list`
+       * `sudo nvme id-ctrl -H /dev/nvme0`
+       * `sudo nvme list-ns /dev/nvme0`
+       * `sudo nvme id-ns -H /dev/nvme0 --namespace-id=1`   
   validations:
     required: false
     
