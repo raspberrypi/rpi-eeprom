@@ -1,0 +1,94 @@
+name: "Bug report"
+description: Create a report to help us fix your issue
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Is this the right place for my bug report?**
+      This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.
+      
+      Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware). 
+      If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it.
+
+- type: textarea
+  id: description
+  attributes:
+    label: Describe the bug
+    description: |
+      Add a clear and concise description of what you think the bug is.
+  validations:
+    required: true
+
+- type: textarea
+  id: reproduce
+  attributes:
+    label: Steps to reproduce the behaviour
+    description: |
+      List the steps required to reproduce the issue.
+  validations:
+    required: true
+- type: dropdown
+  id: model
+  attributes:
+    label: Device (s)
+    description: On which device you are facing the bug?
+    multiple: true
+    options:
+      - Raspberry Pi 4 Mod. B
+      - Raspberry Pi 400
+      - Raspberry Pi CM4
+      - Raspberry Pi CM4 Lite
+      - Other
+  validations:
+    required: true
+
+- type: textarea
+  id: system
+  attributes:
+    label: System
+    description: |
+      Copy and paste the results of the raspinfo command in to this section.
+      Alternatively, copy and paste a pastebin link, or add answers to the following questions:
+      * Which OS and version (`cat /etc/rpi-issue`)?
+      * Which bootloader version (`vcgencmd bootloader_version`)?
+      * Which firmware version (`vcgencmd version`)?
+      * Which kernel version (`uname -a`)?
+  validations:
+    required: false
+    
+- type: textarea
+  id: system
+  attributes:
+    label: Bootloader logs
+    description: |
+       If the problem can't be diagnosed from the bootloader HDMI diagnostics screen then we'll normally need to see more detailed logs to diagnose the problem.
+       The [Bootloader configuration](https://www.raspberrypi.org/documentation/computers/raspberry-pi.html#raspberry-pi-4-bootloader-configuration) page describes how to enable UART or NETCONSOLE logs. Please copy and paste the log output here.      
+  validations:
+    required: false
+    
+- type: textarea
+  id: system
+  attributes:
+    label: USB boot
+    description: |
+       Before using USB as the boot device it's advisble to verify that the USB device works correctly from Raspberry Pi OS. Please specify the make and model of the USB device plus any HUBs or USB/SATA adapters. Please also capture the output of the following command from Linux `lsusb -vvv`.
+  validations:
+    required: false    
+
+- type: textarea
+  id: system
+  attributes:
+    label: NVMe boot
+    description: |
+       Before using NVMe as the boot device it's advisble to verify that the NVMe storage is working reliably when mounted from Linux. Please specify the make and model and also  capture the following information from a working system when reporting NVMe issues.
+```bash
+sudo apt-get install nvme-cli
+sudo nvme list
+sudo nvme id-ctrl -H /dev/nvme0
+sudo nvme list-ns /dev/nvme0
+sudo nvme id-ns -H /dev/nvme0 --namespace-id=1
+```       
+  validations:
+    required: false
+    
+    
