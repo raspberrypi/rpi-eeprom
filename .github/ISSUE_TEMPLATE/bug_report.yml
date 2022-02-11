@@ -5,9 +5,10 @@ body:
   attributes:
     value: |
       **Is this the right place for my bug report?**
-      This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.      
-      Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware). 
-      If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it.
+      
+      * This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.      
+      * Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware). 
+      * If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it.
 
 - type: textarea
   id: description
@@ -60,9 +61,9 @@ body:
   attributes:
     label: Bootloader logs
     description: |
-       If the problem can't be diagnosed from the bootloader HDMI diagnostics screen then we'll normally need to see more detailed logs to diagnose the problem. The bootloader and GPU firmware can be configured to enable log output to the UART pins `14` and `15` on the (40-pin GPIO header)[https://www.raspberrypi.com/documentation/computers/os.html#gpio-and-the-40-pin-header]
+       If the problem can't be diagnosed from the bootloader HDMI diagnostics screen then we'll normally need to see more detailed logs to diagnose the problem. The bootloader and GPU firmware can be configured to enable log output to the UART pins `14` and `15` on the [40-pin GPIO header](https://www.raspberrypi.com/documentation/computers/os.html#gpio-and-the-40-pin-header)
          * To enable UART logging from the bootloader specify [BOOT_UART=1](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#BOOT_UART) in the EEPROM config
-         * To enable UART logging from the `start.elf` GPU firmware stage add [uart_2ndstage=1](https://www.raspberrypi.com/documentation/computers/config_txt.html#uart_2ndstage) to `config.txt.
+         * To enable UART logging from the `start.elf` GPU firmware stage add [uart_2ndstage=1](https://www.raspberrypi.com/documentation/computers/config_txt.html#uart_2ndstage) to `config.txt`.
          * If you are familiar with using Wireshark then it's also possible to use [NETCONSOLE](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#NETCONSOLE) write logs to UDP packets.
        Please paste the bootloader logs here.          
   validations:
@@ -73,7 +74,8 @@ body:
   attributes:
     label: USB boot
     description: |
-       Before using USB as the boot device it's advisble to verify that the USB device works correctly from Raspberry Pi OS. Please specify the make and model of the USB device plus any HUBs or USB/SATA adapters. Please also capture the output of the following command from Linux `lsusb -vvv`.
+       Before using USB as the boot device it's advisble to verify that the USB device is [compatible](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#hardware-compatibility) and works reliably from Linux. 
+       Please specify the make and model of the USB device plus any HUBs or USB/SATA adapters. Please also capture the output of the following command from Linux `lsusb -vvv` and paste the results here.
   validations:
     required: false    
 
