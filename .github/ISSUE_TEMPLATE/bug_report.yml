@@ -57,7 +57,7 @@ body:
     required: false
     
 - type: textarea
-  id: system
+  id: Logs
   attributes:
     label: Bootloader logs
     description: |
@@ -67,7 +67,7 @@ body:
     required: false
     
 - type: textarea
-  id: system
+  id: USB
   attributes:
     label: USB boot
     description: |
@@ -76,7 +76,7 @@ body:
     required: false    
 
 - type: textarea
-  id: system
+  id: NVMe
   attributes:
     label: NVMe boot
     description: |
