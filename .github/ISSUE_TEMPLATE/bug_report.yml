@@ -5,8 +5,7 @@ body:
   attributes:
     value: |
       **Is this the right place for my bug report?**
-      This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts. |
-      
+      This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.      
       Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware). 
       If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it.
 
@@ -64,6 +63,7 @@ body:
        If the problem can't be diagnosed from the bootloader HDMI diagnostics screen then we'll normally need to see more detailed logs to diagnose the problem. The bootloader and GPU firmware can be configured to enable log output to the UART pins `14` and `15` on the (40-pin GPIO header)[https://www.raspberrypi.com/documentation/computers/os.html#gpio-and-the-40-pin-header]
          * To enable UART logging from the bootloader specify [BOOT_UART=1](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#BOOT_UART) in the EEPROM config
          * To enable UART logging from the `start.elf` GPU firmware stage add [uart_2ndstage=1](https://www.raspberrypi.com/documentation/computers/config_txt.html#uart_2ndstage) to `config.txt.
+         * If you are familiar with using Wireshark then it's also possible to use [NETCONSOLE](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#NETCONSOLE) write logs to UDP packets.
        Please paste the bootloader logs here.          
   validations:
     required: false
@@ -95,7 +95,10 @@ body:
   id: tftp
   attributes:
     label: Network (TFTP boot)
-    description: |
+    description: |      
+      Please provide the following information if possible:- 
+      * DHCP server configuration files e.g. `dnsmasq.conf`
+      * Wireshark binary packet capture      
   validations:
     required: false
     
