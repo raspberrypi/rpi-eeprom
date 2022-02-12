@@ -51,11 +51,12 @@ body:
   attributes:
     label: Bootloader configuration.
     description: |      
-      Copy and paste the results of `rpi-eeprom-config` or `vcgencmd bootloader_config` or describe the configuration changes if the system is not booting.
+      Copy and paste the results of `vcgencmd bootloader_config` or describe the failing configuration.
       
       * `rpi-eeprom-update` saves a backup of the previous bootloader configuration to `/var/lib/raspberrypi/bootloader/backup` before it schedules the update.
+      * `rpi-eeprom-config pieeprom.upd` can be used to read the contents of an EEPROM image.
   validations:
-    required: false    
+    required: true
 
 - type: textarea
   id: system
