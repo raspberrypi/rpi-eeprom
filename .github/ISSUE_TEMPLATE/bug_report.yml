@@ -9,7 +9,8 @@ body:
       * This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.      
       * Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware).
       * Please report USB issues which occur after the OS has started at the Linux repo [github.com/raspberrypi/linux/](https://github.com/raspberrypi/linux/).
-      * If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it.
+      * If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it. 
+         * The ["Is your Pi not booting?"](https://forums.raspberrypi.com/viewtopic.php?f=28&t=58151) post has lots of useful advice.
 
 - type: textarea
   id: description
