@@ -7,7 +7,8 @@ body:
       **Is this the right place for my bug report?**
       
       * This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.      
-      * Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware). 
+      * Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware).
+      * Please report USB issues which occur after the OS has started at the Linux repo [github.com/raspberrypi/linux/](https://github.com/raspberrypi/linux/).
       * If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it.
 
 - type: textarea
@@ -16,7 +17,8 @@ body:
     label: Describe the bug
     description: |
       Add a clear and concise description of what you think the bug is. 
-      * Attach a photo of the bootloader [diagnostics](/var/lib/raspberrypi/bootloader/backup) if this shows an error.
+      
+      * Attach a photo of the bootloader [diagnostics](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#boot-diagnostics-on-the-raspberry-pi-4).
       * If the system is failing to boot then please check if the green activity LED is displaying an [error pattern](https://www.raspberrypi.com/documentation/computers/configuration.html#led-warning-flash-codes).
   validations:
     required: true
@@ -47,10 +49,11 @@ body:
 - type: textarea
   id: config
   attributes:
-    label: Bootloader config
+    label: Bootloader configuration.
     description: |      
       Copy and paste the results of `rpi-eeprom-config` or `vcgencmd bootloader_config` or describe the configuration changes if the system is not booting.
-      * N.B `rpi-eeprom-update` saves a backup of the previous bootloader configuration to `/var/lib/raspberrypi/bootloader/backup` before it schedules the update.
+      
+      * `rpi-eeprom-update` saves a backup of the previous bootloader configuration to `/var/lib/raspberrypi/bootloader/backup` before it schedules the update.
   validations:
     required: false    
 
