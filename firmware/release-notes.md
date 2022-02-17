@@ -1,5 +1,21 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-02-16 - Net Install fixes - BETA
+   Net install changes.
+   * Got rid of confirmation step that required you to press <Space> to
+     initiate net install. Now just long press <Shift>
+   * Updated the screen text to make it more obvious the device is still
+     trying boot when the net install is showing.
+   * Fixed a DHCP net install bug which caused us to lose the
+     gateway address.
+   * Fixed a bug with the uIP timers which could cause net install to
+     always fail.
+   * Implemented resume and retry on download failure.
+
+   Other interesting changes.
+   * Allow smaller MSD discovery timeouts to be specified.
+   * Some tweaks and fixes to IPV6 netboot.
+
 ## 2022-02-08 - Fix secure-boot boot failure - STABLE
    * Fix boot failure regression on boards which had the OTP secure boot bits set.
 
