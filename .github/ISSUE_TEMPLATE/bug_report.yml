@@ -1,0 +1,123 @@
+name: "Bug report"
+description: Create a report to help us fix your issue
+body:
+- type: markdown
+  attributes:
+    value: |
+      **Is this the right place for my bug report?**
+      
+      * This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.      
+      * Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware).
+      * Please report USB issues which occur after the OS has started at the Linux repo [github.com/raspberrypi/linux/](https://github.com/raspberrypi/linux/).
+      * If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it. 
+         * The ["Is your Pi not booting?"](https://forums.raspberrypi.com/viewtopic.php?f=28&t=58151) post has lots of useful advice.
+
+- type: textarea
+  id: description
+  attributes:
+    label: Describe the bug
+    description: |
+      Add a clear and concise description of what you think the bug is. 
+      
+      * Attach a photo of the bootloader [diagnostics](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#boot-diagnostics-on-the-raspberry-pi-4).
+      * If the system is failing to boot then please check if the green activity LED is displaying an [error pattern](https://www.raspberrypi.com/documentation/computers/configuration.html#led-warning-flash-codes).
+  validations:
+    required: true
+
+- type: textarea
+  id: reproduce
+  attributes:
+    label: Steps to reproduce the behaviour
+    description: |
+      List the steps required to reproduce the issue.
+  validations:
+    required: true
+- type: dropdown
+  id: model
+  attributes:
+    label: Device (s)
+    description: On which device you are facing the bug?
+    multiple: true
+    options:
+      - Raspberry Pi 4 Mod. B
+      - Raspberry Pi 400
+      - Raspberry Pi CM4
+      - Raspberry Pi CM4 Lite
+      - Other
+  validations:
+    required: true
+    
+- type: textarea
+  id: config
+  attributes:
+    label: Bootloader configuration.
+    description: |      
+      Copy and paste the results of `vcgencmd bootloader_config` or describe the failing configuration.
+      
+      * `rpi-eeprom-update` saves a backup of the previous bootloader configuration to `/var/lib/raspberrypi/bootloader/backup` before it schedules the update.
+      * `rpi-eeprom-config pieeprom.upd` can be used to read the contents of an EEPROM image.
+  validations:
+    required: true
+
+- type: textarea
+  id: system
+  attributes:
+    label: System
+    description: |
+      Copy and paste the results of the `raspinfo` command in to this section.
+      Alternatively, copy and paste a pastebin link, or add answers to the following questions:
+      * Which OS and version (`cat /etc/rpi-issue`)?
+      * Which bootloader version (`vcgencmd bootloader_version`)?
+      * Which firmware version (`vcgencmd version`)?
+      * Which kernel version (`uname -a`)?
+  validations:
+    required: false
+    
+- type: textarea
+  id: Logs
+  attributes:
+    label: Bootloader logs
+    description: |
+       If the problem can't be diagnosed from the bootloader HDMI diagnostics screen then we'll normally need to see more detailed logs to diagnose the problem. The bootloader and GPU firmware can be configured to enable log output to the UART pins `14` and `15` on the [40-pin GPIO header](https://www.raspberrypi.com/documentation/computers/os.html#gpio-and-the-40-pin-header)
+         * To enable UART logging from the bootloader specify [BOOT_UART=1](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#BOOT_UART) in the EEPROM config
+         * To enable UART logging from the `start.elf` GPU firmware stage add [uart_2ndstage=1](https://www.raspberrypi.com/documentation/computers/config_txt.html#uart_2ndstage) to `config.txt`.
+         * If you are familiar with using Wireshark then it's also possible to use [NETCONSOLE](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#NETCONSOLE) write logs to UDP packets.
+       Please paste the bootloader logs here.          
+  validations:
+    required: false
+    
+- type: textarea
+  id: USB
+  attributes:
+    label: USB boot
+    description: |
+       Before using USB as the boot device it's advisble to verify that the USB device is [compatible](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#hardware-compatibility) and works reliably from Linux. 
+       Please specify the make and model of the USB device plus any HUBs or USB/SATA adapters. Please also capture the output of the following command from Linux `lsusb -vvv` and paste the results here.
+  validations:
+    required: false    
+
+- type: textarea
+  id: NVMe
+  attributes:
+    label: NVMe boot
+    description: |
+       Before using NVMe as the boot device it's advisble to verify that the NVMe storage is working reliably when mounted from Linux. Please specify the make and model and also  capture the following information from a working system when reporting NVMe issues.
+       * `sudo apt-get install nvme-cli`
+       * `sudo nvme list`
+       * `sudo nvme id-ctrl -H /dev/nvme0`
+       * `sudo nvme list-ns /dev/nvme0`
+       * `sudo nvme id-ns -H /dev/nvme0 --namespace-id=1`   
+  validations:
+    required: false
+    
+- type: textarea
+  id: tftp
+  attributes:
+    label: Network (TFTP boot)
+    description: |      
+      Please provide the following information if possible:- 
+      * DHCP server configuration files e.g. `dnsmasq.conf`
+      * Wireshark binary packet capture      
+  validations:
+    required: false
+    
