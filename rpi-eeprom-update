@@ -690,7 +690,7 @@ removePreviousUpdates()
 {
    if [ "$(id -u)" = "0" ]; then
       findBootFS
-      echo "    BOOTFS: ${BOOTFS}"
+      echo "BOOTFS: ${BOOTFS}"
 
       (
          # Remove any stale recovery.bin files or EEPROM images
