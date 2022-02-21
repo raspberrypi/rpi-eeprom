@@ -547,11 +547,9 @@ findBootFS()
       TMP_BOOTFS_MNT="$(mktemp -d)"
       mount /dev/mmcblk0p1 "${TMP_BOOTFS_MNT}"
       BOOTFS="${TMP_BOOTFS_MNT}"
-   fi
-
-   # Some distros mount boot partition in alternative locations, e.g. Debian
-   # We can aid them by probing the most common alternative paths
-   if [ -n "${BOOTFS_ALTERNATIVE_PATHS}" ]; then
+   elif [ -n "${BOOTFS_ALTERNATIVE_PATHS}" ] && ( [ ! -d "${BOOTFS}" ] || [ "$(find "${BOOTFS}" -maxdepth 1 -name "*.elf" | wc -l)" -le 0 ] ); then
+      # Some distros mount boot partition in alternative locations, e.g. Debian
+      # We can aid them by probing the most common alternative paths
       for bootfs_alternative_path in ${BOOTFS_ALTERNATIVE_PATHS}; do
          if [ -d "${bootfs_alternative_path}" ] && [ "$(find "${bootfs_alternative_path}" -maxdepth 1 -name "*.elf" | wc -l)" -gt 0 ]; then
             BOOTFS="${bootfs_alternative_path}"
