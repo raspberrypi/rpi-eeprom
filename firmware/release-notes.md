@@ -1,5 +1,15 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-02-28 - More net Install changes - BETA
+   Net install changes.
+   * Net install is initiated on boot if shift is pressed.
+   * New HTTP boot order (7) and configuration parameters,
+     HTTP_HOST, HTTP_PATH, HTTP_PORT to set url
+
+   Other interesting changes.
+   * Increase the max ramdisk size to 128MB
+   * Increase timeout of early SD/EMMC commands to 100ms
+
 ## 2022-02-16 - Net Install fixes - BETA
    Net install changes.
    * Got rid of confirmation step that required you to press <Space> to
