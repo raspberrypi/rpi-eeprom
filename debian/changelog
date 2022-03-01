@@ -1,3 +1,10 @@
+rpi-eeprom (13.10-1~buster) buster; urgency=medium
+
+  [ Peter Harper ]
+  * 2022-02-28: More net Install changes - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 01 Mar 2022 13:25:28 +0000
+
 rpi-eeprom (13.9-1~buster) buster; urgency=medium
 
   [ Peter Harper ]
