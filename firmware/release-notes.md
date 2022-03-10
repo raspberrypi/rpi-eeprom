@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-03-10 - HTTP_PATH fix - BETA
+   * Fix the defective HTTP_PATH eeprom configuration
+
 ## 2022-02-28 - More net Install changes - BETA
    Net install changes.
    * Net install is initiated on boot if shift is pressed.
