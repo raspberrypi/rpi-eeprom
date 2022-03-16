@@ -1,3 +1,10 @@
+rpi-eeprom (13.12-1) bullseye; urgency=medium
+
+  [ Peter Harper ]
+  * 2022-03-10: Promote 2022-03-10 to LATEST/STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 16 Mar 2022 10:32:51 +0000
+
 rpi-eeprom (13.11-1) bullseye; urgency=medium
 
   [ Peter Harper ]
