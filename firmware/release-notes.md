@@ -1,5 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-03-10 - Promote the 2022-03-10 beta release to LATEST/STABLE
+   * Includes new net install feature, enabled by default for Pi 4 and Pi 400
+   * New net install download screen may appear on boot if a boot location can't
+     be found or if boot is slow. Alternative press and hold shift on boot to
+     start net install.
+   * New HTTP boot order.
+   * Bootloader diagnosis screen is now 720p if supported by your monitor.
+   * Self update mode is now enabled during SD/EMMC boot.
+   * The PARTITION number can now be specified as an EEPROM property.
+   * Allow smaller MSD discovery timeouts to be specified.
+   * Some tweaks and fixes to IPV6 netboot.
+   * Increase the max ramdisk size to 128MB
+   * Increase timeout of early SD/EMMC commands to 100ms
+
 ## 2022-03-10 - HTTP_PATH fix - BETA
    * Fix the defective HTTP_PATH eeprom configuration
 
