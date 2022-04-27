@@ -1,5 +1,15 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-04-22 - Add pieeprom-2022-04-26 release - STABLE/BETA
+   * Release pieeprom-2022-04-22 signed with the secure-boot key so that
+     network install can be used on secure-boot devices.
+
+## 2022-04-22 - Add pieeprom-2022-04-22 release - BETA
+   * Fix netboot reboot failure on Pi 4B R1.1 if OS enables IDDQ power saving
+     https://github.com/raspberrypi/rpi-eeprom/issues/417
+   * Fix incorrect error code (configuration error) on EEPROM update failure.
+   * Enable more verbose errors for EEPROM update failures.
+
 ## 2022-03-10 - Promote the 2022-03-10 beta release to LATEST/STABLE
    * Includes new net install feature, enabled by default for Pi 4 and Pi 400
    * New net install download screen may appear on boot if a boot location can't
