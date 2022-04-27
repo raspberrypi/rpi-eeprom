@@ -1,3 +1,11 @@
+rpi-eeprom (13.13-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2022-04-14: Ethernet auto IDDQ fix & EEPROM update diagnostics - BETA
+  * pieeprom-2022-04-26: Network install / secure-boot STABLE/BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 27 Apr 2022 14:57:49 +0100
+
 rpi-eeprom (13.12-1) bullseye; urgency=medium
 
   [ Peter Harper ]
