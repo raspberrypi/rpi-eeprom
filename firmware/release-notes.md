@@ -1,5 +1,11 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-04-27 - Promote pieeprom-2022-04-26 to the DEFAULT release
+   * Enable Network Install in the default bootloader release.
+   * This release is signed with the secure-boot key and supports
+     the new HTTP boot-order for downloading signed boot images for
+     automated provisioning systems.
+
 ## 2022-04-22 - Add pieeprom-2022-04-26 release - STABLE/BETA
    * Release pieeprom-2022-04-22 signed with the secure-boot key so that
      network install can be used on secure-boot devices.
