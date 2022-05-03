@@ -1,3 +1,11 @@
+rpi-eeprom (13.14-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * Move old beta releases out of the APT package and into the old directory
+  * pieeprom-2022-04-26: Promote pieeprom-2022-04-26 to the DEFAULT release
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 03 May 2022 13:21:51 +0100
+
 rpi-eeprom (13.13-1) bullseye; urgency=medium
 
   [ Tim Gover ]
