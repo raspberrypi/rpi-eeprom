@@ -33,6 +33,17 @@ BOOTFS=${BOOTFS:-/boot}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
 
+# Self-update is preferred to using recovery.bin because it avoids modifiy the
+# boot partition in order to rename recovery.bin after use. Since the 2711 ROM
+# does not support network or USB MSD loading of recovery.bin self-update has to
+# be used with other boot modes anyway.
+
+# If RPI_EEPROM_SELF_UPDATE=1 then avoid installing recovery.bin so long as the
+# current bootloader version supports self-update from SD/MMC and that doesn't
+# look as though SELF_UPDATE has been disable in the EEPROM config or config.txt.
+RPI_EEPROM_SELF_UPDATE="${RPI_EEPROM_SELF_UPDATE:-0}"
+RPI_EEPROM_SELF_UPDATE_MIN_VER=1650968668
+
 # Automatic, critical updates are not applied unless the current bootloader version
 # is older than pieeprom-2020-09-03
 BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1599135103}"
@@ -215,8 +226,28 @@ applyRecoveryUpdate()
                 || die "Failed to set permissions on eeprom update files"
    fi
 
-   cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" \
-      || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
+   if getBootloaderConfig | grep -q ENABLE_SELF_UPDATE=0; then
+      # Self update has been disabled in the EEPROM config so recovery.bin
+      # must be used to clear this.
+      RPI_EEPROM_SELF_UPDATE=0
+   fi
+
+   # Setting bootlaoder_update=0 was really intended for use with network-boot with shared
+   # config.txt files. However, if it looks as though self-update has been disabled then
+   # assume recovery.bin is required.
+   config_txt="${BOOTFS}/config.txt"
+   if [ -f "${config_txt}" ]; then
+      if grep -q "bootloader_update=0" "${config_txt}"; then
+         RPI_EEPROM_SELF_UPDATE=0
+      fi
+   fi
+
+   [ "${BOOTLOADER_CURRENT_VERSION}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
+
+   if [ "${RPI_EEPROM_SELF_UPDATE}" != "1" ]; then
+	echo "Using recovery.bin for EEPROM update"
+	cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
+   fi
 
    echo ""
    echo "EEPROM updates pending. Please reboot to apply the update."
