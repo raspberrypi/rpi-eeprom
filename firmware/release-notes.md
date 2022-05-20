@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-05-20 - Add pieeprom-2022-05-20 - BETA
+   * Reduce boot-time when network install is disabled NET_INSTALL_ENABLED=0.
+   * Switch to the newer SDIO HC and increase SPI clock speed.
+
 ## 2022-04-27 - Promote pieeprom-2022-04-26 to the DEFAULT release
    * Enable Network Install in the default bootloader release.
    * This release is signed with the secure-boot key and supports
