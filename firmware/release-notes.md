@@ -1,5 +1,10 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-07-14 - Add pieeprom-2022-07-14 - BETA
+   * Enable long-filenames & sub-directories for start_file & fixup_file.
+     Use Unix path separators with a maximum path of 255 characters.
+     Relative paths (. or ..) are not supported.
+
 ## 2022-05-20 - Add pieeprom-2022-05-20 - BETA
    * Reduce boot-time when network install is disabled NET_INSTALL_ENABLED=0.
    * Switch to the newer SDIO HC and increase SPI clock speed.
