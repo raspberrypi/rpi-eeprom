@@ -1,3 +1,15 @@
+rpi-eeprom (13.15-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * make-imager-release: Bump the imager release to 2022-04-26
+  * make-recovery-images: Attempt to avoid orphaned loopback devices
+  * rpi-eeprom-update: Avoid using recovery.bin if the current bootloader supports self-update
+  * pieeprom-2022-05-20.bin Reduce boot-time when network install is disabled - BETA
+  * Restore ARM 32-bit vl805 flash programming tool
+  * 2022-07-14 - Add pieeprom-2022-07-14 - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 18 Jul 2022 09:03:05 +0100
+
 rpi-eeprom (13.14-1) bullseye; urgency=medium
 
   [ Tim Gover ]
