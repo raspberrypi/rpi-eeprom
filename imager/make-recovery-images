@@ -47,7 +47,10 @@ EOF
       mount "${LOOP}" fs
       cp -v files/* fs
       sync
+      sleep 5
       umount fs
+      # Delay before calling kpartx otherwise it's sometimes possible to get orphaned loopback devices
+      sleep 5
       kpartx -dv temp.img
    )
    mkdir -p images
@@ -60,3 +63,4 @@ EOF
    rm "images/${img}"
    chown "${SUDO_UID}:${SUDO_GID}" "images/${src}"
 done
+echo "Wrote images for rpi-imager to $(pwd)/images/${src}"
