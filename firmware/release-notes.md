@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-07-19 - Add pieeprom-2022-07-19 - STABLE
+   * Enable secure-boot on the 2022-07-14 beta release and promote to stable.
+
 ## 2022-07-14 - Add pieeprom-2022-07-14 - BETA
    * Enable long-filenames & sub-directories for start_file & fixup_file.
      Use Unix path separators with a maximum path of 255 characters.
