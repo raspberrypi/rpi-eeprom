@@ -1,5 +1,10 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-07-22 - Add pieeprom-2022-07-22 - BETA + STABLE
+   * NVMe fix large file reads - see https://github.com/raspberrypi/firmware/issues/1731
+     The firmware fix is also relevant for the bootloader when loading
+     large boot.img files.
+
 ## 2022-07-19 - Add pieeprom-2022-07-19 - STABLE
    * Enable secure-boot on the 2022-07-14 beta release and promote to stable.
 
