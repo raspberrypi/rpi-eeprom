@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-07-26 - Add pieeprom-2022-07-26 - BETA + STABLE
+   * Fix FAT issue https://github.com/raspberrypi/rpi-eeprom/issues/438
+
 ## 2022-07-22 - Add pieeprom-2022-07-22 - BETA + STABLE
    * NVMe fix large file reads - see https://github.com/raspberrypi/firmware/issues/1731
      The firmware fix is also relevant for the bootloader when loading
