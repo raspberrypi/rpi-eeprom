@@ -1,5 +1,11 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-08-02 - Add pieeprom-2022-08-02 - BETA + STABLE
+   * Display the secure-boot configuration on the diagnostics screen
+     if secure-boot is enabled.
+     See https://www.raspberrypi.com/documentation/computers/configuration.html#bcm2711-bootloader-properties-chosenbootloader
+    * Toggle SD power at boot to reset card-state after ROM SD probe.
+
 ## 2022-07-26 - Add pieeprom-2022-07-26 - BETA + STABLE
    * Fix FAT issue https://github.com/raspberrypi/rpi-eeprom/issues/438
 
