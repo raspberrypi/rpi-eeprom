@@ -1,5 +1,22 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-08-02 - Add pieeprom-2022-08-02 - BETA + STABLE
+   * Display the secure-boot configuration on the diagnostics screen
+     if secure-boot is enabled.
+     See https://www.raspberrypi.com/documentation/computers/configuration.html#bcm2711-bootloader-properties-chosenbootloader
+    * Toggle SD power at boot to reset card-state after ROM SD probe.
+
+## 2022-07-26 - Add pieeprom-2022-07-26 - BETA + STABLE
+   * Fix FAT issue https://github.com/raspberrypi/rpi-eeprom/issues/438
+
+## 2022-07-22 - Add pieeprom-2022-07-22 - BETA + STABLE
+   * NVMe fix large file reads - see https://github.com/raspberrypi/firmware/issues/1731
+     The firmware fix is also relevant for the bootloader when loading
+     large boot.img files.
+
+## 2022-07-19 - Add pieeprom-2022-07-19 - STABLE
+   * Enable secure-boot on the 2022-07-14 beta release and promote to stable.
+
 ## 2022-07-14 - Add pieeprom-2022-07-14 - BETA
    * Enable long-filenames & sub-directories for start_file & fixup_file.
      Use Unix path separators with a maximum path of 255 characters.
