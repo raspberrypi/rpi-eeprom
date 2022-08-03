@@ -1,3 +1,13 @@
+rpi-eeprom (13.16-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2022-07-19: Promote release from beta to STABLE
+  * pieeprom-2022-07-22 - Add pieeprom-2022-07-22 - BETA + STABLE
+  * pieeprom-2022-07-26: - Add pieeprom-2022-07-26 - BETA + STABLE
+  * 2022-08-02 - Add pieeprom-2022-08-02 - BETA + STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 03 Aug 2022 12:19:52 +0100
+
 rpi-eeprom (13.15-1) bullseye; urgency=medium
 
   [ Tim Gover ]
