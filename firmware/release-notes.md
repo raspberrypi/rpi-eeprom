@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-09-02 - Add pieeprom-2022-09-02 - BETA + STABLE
+   * Parse target MAC address in NETCONSOLE property https://github.com/raspberrypi/rpi-eeprom/issues/440
+
 ## 2022-08-02 - Add pieeprom-2022-08-02 - BETA + STABLE
    * Display the secure-boot configuration on the diagnostics screen
      if secure-boot is enabled.
