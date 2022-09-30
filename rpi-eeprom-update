@@ -339,7 +339,10 @@ checkDependencies() {
 
    if [ ${BOARD_TYPE} -eq 20 ] && [ "${CM4_ENABLE_RPI_EEPROM_UPDATE}" != '1' ]; then
       # For CM4, USB device boot is the recommended method for EEPROM updates.
-      echo "rpi-eeprom-update is not enabled by default on CM4. Run with -h for more information."
+      echo "rpi-eeprom-update is not enabled by default on CM4."
+      echo "The recommended method for flashing the EEPROM is rpiboot."
+      echo "See: https://github.com/raspberrypi/usbboot/blob/master/Readme.md"
+      echo "Run with -h for more information."
       exit ${EXIT_SUCCESS}
    fi
 
