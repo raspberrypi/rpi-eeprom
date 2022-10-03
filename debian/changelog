@@ -1,3 +1,9 @@
+rpi-eeprom (13.17-2) bullseye; urgency=medium
+
+  * Rebuild with a supported compression algorithm
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 03 Oct 2022 16:34:56 +0100
+
 rpi-eeprom (13.17-1) bullseye; urgency=medium
 
   [ Tim Gover ]
