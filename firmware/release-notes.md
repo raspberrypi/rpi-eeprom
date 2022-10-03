@@ -1,5 +1,10 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-10-03 - Add pieeprom-2022-10-03.bin - BETA
+   * Increase the size of USB in-transfers
+   * Increase TFTP_MAX_BLOCKSIZE to 1468
+   * stop NVMe cleanly
+
 ## 2022-09-02 - Add pieeprom-2022-09-02 - BETA + STABLE
    * Parse target MAC address in NETCONSOLE property https://github.com/raspberrypi/rpi-eeprom/issues/440
 
