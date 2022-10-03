@@ -1,3 +1,15 @@
+rpi-eeprom (13.17-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * chmod -x pieeprom-2022-08-02.bin
+  * Parse target MAC address in NETCONSOLE property
+  * rpi-eeprom-update: Mention rpiboot in the CM4 not supported error message
+
+  [ Peter Harper ]
+  * 2022-10-03 - Add pieeprom-2022-10-03.bin - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 03 Oct 2022 15:45:01 +0100
+
 rpi-eeprom (13.16-1) bullseye; urgency=medium
 
   [ Tim Gover ]
