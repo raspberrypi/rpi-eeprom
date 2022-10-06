@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-10-06 - Fix issue with screen display - BETA
+   * Fix issue with the bootloader display not being cleared properly
+
 ## 2022-10-03 - Add pieeprom-2022-10-03.bin - BETA
    * Increase the size of USB in-transfers
    * Increase TFTP_MAX_BLOCKSIZE to 1468
