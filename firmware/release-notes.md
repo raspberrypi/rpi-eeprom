@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-10-12 - Fix USB boot regression - BETA
+   * Reduce size of USB transfer
+
 ## 2022-10-06 - Fix issue with screen display - BETA
    * Fix issue with the bootloader display not being cleared properly
 
