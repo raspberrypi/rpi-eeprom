@@ -29,7 +29,12 @@ FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STA
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
 ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
 RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recovery.bin}
-BOOTFS=${BOOTFS:-/boot}
+
+if [ -z "${BOOTFS}" ]; then
+   BOOTFS="/boot"
+   BOOTFS_ALTERNATIVE_PATHS="/boot/firmware"
+fi
+
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
 
@@ -576,12 +581,22 @@ findBootFS()
       TMP_BOOTFS_MNT="$(mktemp -d)"
       mount /dev/mmcblk0p1 "${TMP_BOOTFS_MNT}"
       BOOTFS="${TMP_BOOTFS_MNT}"
+   elif [ -n "${BOOTFS_ALTERNATIVE_PATHS}" ] && ( [ ! -d "${BOOTFS}" ] || [ "$(find "${BOOTFS}" -maxdepth 1 -name "*.elf" | wc -l)" -le 0 ] ); then
+      # Some distros mount boot partition in alternative locations, e.g. Debian
+      # We can aid them by probing the most common alternative paths
+      for bootfs_alternative_path in ${BOOTFS_ALTERNATIVE_PATHS}; do
+         if [ -d "${bootfs_alternative_path}" ] && [ "$(find "${bootfs_alternative_path}" -maxdepth 1 -name "*.elf" | wc -l)" -gt 0 ]; then
+            BOOTFS="${bootfs_alternative_path}"
+
+            break
+         fi
+      done
    fi
 
    # If BOOTFS is not a directory or doesn't contain any .elf files then
    # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
-   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" = 0 ]; then
+   if [ "$(find "${BOOTFS}/" -maxdepth 1 -name "*.elf" | wc -l)" = 0 ]; then
       echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
    fi
 }
@@ -711,6 +726,7 @@ removePreviousUpdates()
 {
    if [ "$(id -u)" = "0" ]; then
       findBootFS
+      echo "BOOTFS: ${BOOTFS}"
 
       (
          # Remove any stale recovery.bin files or EEPROM images
