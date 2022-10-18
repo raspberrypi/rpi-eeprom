@@ -1,3 +1,14 @@
+rpi-eeprom (13.18-1) bullseye; urgency=medium
+
+  [ Peter Harper ]
+  * 2022-10-06 - Fix issue with screen display - BETA
+  * 2022-10-12 - Fix USB boot regression - BETA
+
+  [ Tim Gover ]
+  * 2022-10-18 - Tryboot enhancements for A/B partition booting - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 18 Oct 2022 12:58:37 +0100
+
 rpi-eeprom (13.17-2) bullseye; urgency=medium
 
   * Rebuild with a supported compression algorithm
