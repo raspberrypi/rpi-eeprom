@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-10-20 - Promote pieeprom-2022-10-18 BETA release to stable
+
 ## 2022-10-18 - Tryboot enhancements for A/B partition booting - BETA
    * Add support for a [tryboot] conditional statement in config files.
    * Load config.txt instead of tryboot.txt if tryboot_a_b=1 in autoboot.txt
