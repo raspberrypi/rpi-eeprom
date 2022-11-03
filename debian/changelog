@@ -1,3 +1,11 @@
+rpi-eeprom (13.20-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2022-11-02: Add option to use Customer OTP for MAC address - BETA
+  * rpi-eeprom-digest: Update from usbboot for the verify option
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 03 Nov 2022 18:36:55 +0000
+
 rpi-eeprom (13.19-1) bullseye; urgency=medium
 
   [ Tim Gover ]
