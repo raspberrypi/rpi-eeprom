@@ -1,5 +1,13 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-11-02 - Add option to use Customer OTP for MAC address - BETA
+   * Add a new EEPROM property that allows the Ethernet MAC address
+     programmed during manufacture to be overridden a value in the
+     Customer OTP register.
+
+     MAC_ADDRESS_OTP=A,B
+     where A and B are the customer row numbers (0..7)
+
 ## 2022-10-20 - Promote pieeprom-2022-10-18 BETA release to stable
 
 ## 2022-10-18 - Tryboot enhancements for A/B partition booting - BETA
