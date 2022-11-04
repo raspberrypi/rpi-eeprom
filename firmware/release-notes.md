@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-11-04 - Fix secure boot issue - BETA + STABLE
+   * Fix an OOM issue that was causing secure boot to fail (but not from RPIBOOT)
+
 ## 2022-11-02 - Add option to use Customer OTP for MAC address - BETA
    * Add a new EEPROM property that allows the Ethernet MAC address
      programmed during manufacture to be overridden a value in the
