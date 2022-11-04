@@ -1,3 +1,10 @@
+rpi-eeprom (13.21-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * * Fix an OOM issue that was causing secure boot to fail (but not from RPIBOOT)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 04 Nov 2022 19:04:11 +0000
+
 rpi-eeprom (13.20-1) bullseye; urgency=medium
 
   [ Tim Gover ]
