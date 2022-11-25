@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-11-25 - Fix unconfigured netconsole messages - BETA + STABLE
+   * Fix unconfigured netconsole messages https://github.com/raspberrypi/rpi-eeprom/issues/452
+   * Add display state to HDMI diagnostics screen
+
 ## 2022-11-04 - Fix secure boot issue - BETA + STABLE
    * Fix an OOM issue that was causing secure boot to fail (but not from RPIBOOT)
 
