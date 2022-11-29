@@ -26,13 +26,15 @@ checkDependencies() {
       die "sha256sum not found. Try installing the coreutilities package."
    fi
 
-   if ! command -v openssl > /dev/null; then
-      die "openssl not found. Try installing the openssl package."
-   fi
+   if [ -n "${KEY}" ] || [ "${VERIFY}" = 1 ]; then
+       if ! command -v openssl > /dev/null; then
+          die "openssl not found. Try installing the openssl package."
+       fi
 
-   if ! command -v xxd > /dev/null; then
-      die "xxd not found. Try installing the xxd package."
-   fi
+       if ! command -v xxd > /dev/null; then
+          die "xxd not found. Try installing the xxd package."
+       fi
+   fi 
 }
 
 usage() {
@@ -91,10 +93,9 @@ verifySig() {
    sig_file="${1}"
    [ -f "${sig_file}" ] || die "Signature file ${sig_file} not found"
    sig_hex="$(grep rsa2048 "${sig_file}" | cut -f 2 -d ' ')"
-   echo ${sig_hex} | xxd -c 4096 -p -r > "${TMP_DIR}/sig.bin"
-
    [ -n "${sig_hex}" ] || die "No RSA signature in ${sig_file}"
-   sha256=$(sha256sum "${IMAGE}" | awk '{print $1}')
+
+   echo ${sig_hex} | xxd -c 4096 -p -r > "${TMP_DIR}/sig.bin"
    "${OPENSSL}" dgst -verify "${KEY}" -signature "${TMP_DIR}/sig.bin" "${IMAGE}" || die "${IMAGE} not verified"
 }
 
