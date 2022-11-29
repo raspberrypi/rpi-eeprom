@@ -1,3 +1,14 @@
+rpi-eeprom (13.22-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * Align rpi-eeprom-digest with usbboot
+  * pieeprom-2022-11-25 - Fix unconfigured netconsole messages - BETA + STABLE
+  * rpi-eeprom-config: Add -x option to extract files
+  * rpi-eeprom-config: Make padding more robust.
+  * unit-test: Update to cover all the releases including beta
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 29 Nov 2022 14:53:08 +0000
+
 rpi-eeprom (13.21-1) bullseye; urgency=medium
 
   [ Tim Gover ]
