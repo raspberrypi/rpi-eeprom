@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+import argparse
+import struct
+import sys
+
+from Cryptodome.PublicKey import RSA
+
+def bintopem(infile, outf):
+    f = open(infile, 'rb')
+    arr = f.read(264)
+
+    n = int.from_bytes(struct.unpack_from("256B", arr, 0), 'little')
+    e = struct.unpack_from("<Q", arr, 256)[0]
+    pubkey = RSA.construct((n, e))
+    outf.write(pubkey.exportKey())
+
+def pemtobin(infile, outf):
+    key = RSA.importKey(open(infile, 'r').read())
+
+    if key.size_in_bits() != 2048:
+        raise Exception("RSA key size must be 2048")
+
+    # Extract the public key componenet n,e and store as little endian
+    outf.write(key.n.to_bytes(256, byteorder='little'))
+    outf.write(key.e.to_bytes(8, byteorder='little'))
+
+def main():
+    parser = argparse.ArgumentParser('Converts RSA keys between PEM format and the raw binary format used by the Raspberry Pi 4 bootloader')
+    parser.add_argument('input', nargs='+')
+    parser.add_argument('--inform', default="pem")
+    parser.add_argument('--output', required=False)
+
+    args = parser.parse_args()
+
+    if args.output:
+        outf = open(args.output, 'wb')
+    else:
+        outf = sys.stdout.buffer
+
+    if args.inform == "pem":
+        pemtobin(args.input[0], outf)
+    elif args.inform == "bin":
+        bintopem(args.input[0], outf)
+    else:
+        raise Exception("Unknown format %s" % args.inform)
+
+if __name__ == '__main__':
+    main()

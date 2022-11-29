@@ -1,0 +1,124 @@
+#!/bin/sh
+
+set -e
+
+FORCE=0
+READ_KEY=""
+WRITE_KEY=""
+OUTPUT_BINARY=0
+
+die() {
+    echo "$@" >&2
+    exit 1
+}
+
+usage() {
+    cat <<EOF
+   $(basename "$0") [-cfwy] <key>
+
+   No args - reads the current private key from OTP. These values are NOT visible via 'vcgencmd otp_dump'.
+
+   -b Output the key in binary format.
+   -c Reads key and exits with 1 if it is all zeros i.e. not set.
+   -f Force write (if OTP is non-zero).
+      The vcmailbox API checks that the new key is equal to the bitwise OR of the current OTP and the new key.
+      N.B. OTP bits can never change from 1 to 0.
+   -w Writes the new key to OTP memory.
+   -y Skip the confirmation prompt when writing to OTP.
+
+   <key> is a 64 digit hex number (256 bit) e.g. to generate a 256 random number run 'openssl rand -hex 32'
+
+   IMPORTANT: Raspberry Pi 4 and earlier revisions do not have a hardware secure key store. These OTP rows are visible
+   to any user in the 'video' group via vcmailbox. Therefore this functionality is only suitable for key
+   storage if the OS has already been restricted using the signed boot functionality.
+
+   WARNING: Changes to OTP memory are permanent and cannot be undone.
+EOF
+exit 1
+}
+
+check_key_set() {
+    read_key
+    if [ -z "$(echo "${READ_KEY}" | sed s/0//g)" ]; then
+        return 1
+    fi
+    return 0
+}
+
+read_key() {
+    out=READ_KEY="$(vcmailbox 0x00030081 40 40 0 8 0 0 0 0 0 0 0 0)" || die "Failed to read the current key from OTP"
+    READ_KEY="$(echo "${out}" | sed 's/0x//g' | awk '{for(i=8;i<16;i++) printf $i; print ""}')"
+}
+
+write_key() {
+    key="${1}"
+    # Normalize formatting and check the length
+    key="$(echo "${key}" | tr 'A-Z' 'a-z')"
+    key="$(echo "${key}" | sed 's/[^a-f0-9]//g')"
+    [ "$(echo -n "${key}" | wc -c)" = 64 ] || die "Invalid key parameter"
+
+    count=0
+    key_params=""
+    while [ ${count} -lt 8 ]; do
+        start=$(((count * 8) + 1))
+    end=$((start + 7))
+    key_params="${key_params} 0x$(echo -n "${key}" | cut -c${start}-${end})"
+    count=$((count + 1))
+    done
+
+    if [ "${YES}" = 0 ] && [ -t 0 ]; then
+       echo "Write ${key} to OTP?"
+       echo
+       echo "WARNING: Updates to OTP registers are permanent and cannot be undone."
+
+       echo "Type YES (in upper case) to continue or press return to exit."
+       read -r confirm
+       if [ "${confirm}" != "YES" ]; then
+          echo "Cancelled"
+          exit
+       fi
+    fi
+
+    vcmailbox 0x38081 40 40 0 8 ${key_params} || die "Failed to write key"
+    read_key
+    [ "${READ_KEY}" = "${key}" ] || die "Key readback check failed. ${out}"
+}
+
+YES=0
+while getopts bcfhw:y option; do
+    case "${option}" in
+        b) OUTPUT_BINARY=1
+            ;;
+        c)
+            if check_key_set; then
+                exit 0
+            fi
+            exit 1
+            ;;
+        f) FORCE=1
+            ;;
+        h) usage
+            ;;
+        w) WRITE_KEY="${OPTARG}"
+            ;;
+        y) YES=1
+           ;;
+        *) echo "Unknown argument \"${option}\""
+            usage
+            ;;
+    esac
+done
+
+if [ -n "${WRITE_KEY}" ]; then
+    if [ "${FORCE}" = 0 ] && check_key_set; then
+        die "Current key is non-zero. Specify -f to write anyway"
+    fi
+    write_key "${WRITE_KEY}"
+else
+    read_key
+    if [ "${OUTPUT_BINARY}" = 1 ]; then
+        echo "${READ_KEY}" | xxd -r -p
+    else
+        echo "${READ_KEY}"
+    fi
+fi
