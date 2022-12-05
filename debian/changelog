@@ -1,3 +1,11 @@
+rpi-eeprom (14.0-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * tools: Add secure-boot related scripts to tools
+  * pieeprom-2022-11-25 Promote STABLE to DEFAULT release
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 05 Dec 2022 13:17:58 +0000
+
 rpi-eeprom (13.22-1) bullseye; urgency=medium
 
   [ Tim Gover ]
