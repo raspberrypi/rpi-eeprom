@@ -1,5 +1,15 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-12-01 - Promote pieeprom-2022-11-25 to the DEFAULT release.
+Interesting changes since the last default release
+   * [tryboot] conditional statement + tryboot_a_b mode
+   * Support custom OTP mac addresses
+   * Increase TFTP_MAX_BLOCK_SIZE
+   * Stop NVMe cleanly
+   * Fixes for NETCONSOLE parsing and initialisation.
+   * Long filename support for start_file / fixup_file.
+   * Secure boot and display debug info on the diagnostis screen.
+
 ## 2022-11-25 - Fix unconfigured netconsole messages - BETA + STABLE
    * Fix unconfigured netconsole messages https://github.com/raspberrypi/rpi-eeprom/issues/452
    * Add display state to HDMI diagnostics screen
