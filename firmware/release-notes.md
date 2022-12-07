@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2022-12-07 - Fix SD voltage reset on Pi4 R1.1 (DEFAULT/STABLE/BETA).
+   * Fix issue where SD voltage was not reset by power cycling PMIC on reboot.
+     See https://github.com/raspberrypi/firmware/issues/1763
+
 ## 2022-12-01 - Promote pieeprom-2022-11-25 to the DEFAULT release.
 Interesting changes since the last default release
    * [tryboot] conditional statement + tryboot_a_b mode
