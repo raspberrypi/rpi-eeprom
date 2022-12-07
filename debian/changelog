@@ -1,3 +1,12 @@
+rpi-eeprom (15.0-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * Point to the latest release
+  * make-imager-release: Move image release to 2022-12-07
+  * 2022-12-07 - Fix SD voltage reset on Pi4 R1.1 (DEFAULT/STABLE/BETA).
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 07 Dec 2022 19:45:54 +0000
+
 rpi-eeprom (14.0-1) bullseye; urgency=medium
 
   [ Tim Gover ]
