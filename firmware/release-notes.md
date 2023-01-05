@@ -1,5 +1,11 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2023-01-04 - VL805 firmware update - BETA
+   * Update VL805 to 138C0 - fix for handling of split transactions
+     https://github.com/raspberrypi/linux/pull/5262
+   * Fix HID error handling with network install
+     https://github.com/raspberrypi/rpi-eeprom/issues/458
+
 ## 2022-12-07 - Fix SD voltage reset on Pi4 R1.1 (DEFAULT/STABLE/BETA).
    * Fix issue where SD voltage was not reset by power cycling PMIC on reboot.
      See https://github.com/raspberrypi/firmware/issues/1763
