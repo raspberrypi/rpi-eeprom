@@ -1,3 +1,10 @@
+rpi-eeprom (15.1-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2023-01-04 VL805 firmware update - BETA
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 06 Jan 2023 04:02:27 +0000
+
 rpi-eeprom (15.0-1) bullseye; urgency=medium
 
   [ Tim Gover ]
