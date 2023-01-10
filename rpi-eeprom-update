@@ -5,6 +5,7 @@
 set -e
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
+rpi_eeprom_config_dir="/usr/bin"
 
 if [ -f /etc/default/rpi-eeprom-update ]; then
    . /etc/default/rpi-eeprom-update
@@ -174,7 +175,7 @@ prepareImage()
    cp -f "${BOOTLOADER_UPDATE_IMAGE}" "${TMP_EEPROM_IMAGE}"
 
    if [ "${OVERWRITE_CONFIG}" = 0 ]; then
-      "${script_dir}/rpi-eeprom-config" \
+      "${rpi_eeprom_config_dir}/rpi-eeprom-config" \
          --out "${TMP_EEPROM_IMAGE}" \
          --config "${NEW_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
    fi
