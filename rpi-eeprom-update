@@ -126,7 +126,7 @@ getBootloaderConfig() {
 
    if [ -f "${blconfig_alias}" ]; then
       local blconfig_ofnode_path="/sys/firmware/devicetree/base"$(strings "${blconfig_alias}")""
-      local blconfig_ofnode_link=$(find -L /sys/bus/nvmem -samefile "${blconfig_ofnode_path}" 2>/dev/null)
+      local blconfig_ofnode_link=$(find -L /sys/bus/nvmem -maxdepth 3 -samefile "${blconfig_ofnode_path}" 2>/dev/null)
 
       if [ -e "${blconfig_ofnode_link}" ]; then
          blconfig_nvmem_path=$(dirname "${blconfig_ofnode_link}")
