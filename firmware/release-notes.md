@@ -1,5 +1,9 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2023-01-12 - Promote previous BETA release to STABLE
+   * Sign the 2023-01-04 release with the secure-boot ROM key and release
+     as pieeprom-2023-01-11.bin
+
 ## 2023-01-04 - VL805 firmware update - BETA
    * Update VL805 to 138C0 - fix for handling of split transactions
      https://github.com/raspberrypi/linux/pull/5262
