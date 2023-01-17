@@ -1,3 +1,56 @@
+rpi-eeprom (15.2-1~buster) buster; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2022-04-14: Ethernet auto IDDQ fix & EEPROM update diagnostics - BETA
+  * pieeprom-2022-04-26: Network install / secure-boot STABLE/BETA
+  * Move old beta releases out of the APT package and into the old directory
+  * pieeprom-2022-04-26: Promote pieeprom-2022-04-26 to the DEFAULT release
+  * make-imager-release: Bump the imager release to 2022-04-26
+  * make-recovery-images: Attempt to avoid orphaned loopback devices
+  * rpi-eeprom-update: Avoid using recovery.bin if the current bootloader supports self-update
+  * pieeprom-2022-05-20.bin Reduce boot-time when network install is disabled - BETA
+  * Restore ARM 32-bit vl805 flash programming tool
+  * 2022-07-14 - Add pieeprom-2022-07-14 - BETA
+  * pieeprom-2022-07-19: Promote release from beta to STABLE
+  * pieeprom-2022-07-22 - Add pieeprom-2022-07-22 - BETA + STABLE
+  * pieeprom-2022-07-26: - Add pieeprom-2022-07-26 - BETA + STABLE
+  * 2022-08-02 - Add pieeprom-2022-08-02 - BETA + STABLE
+  * chmod -x pieeprom-2022-08-02.bin
+  * * Parse target MAC address in NETCONSOLE property
+  * rpi-eeprom-update: Mention rpiboot in the CM4 not supported error message
+
+  [ Peter Harper ]
+  * 2022-10-03 - Add pieeprom-2022-10-03.bin - BETA
+  * 2022-10-06 - Fix issue with screen display - BETA
+  * 2022-10-12 - Fix USB boot regression - BETA
+
+  [ Tim Gover ]
+  * 2022-10-18 - Tryboot enhancements for A/B partition booting - BETA
+  * Update release notes for 2022-10-18 - BETA
+  * pieeprom-2022-10-18: Promote BETA release to STABLE
+  * pieeprom-2022-11-02: Add option to use Customer OTP for MAC address - BETA
+  * rpi-eeprom-digest: Update from usbboot for the verify option
+  * * Fix an OOM issue that was causing secure boot to fail (but not from RPIBOOT)
+  * Align rpi-eeprom-digest with usbboot
+  * pieeprom-2022-11-25 - Fix unconfigured netconsole messages - BETA + STABLE
+  * rpi-eeprom-config: Add -x option to extract files
+  * rpi-eeprom-config: Make padding more robust.
+  * unit-test: Update to cover all the releases including beta
+  * tools: Add secure-boot related scripts to tools
+  * pieeprom-2022-11-25 Promote STABLE to DEFAULT release
+  * Point to the latest release
+  * make-imager-release: Move image release to 2022-12-07
+  * 2022-12-07 - Fix SD voltage reset on Pi4 R1.1 (DEFAULT/STABLE/BETA).
+  * pieeprom-2023-01-04 VL805 firmware update - BETA
+
+  [ Allan Xavier ]
+  * Fix rpi-eeprom-update when using busybox find
+
+  [ Tim Gover ]
+  * pieeprom-2023-01-11: Promote previous BETA release to STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 17 Jan 2023 09:16:15 +0000
+
 rpi-eeprom (13.12-1~buster) buster; urgency=medium
 
   [ Peter Harper ]
