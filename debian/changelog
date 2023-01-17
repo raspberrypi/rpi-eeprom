@@ -1,3 +1,13 @@
+rpi-eeprom (15.2-1) bullseye; urgency=medium
+
+  [ Allan Xavier ]
+  * Fix rpi-eeprom-update when using busybox find
+
+  [ Tim Gover ]
+  * pieeprom-2023-01-11: Promote previous BETA release to STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 17 Jan 2023 08:39:52 +0000
+
 rpi-eeprom (15.1-1) bullseye; urgency=medium
 
   [ Tim Gover ]
