@@ -1,5 +1,108 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2023-01-12 - Promote previous BETA release to STABLE
+   * Sign the 2023-01-04 release with the secure-boot ROM key and release
+     as pieeprom-2023-01-11.bin
+
+## 2023-01-04 - VL805 firmware update - BETA
+   * Update VL805 to 138C0 - fix for handling of split transactions
+     https://github.com/raspberrypi/linux/pull/5262
+   * Fix HID error handling with network install
+     https://github.com/raspberrypi/rpi-eeprom/issues/458
+
+## 2022-12-07 - Fix SD voltage reset on Pi4 R1.1 (DEFAULT/STABLE/BETA).
+   * Fix issue where SD voltage was not reset by power cycling PMIC on reboot.
+     See https://github.com/raspberrypi/firmware/issues/1763
+
+## 2022-12-01 - Promote pieeprom-2022-11-25 to the DEFAULT release.
+Interesting changes since the last default release
+   * [tryboot] conditional statement + tryboot_a_b mode
+   * Support custom OTP mac addresses
+   * Increase TFTP_MAX_BLOCK_SIZE
+   * Stop NVMe cleanly
+   * Fixes for NETCONSOLE parsing and initialisation.
+   * Long filename support for start_file / fixup_file.
+   * Secure boot and display debug info on the diagnostis screen.
+
+## 2022-11-25 - Fix unconfigured netconsole messages - BETA + STABLE
+   * Fix unconfigured netconsole messages https://github.com/raspberrypi/rpi-eeprom/issues/452
+   * Add display state to HDMI diagnostics screen
+
+## 2022-11-04 - Fix secure boot issue - BETA + STABLE
+   * Fix an OOM issue that was causing secure boot to fail (but not from RPIBOOT)
+
+## 2022-11-02 - Add option to use Customer OTP for MAC address - BETA
+   * Add a new EEPROM property that allows the Ethernet MAC address
+     programmed during manufacture to be overridden a value in the
+     Customer OTP register.
+
+     MAC_ADDRESS_OTP=A,B
+     where A and B are the customer row numbers (0..7)
+
+## 2022-10-20 - Promote pieeprom-2022-10-18 BETA release to stable
+
+## 2022-10-18 - Tryboot enhancements for A/B partition booting - BETA
+   * Add support for a [tryboot] conditional statement in config files.
+   * Load config.txt instead of tryboot.txt if tryboot_a_b=1 in autoboot.txt
+   * Fix failover to partition 1  if the `boot_partition` points to non-bootable partition.
+   * Enable `autoboot.txt` in secure-boot mode.
+
+## 2022-10-12 - Fix USB boot regression - BETA
+   * Reduce size of USB transfer
+
+## 2022-10-06 - Fix issue with screen display - BETA
+   * Fix issue with the bootloader display not being cleared properly
+
+## 2022-10-03 - Add pieeprom-2022-10-03.bin - BETA
+   * Increase the size of USB in-transfers
+   * Increase TFTP_MAX_BLOCKSIZE to 1468
+   * stop NVMe cleanly
+
+## 2022-09-02 - Add pieeprom-2022-09-02 - BETA + STABLE
+   * Parse target MAC address in NETCONSOLE property https://github.com/raspberrypi/rpi-eeprom/issues/440
+
+## 2022-08-02 - Add pieeprom-2022-08-02 - BETA + STABLE
+   * Display the secure-boot configuration on the diagnostics screen
+     if secure-boot is enabled.
+     See https://www.raspberrypi.com/documentation/computers/configuration.html#bcm2711-bootloader-properties-chosenbootloader
+    * Toggle SD power at boot to reset card-state after ROM SD probe.
+
+## 2022-07-26 - Add pieeprom-2022-07-26 - BETA + STABLE
+   * Fix FAT issue https://github.com/raspberrypi/rpi-eeprom/issues/438
+
+## 2022-07-22 - Add pieeprom-2022-07-22 - BETA + STABLE
+   * NVMe fix large file reads - see https://github.com/raspberrypi/firmware/issues/1731
+     The firmware fix is also relevant for the bootloader when loading
+     large boot.img files.
+
+## 2022-07-19 - Add pieeprom-2022-07-19 - STABLE
+   * Enable secure-boot on the 2022-07-14 beta release and promote to stable.
+
+## 2022-07-14 - Add pieeprom-2022-07-14 - BETA
+   * Enable long-filenames & sub-directories for start_file & fixup_file.
+     Use Unix path separators with a maximum path of 255 characters.
+     Relative paths (. or ..) are not supported.
+
+## 2022-05-20 - Add pieeprom-2022-05-20 - BETA
+   * Reduce boot-time when network install is disabled NET_INSTALL_ENABLED=0.
+   * Switch to the newer SDIO HC and increase SPI clock speed.
+
+## 2022-04-27 - Promote pieeprom-2022-04-26 to the DEFAULT release
+   * Enable Network Install in the default bootloader release.
+   * This release is signed with the secure-boot key and supports
+     the new HTTP boot-order for downloading signed boot images for
+     automated provisioning systems.
+
+## 2022-04-22 - Add pieeprom-2022-04-26 release - STABLE/BETA
+   * Release pieeprom-2022-04-22 signed with the secure-boot key so that
+     network install can be used on secure-boot devices.
+
+## 2022-04-22 - Add pieeprom-2022-04-22 release - BETA
+   * Fix netboot reboot failure on Pi 4B R1.1 if OS enables IDDQ power saving
+     https://github.com/raspberrypi/rpi-eeprom/issues/417
+   * Fix incorrect error code (configuration error) on EEPROM update failure.
+   * Enable more verbose errors for EEPROM update failures.
+
 ## 2022-03-10 - Promote the 2022-03-10 beta release to LATEST/STABLE
    * Includes new net install feature, enabled by default for Pi 4 and Pi 400
    * New net install download screen may appear on boot if a boot location can't

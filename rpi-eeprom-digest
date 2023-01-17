@@ -16,7 +16,7 @@ die() {
 
 TMP_DIR=""
 cleanup() {
-   if [ -f "${TMP_DIR}" ]; then
+   if [ -d "${TMP_DIR}" ]; then
       rm -rf "${TMP_DIR}"
    fi
 }
@@ -26,15 +26,15 @@ checkDependencies() {
       die "sha256sum not found. Try installing the coreutilities package."
    fi
 
-   if [ -n "${KEY}" ]; then
-      if ! command -v ${OPENSSL} > /dev/null; then
-         die "${OPENSSL} not found. Try installing the openssl package."
-      fi
+   if [ -n "${KEY}" ] || [ "${VERIFY}" = 1 ]; then
+       if ! command -v openssl > /dev/null; then
+          die "openssl not found. Try installing the openssl package."
+       fi
 
-      if ! command -v xxd > /dev/null; then
-         die "xxd not found. Try installing the xxd package."
-      fi
-   fi
+       if ! command -v xxd > /dev/null; then
+          die "xxd not found. Try installing the xxd package."
+       fi
+   fi 
 }
 
 usage() {
@@ -59,24 +59,58 @@ The bootloader only verifies RSA signatures in signed boot mode
 Examples:
 
 # Generate RSA signature for the EEPROM config file.
-rpi-eeprom-digest -k key.pem -i bootconf.txt  -o bootconf.sig
+rpi-eeprom-digest -k private.pem -i bootconf.txt  -o bootconf.sig
 
 # Generate the normal sha256 hash to guard against file-system corruption
 rpi-eeprom-digest -i pieeprom.bin -o pieeprom.sig
 rpi-eeprom-digest -i vl805.bin -o vl805.sig
 
+# To verify the signature of an existing .sig file using the public key.
+# N.B The key file must be the PUBLIC key in PEM format.
+rpi-eeprom-digest -k public.pem -i pieeprom.bin -v pieeprom.sig
+
 EOF
 exit 0
 }
 
+writeSig() {
+   TMP_DIR=$(mktemp -d)
+   SIG_TMP="${TMP_DIR}/tmp.sig"
+   sha256sum "${IMAGE}" | awk '{print $1}' > "${OUTPUT}"
+
+   # Include the update-timestamp
+   echo "ts: $(date -u +%s)" >> "${OUTPUT}"
+
+   if [ -n "${KEY}" ]; then
+      [ -f "${KEY}" ] || die "RSA private \"${KEY}\" not found"
+      "${OPENSSL}" dgst -sign "${KEY}" -keyform PEM -sha256 -out "${SIG_TMP}" "${IMAGE}"
+      echo "rsa2048: $(xxd -c 4096 -p < "${SIG_TMP}")" >> "${OUTPUT}"
+   fi
+}
+
+verifySig() {
+   TMP_DIR=$(mktemp -d)
+   sig_file="${1}"
+   [ -f "${sig_file}" ] || die "Signature file ${sig_file} not found"
+   sig_hex="$(grep rsa2048 "${sig_file}" | cut -f 2 -d ' ')"
+   [ -n "${sig_hex}" ] || die "No RSA signature in ${sig_file}"
+
+   echo ${sig_hex} | xxd -c 4096 -p -r > "${TMP_DIR}/sig.bin"
+   "${OPENSSL}" dgst -verify "${KEY}" -signature "${TMP_DIR}/sig.bin" "${IMAGE}" || die "${IMAGE} not verified"
+}
+
 OUTPUT=""
-while getopts i:k:ho: option; do
+VERIFY=0
+while getopts i:k:ho:v: option; do
    case "${option}" in
    i) IMAGE="${OPTARG}"
       ;;
    k) KEY="${OPTARG}"
       ;;
    o) OUTPUT="${OPTARG}"
+      ;;
+   v) SIGNATURE="${OPTARG}"
+      VERIFY=1
       ;;
    h) usage
       ;;
@@ -86,25 +120,15 @@ while getopts i:k:ho: option; do
    esac
 done
 
-[ -n "${IMAGE}" ] || usage
-[ -n "${OUTPUT}" ] || usage
-
 trap cleanup EXIT
-
 checkDependencies
 
+[ -n "${IMAGE}" ] || usage
 [ -f "${IMAGE}" ] || die "Source image \"${IMAGE}\" not found"
-
-TMP_DIR=$(mktemp -d)
-SIG_TMP="${TMP_DIR}/tmp.sig"
-sha256sum "${IMAGE}" | awk '{print $1}' > "${OUTPUT}"
-
-# Include the update-timestamp
-echo "ts: $(date -u +%s)" >> "${OUTPUT}"
-
-if [ -n "${KEY}" ]; then
-   [ -f "${KEY}" ] || die "RSA private \"${KEY}\" not found"
-
-   "${OPENSSL}" dgst -sign "${KEY}" -keyform PEM -sha256 -out "${SIG_TMP}" "${IMAGE}"
-   echo "rsa2048: $(xxd -c 4096 -p < "${SIG_TMP}")" >> "${OUTPUT}"
+if [ "${VERIFY}" = 1 ]; then
+   verifySig "${SIGNATURE}"
+else
+   [ -n "${OUTPUT}" ] || usage
+   writeSig
 fi
+

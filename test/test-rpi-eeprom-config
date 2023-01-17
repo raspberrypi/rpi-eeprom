@@ -135,7 +135,7 @@ check_conf_size_large()
 {
    echo "check maximum config file size"
    image="${script_dir}/$1"
-   conf="bootconf-2024.txt"
+   conf="bootconf-4076.txt"
 
    expected_md5="$(md5sum "${conf}" | awk '{print $1}')"
 
@@ -154,7 +154,7 @@ check_conf_size_too_large()
 {
    echo "check config file which exceeds the maximum size"
    image="${script_dir}/$1"
-   conf="bootconf-2025.txt"
+   conf="bootconf-4077.txt"
 
    expected_md5="$(md5sum "${conf}" | awk '{print $1}')"
 
@@ -167,7 +167,12 @@ check_conf_size_too_large()
 echo "Check config read and loopback read/write against reference config files"
 versions="$(cd configs; ls *.txt | sed 's/bootconf-//g' | sed 's/.txt//g')"
 for ver in ${versions}; do
-   check_loopback "../firmware/old/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
+   if [ -f "../firmware/old/beta/pieeprom-${ver}.bin" ]; then
+       # Use this directory if the bootloader has been archived
+       check_loopback "../firmware/old/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
+   else
+       check_loopback "../firmware/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
+   fi
    cleanup
 done
 

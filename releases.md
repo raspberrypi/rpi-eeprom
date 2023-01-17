@@ -6,7 +6,7 @@ bootloader is automatically updated after an APT update via the [rpi-eeprom-upda
 Release notes are available [here](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware/release-notes.md).
 
 ## Default release
-The default production EEPROM image release is [2020-09-03](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2020.09.03-138a1) and can be installed via the [Raspberry Pi Imager](https://www.raspberrypi.org/downloads/).
+The default production EEPROM image release is [2022-11-25](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2022.11.25-138a1) and can be installed via the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
 ## USB MSD boot
 Please see the [USB mass storage boot](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#usb-mass-storage-boot) guide.
