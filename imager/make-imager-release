@@ -4,4 +4,4 @@ set -e
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
 
-${script_dir}/make-release critical 2022-12-07 000138a1 "${script_dir}" release rpi-boot-eeprom-recovery
+${script_dir}/make-release critical 2023-01-11 000138c0 "${script_dir}" release rpi-boot-eeprom-recovery

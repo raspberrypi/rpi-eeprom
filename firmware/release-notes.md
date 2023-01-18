@@ -1,5 +1,12 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2023-01-18 - Promote previous STABLE release to DEFAULT
+Interesting changes since the last default release
+   * Update VL805 to 138C0 - fix for handling of split transactions
+     https://github.com/raspberrypi/linux/pull/5262
+   * Fix HID error handling with network install
+     https://github.com/raspberrypi/rpi-eeprom/issues/458
+
 ## 2023-01-12 - Promote previous BETA release to STABLE
    * Sign the 2023-01-04 release with the secure-boot ROM key and release
      as pieeprom-2023-01-11.bin
