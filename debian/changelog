@@ -1,3 +1,10 @@
+rpi-eeprom (16.0-1) bullseye; urgency=medium
+
+  [ Tim Gover ]
+  * 2023-01-18 - Promote pieeprom-2023-01-11 STABLE release to DEFAULT
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 20 Jan 2023 15:42:54 +0000
+
 rpi-eeprom (15.2-1) bullseye; urgency=medium
 
   [ Allan Xavier ]
