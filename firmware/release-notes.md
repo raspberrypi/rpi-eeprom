@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2023-05-11 - Fix hang in secure-boot init - BETA
+   * Fix intermittent hang when initialising secure-boot during a reboot loop.
+
 ## 2023-01-18 - Promote previous STABLE release to DEFAULT
 Interesting changes since the last default release
    * Update VL805 to 138C0 - fix for handling of split transactions
