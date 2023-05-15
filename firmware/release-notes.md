@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2023-05-15 - Promote pieeprom-2023-05-11 to STABLE
+
 ## 2023-05-11 - Fix hang in secure-boot init - BETA
    * Fix intermittent hang when initialising secure-boot during a reboot loop.
 
