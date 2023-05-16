@@ -1,3 +1,14 @@
+rpi-eeprom (16.1-1) bullseye; urgency=medium
+
+  [ Ivan T. Ivanov ]
+  * rpi-eeprom-update: Follow links when looking for latest EEPROM
+
+  [ Tim Gover ]
+  * pieeprom-2023-05-11: Fix intermittent hang during secure-boot - BETA
+  * pieeprom-2023-05-11: Promote BETA release to STABLE
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 16 May 2023 07:54:11 +0100
+
 rpi-eeprom (16.0-1) bullseye; urgency=medium
 
   [ Tim Gover ]
