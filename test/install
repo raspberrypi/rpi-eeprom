@@ -19,7 +19,9 @@ CONFIG="/etc/default/rpi-eeprom-update"
 
 [ "$(id -u)" = "0" ] || die "$0 Must be run as root - try 'sudo $0 [-b]'"
 
-cp -rfv "${FIRMWARE_DIR}"/* /lib/firmware/raspberrypi/bootloader
+rm -rf /lib/firmware/raspberrypi/bootloader
+mkdir -p /lib/firmware/raspberrypi/bootloader
+cp -rf "${FIRMWARE_DIR}"/* /lib/firmware/raspberrypi/bootloader
 cp -fv "${script_dir}/../rpi-eeprom-config" /usr/bin
 cp -fv "${script_dir}/../rpi-eeprom-digest" /usr/bin
 cp -fv "${script_dir}/../rpi-eeprom-update" /usr/bin
