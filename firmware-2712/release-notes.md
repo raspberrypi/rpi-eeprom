@@ -1,5 +1,16 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-09-21: Power button and ACT LED improvements
+
+* Fix bug where button press was not monitor for USB-C power supplies
+  that were detected as < 3A.
+* In USB boot mode automatically select max-current during a reboot
+  (but not power on reset) to improve OS installation experience.
+* USB-MSD stability improvements
+* Remove the HALT error pattern and go to halt/standby immediately.
+* Add support for HAT map.
+
+
 2023-09-13: Initial release
 
 * Initial manufacturing software
