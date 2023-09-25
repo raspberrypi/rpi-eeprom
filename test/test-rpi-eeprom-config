@@ -167,11 +167,11 @@ check_conf_size_too_large()
 echo "Check config read and loopback read/write against reference config files"
 versions="$(cd configs; ls *.txt | sed 's/bootconf-//g' | sed 's/.txt//g')"
 for ver in ${versions}; do
-   if [ -f "../firmware/old/beta/pieeprom-${ver}.bin" ]; then
+   if [ -f "../firmware-2711/old/beta/pieeprom-${ver}.bin" ]; then
        # Use this directory if the bootloader has been archived
-       check_loopback "../firmware/old/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
+       check_loopback "../firmware-2711/old/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
    else
-       check_loopback "../firmware/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
+       check_loopback "../firmware-2711/beta/pieeprom-${ver}.bin" "configs/bootconf-${ver}.txt"
    fi
    cleanup
 done
@@ -181,14 +181,14 @@ check_loopback pieeprom-signed.bin bootconf.txt
 check_signed_loopback pieeprom-signed.bin bootconf.txt bootconf.sig public.pem
 cleanup
 
-check_update "../firmware/old/beta/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15-freeze.bin" "bootconf-2019-07-15-freeze.txt"
+check_update "../firmware-2711/old/beta/pieeprom-2019-07-15.bin" "pieeprom-2019-07-15-freeze.bin" "bootconf-2019-07-15-freeze.txt"
 cleanup
 
-check_reduce_size "../firmware/old/beta/pieeprom-2019-07-15.bin" "bootconf-2019-07-15.txt"
+check_reduce_size "../firmware-2711/old/beta/pieeprom-2019-07-15.bin" "bootconf-2019-07-15.txt"
 cleanup
 
-check_conf_size_large "../firmware/old/beta/pieeprom-2019-07-15.bin"
+check_conf_size_large "../firmware-2711/old/beta/pieeprom-2019-07-15.bin"
 cleanup
 
-check_conf_size_too_large "../firmware/old/beta/pieeprom-2019-07-15.bin"
+check_conf_size_too_large "../firmware-2711/old/beta/pieeprom-2019-07-15.bin"
 cleanup
