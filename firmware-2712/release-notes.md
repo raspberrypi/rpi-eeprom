@@ -1,5 +1,10 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-09-28: vcgencmd pmic_read_adcs fixes (automatic update)
+ 
+* Fix the LDO names and current scaling codes
+* Manufacturing test updates
+
 2023-09-21: Power button and ACT LED improvements
 
 * Fix bug where button press was not monitor for USB-C power supplies
