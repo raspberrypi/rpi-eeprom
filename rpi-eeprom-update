@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Raspberry Pi4 boot EEPROM updater.
+# Raspberry Pi bootloader EEPROM updater.
 
 set -e
 
@@ -14,8 +14,7 @@ LOCAL_MODE=0
 if [ -n "$FIRMWARE_ROOT" ]; then
    # Provided by environment
    true
-elif [ -d /lib/firmware/raspberrypi/bootloader ]; then
-   # Default firmware root exists
+elif [ -d /lib/firmware/raspberrypi/bootloader ] || [ -d /lib/firmware/raspberrypi/bootloader-2711 ] || [ -d /lib/firmware/raspberrypi/bootloader-2712 ]; then
    FIRMWARE_ROOT=/lib/firmware/raspberrypi/bootloader
 else
    # Work from local git checkout
@@ -25,10 +24,8 @@ fi
 
 # Selects the release sub-directory
 FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-default}
-FIRMWARE_IMAGE_DIR=${FIRMWARE_IMAGE_DIR:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
 ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
-RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}/recovery.bin}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
 
@@ -42,10 +39,6 @@ RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
 # look as though SELF_UPDATE has been disable in the EEPROM config or config.txt.
 RPI_EEPROM_SELF_UPDATE="${RPI_EEPROM_SELF_UPDATE:-0}"
 RPI_EEPROM_SELF_UPDATE_MIN_VER=1650968668
-
-# Automatic, critical updates are not applied unless the current bootloader version
-# is older than pieeprom-2020-09-03
-BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1599135103}"
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
 
@@ -63,6 +56,7 @@ EEPROM_SIZE=524288
 BOARD_INFO=
 BOARD_REVISION=
 BOARD_TYPE=
+BCM_CHIP=
 
 # Newer board revisions embed the VLI firmware in the bootloader EEPROM and
 # there is no way to separately update the VLI firmware. Consequently,
@@ -244,8 +238,8 @@ applyRecoveryUpdate()
    [ "${BOOTLOADER_CURRENT_VERSION}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
 
    if [ "${RPI_EEPROM_SELF_UPDATE}" != "1" ]; then
-	echo "Using recovery.bin for EEPROM update"
-	cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
+      echo "Using recovery.bin for EEPROM update"
+      cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
    fi
 
    echo ""
@@ -314,6 +308,11 @@ getBootloaderUpdateVersion() {
    fi
 }
 
+chipNotSupported() {
+   echo "This tool only works with Raspberry Pi4 and Rapberry Pi5"
+   exit ${EXIT_SUCCESS}
+}
+
 checkDependencies() {
 
    if [ -f "/sys/firmware/devicetree/base/system/linux,revision" ]; then
@@ -327,11 +326,31 @@ checkDependencies() {
       exit ${EXIT_SUCCESS}
    fi
 
-   if [ $(((0x$BOARD_INFO >> 23) & 1)) -eq 0 ] || [ $(((0x$BOARD_INFO >> 12) & 15)) -ne 3 ]; then
-      # Not a BCM2711, no EEPROMs to update.
-      echo "This tool only works with a Raspberry Pi 4"
-      exit ${EXIT_SUCCESS}
+   if [ $(((0x$BOARD_INFO >> 23) & 1)) = 0 ]; then
+      chipNotSupported
    fi
+
+   if [ $(((0x$BOARD_INFO >> 12) & 15)) = 3 ]; then
+      BCM_CHIP=2711
+      EEPROM_SIZE=524288
+      BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1599135103}"
+   elif [ $(((0x$BOARD_INFO >> 12) & 15)) = 4 ]; then
+      # BCM2712 always supports self-update so recovery.bin is only used for RPi imager
+      # bootloader updated SD cards or with RPIBOOT.
+      BCM_CHIP=2712
+      EEPROM_SIZE=2097152
+      RPI_EEPROM_SELF_UPDATE=1
+      BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1695896697}"
+   else
+      chipNotSupported
+   fi
+
+   FIRMWARE_IMAGE_DIR="${FIRMWARE_ROOT}-${BCM_CHIP}/${FIRMWARE_RELEASE_STATUS}"
+   if ! [ -d "${FIRMWARE_IMAGE_DIR}" ]; then
+      # Use unadorned name for backwards compatiblity
+      FIRMWARE_IMAGE_DIR="${FIRMWARE_ROOT}/${FIRMWARE_RELEASE_STATUS}"
+   fi
+   RECOVERY_BIN=${RECOVERY_BIN:-${FIRMWARE_IMAGE_DIR}/recovery.bin}
 
    BOARD_TYPE=$(((0x$BOARD_INFO >> 4) & 0xff))
    BOARD_REVISION=$((0x$BOARD_INFO & 0xf))
@@ -385,7 +404,7 @@ checkDependencies() {
       die "sha256sum not found. Try installing the coreutilities package."
    fi
 
-   if [ ! -f "${RECOVERY_BIN}" ]; then
+   if [ "${BCM_CHIP}" = 2711 ] && [ ! -f "${RECOVERY_BIN}" ]; then
       die "${RECOVERY_BIN} not found."
    fi
 }
@@ -394,13 +413,15 @@ usage() {
 cat <<EOF
 rpi-eeprom-update [options]... [FILE]
 
-Bootloader EEPROM update tool for the Raspberry Pi 4.
+Bootloader EEPROM update tool for the Raspberry Pi 4 and Raspberry Pi 5.
 
-Checks whether the Raspberry Pi 4 bootloader and the VL805 USB controller
-EEPROMs are up to date and optionally updates the EEPROMs at the next reboot.
+This script also updates the SPI EEPROM image for the VL805 USB HC
+firmware on early Pi4B boards where the USB firmware is stored in 
+a dedicated SPI EEPROM instead of embedding it in the bootloader
+EEPROM. Raspberry Pi 5 uses the RP1.
 
 The default update mechanism writes recovery.bin and the EEPROM update
-image(s) (pieeprom.upd and vl805.bin) to the boot partition.
+image(s) (pieeprom.upd and vl805.bin (if required)) to the boot partition.
 The SHA256 hash of the corresponding images are written to pieeprom.sig
 and/or vl805.sig. This guards against file system corruption which could
 cause the EEPROM to be flashed with an invalid image. This is not a
@@ -541,24 +562,26 @@ printVersions()
    echo "   RELEASE: ${FIRMWARE_RELEASE_STATUS} (${FIRMWARE_IMAGE_DIR})"
    echo "            Use ${RPI_EEPROM_UPDATE_CONFIG_TOOL} to change the release."
 
-   echo ""
-   if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
-      echo "  VL805_FW: Dedicated VL805 EEPROM"
-   else
-      echo "  VL805_FW: Using bootloader EEPROM"
-   fi
-   if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
-      echo "   VL805: update available"
-   else
-      if [ "$(id -u)" = "0" ]; then
-         echo "     VL805: up to date"
+   if [ "${BCM_CHIP}" = 2711 ]; then
+      echo ""
+      if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
+         echo "  VL805_FW: Dedicated VL805 EEPROM"
       else
-         echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
+         echo "  VL805_FW: Using bootloader EEPROM"
       fi
-   fi
+      if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
+         echo "   VL805: update available"
+      else
+         if [ "$(id -u)" = "0" ]; then
+            echo "     VL805: up to date"
+         else
+            echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
+         fi
+      fi
 
-   echo "   CURRENT: ${VL805_CURRENT_VERSION}"
-   echo "    LATEST: ${VL805_UPDATE_VERSION}"
+      echo "   CURRENT: ${VL805_CURRENT_VERSION}"
+      echo "    LATEST: ${VL805_UPDATE_VERSION}"
+   fi
 }
 
 findBootFS()
@@ -585,8 +608,15 @@ findBootFS()
    # If BOOTFS is not a directory or doesn't contain any .elf files then
    # it's probably not the boot partition.
    [ -d "${BOOTFS}" ] || die "BOOTFS: \"${BOOTFS}\" is not a directory"
-   if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" = 0 ]; then
-      echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
+
+   if [ "${BCM_CHIP}" = 2712 ]; then
+      if ! [ -e "${BOOTFS}/config.txt" ]; then
+         echo "WARNING: BOOTFS: \"${BOOTFS}/config.txt\" not found. Please check boot directory"
+      fi
+   else
+      if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" = 0 ]; then
+         echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
+      fi
    fi
 }
 
@@ -596,10 +626,13 @@ getVL805CurrentVersion()
    # space which is only accessible as root. If the command is not run as
    # root then treat the version as unknown and skip VLI updates.
    VL805_CURRENT_VERSION=""
-   if [ "$(id -u)" = "0" ]; then
-         vlver="$(lspci -d 1106:3483 -xxx | awk '/^50:/ { print "VL805 FW version: " $5 $4 $3 $2 }')"
-      if [ -n "${vlver}" ]; then
-         VL805_CURRENT_VERSION="${vlver#*: }"
+
+   if [ "${BCM_CHIP}" = 2711 ]; then
+      if [ "$(id -u)" = "0" ]; then
+            vlver="$(lspci -d 1106:3483 -xxx | awk '/^50:/ { print "VL805 FW version: " $5 $4 $3 $2 }')"
+         if [ -n "${vlver}" ]; then
+            VL805_CURRENT_VERSION="${vlver#*: }"
+         fi
       fi
    fi
 }
@@ -824,6 +857,7 @@ while getopts A:abdhilf:m:ju:rs option; do
    j) JSON_OUTPUT="yes"
       ;;
    l)
+      checkDependencies
       getBootloaderUpdateVersion
       echo "${BOOTLOADER_UPDATE_IMAGE}"
       exit 0
@@ -834,6 +868,7 @@ while getopts A:abdhilf:m:ju:rs option; do
       ;;
    r) [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update -r'"
       echo "Removing temporary files from previous EEPROM update"
+      checkDependencies
       removePreviousUpdates
       exit 0
       ;;

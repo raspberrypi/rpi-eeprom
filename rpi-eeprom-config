@@ -14,7 +14,7 @@ import sys
 import tempfile
 import time
 
-IMAGE_SIZE = 512 * 1024
+VALID_IMAGE_SIZES = [512 * 1024, 2 * 1024 * 1024]
 
 BOOTCONF_TXT = 'bootconf.txt'
 BOOTCONF_SIG = 'bootconf.sig'
@@ -52,6 +52,15 @@ def rpi4():
         with open(compatible_path, "rb") as f:
             compatible = f.read().decode('utf-8')
             if "bcm2711" in compatible:
+                return True
+    return False
+
+def rpi5():
+    compatible_path = "/sys/firmware/devicetree/base/compatible"
+    if os.path.exists(compatible_path):
+        with open(compatible_path, "rb") as f:
+            compatible = f.read().decode('utf-8')
+            if "bcm2712" in compatible:
                 return True
     return False
 
@@ -233,6 +242,7 @@ class BootloaderImage(object):
         """
         self._filename = filename
         self._sections = []
+        self._image_size = 0
         try:
             self._bytes = bytearray(open(filename, 'rb').read())
         except IOError as err:
@@ -241,9 +251,10 @@ class BootloaderImage(object):
         if output is not None:
             self._out = open(output, 'wb')
 
-        if len(self._bytes) != IMAGE_SIZE:
+        self._image_size = len(self._bytes)
+        if self._image_size not in VALID_IMAGE_SIZES:
             exit_error("%s: Expected size %d bytes actual size %d bytes" %
-                       (filename, IMAGE_SIZE, len(self._bytes)))
+                       (filename, self._image_size, len(self._bytes)))
         self.parse()
 
     def parse(self):
@@ -252,7 +263,7 @@ class BootloaderImage(object):
         """
         offset = 0
         magic = 0
-        while offset < IMAGE_SIZE:
+        while offset < self._image_size:
             magic, length = struct.unpack_from('>LL', self._bytes, offset)
             if magic == 0x0 or magic == 0xffffffff:
                 break # EOF
@@ -278,7 +289,7 @@ class BootloaderImage(object):
         length = -1
         is_last = False
 
-        next_offset = IMAGE_SIZE - ERASE_ALIGN_SIZE # Don't create padding inside the bootloader scratch page
+        next_offset = self._image_size - ERASE_ALIGN_SIZE # Don't create padding inside the bootloader scratch page
         for i in range(0, len(self._sections)):
             s = self._sections[i]
             if s.magic == FILE_MAGIC and s.filename == filename:
@@ -306,7 +317,7 @@ class BootloaderImage(object):
         hdr_offset, length, is_last, next_offset = self.find_file(dst_filename)
         update_len = len(src_bytes) + FILE_HDR_LEN
 
-        if hdr_offset + update_len > IMAGE_SIZE - ERASE_ALIGN_SIZE:
+        if hdr_offset + update_len > self._image_size - ERASE_ALIGN_SIZE:
             raise Exception('No space available - image past EOF.')
 
         if hdr_offset < 0:
@@ -406,10 +417,10 @@ class BootloaderImage(object):
 def main():
     """
     Utility for reading and writing the configuration file in the
-    Raspberry Pi 4 bootloader EEPROM image.
+    Raspberry Pi bootloader EEPROM image.
     """
     description = """\
-Bootloader EEPROM configuration tool for the Raspberry Pi 4.
+Bootloader EEPROM configuration tool for the Raspberry Pi 4 and Raspberry Pi 5.
 Operating modes:
 
 1. Outputs the current bootloader configuration to STDOUT if no arguments are
@@ -493,8 +504,8 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
     if (args.edit or args.apply is not None) and os.getuid() != 0:
         exit_error("--edit/--apply must be run as root")
 
-    if (args.edit or args.apply is not None) and not rpi4():
-        exit_error("--edit/--apply must run on a Raspberry Pi 4")
+    if (args.edit or args.apply is not None) and not rpi4() and not rpi5():
+        exit_error("--edit/--apply must run on a Raspberry Pi 4 or Raspberry Pi 5")
 
     if args.edit:
         edit_config(args.eeprom)
