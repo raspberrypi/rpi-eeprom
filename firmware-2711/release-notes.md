@@ -1,5 +1,12 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2023-08-01 - Remove beta release folder
+   * Remove the beta release folder and provide a symlink to stable
+     for backwards compatibility for anyone who has beta in
+     the defaults file.
+     Future beta releases will be "feature-specific" and on a separate
+     branch / download rather than appearing in the generic APT release.
+
 ## 2023-05-15 - Promote pieeprom-2023-05-11 to STABLE
 
 ## 2023-05-11 - Fix hang in secure-boot init - BETA
