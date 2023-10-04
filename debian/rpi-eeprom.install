@@ -3,10 +3,20 @@ rpi-eeprom-update usr/bin/
 rpi-eeprom-digest usr/bin/
 debian/default/ etc/
 
-firmware/default lib/firmware/raspberrypi/bootloader/
-firmware/latest lib/firmware/raspberrypi/bootloader/
+firmware-2711/default lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/latest lib/firmware/raspberrypi/bootloader-2711/
 
-firmware/critical lib/firmware/raspberrypi/bootloader/
-firmware/stable lib/firmware/raspberrypi/bootloader/
-firmware/beta lib/firmware/raspberrypi/bootloader/
-firmware/release-notes.md lib/firmware/raspberrypi/bootloader/
+firmware-2711/critical lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/stable lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/beta lib/firmware/raspberrypi/bootloader-2711/
+
+firmware-2711/release-notes.md lib/firmware/raspberrypi/bootloader-2711/
+
+firmware-2712/default lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/latest lib/firmware/raspberrypi/bootloader-2712/
+
+firmware-2712/critical lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/stable lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/beta lib/firmware/raspberrypi/bootloader-2712/
+
+firmware-2712/release-notes.md lib/firmware/raspberrypi/bootloader-2712/
