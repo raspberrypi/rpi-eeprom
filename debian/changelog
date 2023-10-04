@@ -1,3 +1,34 @@
+rpi-eeprom (19-1) bookworm; urgency=medium
+
+  [ TM ]
+  * Update URL for CM4 bootloader doc site
+
+  [ Serge Schneider ]
+  * If /boot/firmware is in fstab, use it as BOOTFS
+
+  [ Tim Gover ]
+  * firmware: Remove the beta release folder
+  * test: install: Clean /lib/firmware/bootloader
+  * Rename firmware to firmware-2711
+  * firmware-2712: Create the 2712 firmware directory structure
+  * scripts: Add support for chip-specific firmware directories
+  * pieeprom-2023-09-13: 2712: Initial firmware release for Pi5
+  * pieeprom-2023-09-21: 2712: Power button and ACT LED improvements
+  * pieeprom-2023-09-21: 2712: Add recovery.bin for make-image-release
+  * pieeprom-2023-09-28: 2712: vcgencmd pmic_read_adcs fixes
+  * firmware-2711: Switch symlinks to use the standard release names
+
+  [ Serge Schneider ]
+  * d/c: update maintainer email
+  * d/c: add raspi-firmware as an alternative to raspberryp-bootloader
+  * d/c: set rpi-eeprom-images and rpi-eeprom architecture to all
+  * d/gbp.conf: update debian-branch
+  * Update packaging for split firmware directories
+  * Change beta firmware to symlink
+  * d/p/s: remove empty series file
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 04 Oct 2023 13:00:10 +0100
+
 rpi-eeprom (16.1-1) bullseye; urgency=medium
 
   [ Ivan T. Ivanov ]
