@@ -1,0 +1,2 @@
+dir_to_symlink /lib/firmware/raspberrypi/bootloader-2711/beta latest 17.0+pi5+1-1
+dir_to_symlink /lib/firmware/raspberrypi/bootloader-2712/beta latest 17.0+pi5+1-1
