@@ -3,17 +3,14 @@ This page provides links to the production and development release images for th
 bootloader is automatically updated after an APT update via the [rpi-eeprom-update](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#automatic-updates) utility.
 
 ## Release notes
-Release notes are available [here](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware/release-notes.md).
-
-## Default release
-### Raspberry Pi 4, CM4, CM4-s, Pi400
-The default production EEPROM image release is [2023-01-11](https://github.com/raspberrypi/rpi-eeprom/releases/tag/v2023.01.11-138c0) and can be installed via the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+BCM2711 release notes [here](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2711/release-notes.md).
+BCM2712 release notes [here](https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2712/release-notes.md).
 
 ## USB MSD boot
 Please see the [USB mass storage boot](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#usb-mass-storage-boot) guide.
 For support or hardware interoperability discussions please use the Raspberry Pi [general discussion](https://forums.raspberrypi.com/viewforum.php?f=63) forum.
 
 ## Old EEPROM images
-Old bootloader images are periodically removed from the APT package to reduce the disk space, but are still available via Github [here](https://github.com/raspberrypi/rpi-eeprom/tree/master/firmware/old).
+Old bootloader images are periodically removed from the APT package to reduce the disk space but are still available via Github [here](https://github.com/raspberrypi/rpi-eeprom/tree/master/firmware/old).
 
 **Old releases may fail to boot on newer hardware revisions.**
