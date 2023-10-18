@@ -8,7 +8,7 @@
 * Fix network boot reset issue where only the first attempt works.
 * Adding pciex4_reset=0 to config.txt will leave RP1 PCIe enabled when ARM stage is started.
 * Prevent HDMI diagnostics being displayed immediately when waking after HALT.
-* Update board-name - "Rasberry Pi 5"
+* Update board-name - "Raspberry Pi 5"
 
 2023-09-28: vcgencmd pmic_read_adcs fixes (automatic update)
  
