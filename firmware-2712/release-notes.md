@@ -1,5 +1,15 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-10-18: Display autodetect + HAT gpiomap (default + latest)
+
+* Add support for HAT gpiomap for improved HAT compatibility.
+* Add I2C probe for DSI display auto detect
+* Automatically set dtparam=nvme if booted from nvme
+* Fix network boot reset issue where only the first attempt works.
+* Adding pciex4_reset=0 to config.txt will leave RP1 PCIe enabled when ARM stage is started.
+* Prevent HDMI diagnostics being displayed immediately when waking after HALT.
+* Update board-name - "Raspberry Pi 5"
+
 2023-09-28: vcgencmd pmic_read_adcs fixes (automatic update)
  
 * Fix the LDO names and current scaling codes
