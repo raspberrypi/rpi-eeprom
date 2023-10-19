@@ -30,7 +30,7 @@ gen_release() {
    (
       tmp_dir="$(mktemp -d --tmpdir tmp.rpi-eeprom.XXXXXXXXXX)"
       cd "${tmp_dir}"
-      cp "${script_dir}/README.txt" .
+      cp "${script_dir}/README-${bcm_chip}.txt" README.txt
       cp "${firmware_dir}/recovery.bin" .
       if [ ${bcm_chip} = 2711 ]; then
          cp "${firmware_dir}/vl805-${vl805_version}.bin" vl805.bin
@@ -79,9 +79,9 @@ firmware_dir=${script_dir}/../firmware-${bcm_chip}/${firmware_status}
 if [ "${bcm_chip}" = 2711 ]; then
    [ -f "${firmware_dir}/vl805-${vl805_version}.bin" ] || (echo "${firmware_status}/vl805-${vl805_version}.bin doesn't exist" && exit 1)
    [ -d "${config_dir}" ] || (echo "${config_dir} doesn't exist" && exit 1)
-   tag="${pieeprom_version}-vl805-${vl805_version}"
+   tag="${pieeprom_version}-${bcm_chip}-vl805-${vl805_version}"
 else
-   tag="${pieeprom_version}"
+   tag="${pieeprom_version}-${bcm_chip}"
 fi
 # use realpath to ensure paths are absolute
 config_dir=$(realpath "${config_dir}")

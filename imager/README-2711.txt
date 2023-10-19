@@ -1,4 +1,4 @@
-Raspberry Pi 4 EEPROM bootloader rescue image
+Raspberry Pi 4 EEPROM bootloader recovery image
 *********************************************
 
 The Raspberry Pi 4 contains a small EEPROM used to store the bootloader.

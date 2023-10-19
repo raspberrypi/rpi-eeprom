@@ -19,18 +19,21 @@ trap cleanup EXIT
 [ -n "${SUDO_UID}" ] || die "SUDO_UID not defined"
 [ -n "${SUDO_GID}" ] || die "SUDO_GID not defined"
 
-for src in release/*.zip; do
-   src=$(basename "${src}")
-   img=$(echo "${src}" | sed 's/\.zip/.img/')
-   TMP_DIR=$(mktemp -d)
-   (
-      cp "release/${src}" "${TMP_DIR}"
-      mkdir "${TMP_DIR}/files"
-      cd "${TMP_DIR}/files"
-      unzip "../${src}"
-      cd "${TMP_DIR}"
-      dd if=/dev/zero bs=1M count=258 of=temp.img
-      /sbin/sfdisk temp.img <<EOF
+build_images()
+{
+   chip="$1"
+   for src in release-${chip}/*.zip; do
+	   src=$(basename "${src}")
+	   img=$(echo "${src}" | sed 's/\.zip/.img/')
+	   TMP_DIR=$(mktemp -d)
+	   (
+	   cp "release-${chip}/${src}" "${TMP_DIR}"
+	   mkdir "${TMP_DIR}/files"
+	   cd "${TMP_DIR}/files"
+	   unzip "../${src}"
+	   cd "${TMP_DIR}"
+	   dd if=/dev/zero bs=1M count=258 of=temp.img
+	   /sbin/sfdisk temp.img <<EOF
 label: dos
 label-id: 0x0a7b5ac5
 device: temp.img
@@ -38,29 +41,35 @@ unit: sectors
 
 ./test.img1 : start=        2048, size=       524288, type=c
 EOF
-      file temp.img
-      kpartx -lv temp.img | head -n1 | awk '{print $1}'
-      LOOP="/dev/mapper/$(kpartx -lv temp.img | head -n1 | awk '{print $1}')"
-      kpartx -av temp.img
-      /sbin/mkfs.fat -F 32 -s 1 "${LOOP}"
-      mkdir fs
-      mount "${LOOP}" fs
-      cp -v files/* fs
-      sync
-      sleep 5
-      umount fs
-      # Delay before calling kpartx otherwise it's sometimes possible to get orphaned loopback devices
-      sleep 5
-      kpartx -dv temp.img
-   )
-   mkdir -p images
-   chown "${SUDO_UID}:${SUDO_GID}" images
-   mv "${TMP_DIR}/temp.img" "images/${img}"
-   file "images/${img}"
-   cd images
+   file temp.img
+   kpartx -lv temp.img | head -n1 | awk '{print $1}'
+   LOOP="/dev/mapper/$(kpartx -lv temp.img | head -n1 | awk '{print $1}')"
+   kpartx -av temp.img
+   /sbin/mkfs.fat -F 32 -s 1 "${LOOP}"
+   mkdir fs
+   mount "${LOOP}" fs
+   cp -v files/* fs
+   sync
+   sleep 5
+   umount fs
+   # Delay before calling kpartx otherwise it's sometimes possible to get orphaned loopback devices
+   sleep 5
+   kpartx -dv temp.img
+)
+   image_dir="images-${chip}"
+   mkdir -p "${image_dir}"
+   chown "${SUDO_UID}:${SUDO_GID}" "${image_dir}"
+   mv "${TMP_DIR}/temp.img" "${image_dir}/${img}"
+   file "${image_dir}/${img}"
+   cd "${image_dir}"
    zip "${src}" "${img}"
    cd ..
-   rm "images/${img}"
-   chown "${SUDO_UID}:${SUDO_GID}" "images/${src}"
-done
-echo "Wrote images for rpi-imager to $(pwd)/images/${src}"
+   rm "${image_dir}/${img}"
+   chown "${SUDO_UID}:${SUDO_GID}" "${image_dir}/${src}"
+   done
+   echo "Wrote images for rpi-imager to $(pwd)/${image_dir}/${src}"
+}
+
+build_images 2711
+build_images 2712
+
