@@ -1,3 +1,16 @@
+rpi-eeprom (19.1-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2023-10-18: 2712: Display autodetect + HAT gpiomap (default + latest)
+  * Update releases.md
+  * Update README.md
+  * imager-release: Update for Pi5
+
+  [ Andrew Scheller ]
+  * Fix typo
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 19 Oct 2023 16:20:38 +0100
+
 rpi-eeprom (19-1) bookworm; urgency=medium
 
   [ TM ]
