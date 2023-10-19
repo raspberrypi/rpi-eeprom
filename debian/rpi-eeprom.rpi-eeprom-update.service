@@ -1,6 +1,6 @@
 [Unit]
 Description=Check for Raspberry Pi EEPROM updates
-After=boot.mount
+After=boot-firmware.mount
 
 [Service]
 Type=oneshot
