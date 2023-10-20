@@ -1,6 +1,6 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
-2023-10-18: Display autodetect + HAT gpiomap (default + latest)
+2023-10-18: Display autodetect + HAT gpiomap (default + latest) (automatic update)
 
 * Add support for HAT gpiomap for improved HAT compatibility.
 * Add I2C probe for DSI display auto detect
