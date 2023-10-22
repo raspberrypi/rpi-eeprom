@@ -493,7 +493,7 @@ to be stable.
 default:
 The default bootloader image which supports all current models and hardware
 revisions. If there is an important bug fix or hardware change that could
-affect most uses then the then BOOTLOADER_AUTO_UPDATE_MIN_VERSION is updated
+affect most users then the BOOTLOADER_AUTO_UPDATE_MIN_VERSION is updated
 causing the update to be applied the next time the rpi-eeprom APT package is
 updated.
 
