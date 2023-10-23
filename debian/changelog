@@ -1,3 +1,10 @@
+rpi-eeprom (20.0-2) bookworm; urgency=medium
+
+  [ TM ]
+  * Fix /boot/firmware mount
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 23 Oct 2023 09:07:00 +0100
+
 rpi-eeprom (20.0-1) bookworm; urgency=medium
 
   [ Andrew Scheller ]
