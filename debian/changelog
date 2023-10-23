@@ -1,3 +1,14 @@
+rpi-eeprom (20.0-1) bookworm; urgency=medium
+
+  [ Andrew Scheller ]
+  * rpi-eeprom-update: Fix typos in usage text
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: 2712: Bump the min version to pieeprom-2023-10-18
+  * rpi-eeprom-update: Switch back to recovery.bin on Pi5
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 23 Oct 2023 08:06:46 +0100
+
 rpi-eeprom (19.1-1) bookworm; urgency=medium
 
   [ Tim Gover ]
