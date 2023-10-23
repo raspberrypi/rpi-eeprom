@@ -335,12 +335,9 @@ checkDependencies() {
       EEPROM_SIZE=524288
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1599135103}"
    elif [ $(((0x$BOARD_INFO >> 12) & 15)) = 4 ]; then
-      # BCM2712 always supports self-update so recovery.bin is only used for RPi imager
-      # bootloader updated SD cards or with RPIBOOT.
       BCM_CHIP=2712
       EEPROM_SIZE=2097152
-      RPI_EEPROM_SELF_UPDATE=1
-      BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1695896697}"
+      BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1697650217}"
    else
       chipNotSupported
    fi
@@ -492,10 +489,10 @@ to be stable.
 
 default:
 The default bootloader image which supports all current models and hardware
-revisions.
-If a critical bug fix is required then the minimum default version number
-(BOOTLOADER_AUTO_UPDATE_MIN_VERSION) in the rpi-eeprom package is updated
-causing the bootloader to be automatically updated.
+revisions. If there is an important bug fix or hardware change that could
+affect most users then the BOOTLOADER_AUTO_UPDATE_MIN_VERSION is updated
+causing the update to be applied the next time the rpi-eeprom APT package is
+updated.
 
 latest:
 Contains new features, bug fixes and performance improvements.
