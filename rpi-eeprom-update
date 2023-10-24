@@ -89,6 +89,9 @@ cleanup() {
    if [ -f "${NEW_EEPROM_CONFIG}" ]; then
       rm -f "${NEW_EEPROM_CONFIG}"
    fi
+   if [ -f "${FLASHROM_LOG}" ]; then
+      rm -f "${FLASHROM_LOG}"
+   fi
    if [ -d "${TMP_BOOTFS_MNT}" ]; then
       umount "${TMP_BOOTFS_MNT}"
       rmdir "${TMP_BOOTFS_MNT}"
@@ -97,6 +100,7 @@ cleanup() {
    TMP_EEPROM_IMAGE=
    TMP_EEPROM_CONFIG=
    NEW_EEPROM_CONFIG=
+   FLASHROM_LOG=
 }
 trap cleanup EXIT
 
@@ -169,7 +173,14 @@ prepareImage()
    if [ "${OVERWRITE_CONFIG}" = 0 ]; then
       "${script_dir}/rpi-eeprom-config" \
          --out "${TMP_EEPROM_IMAGE}" \
-         --config "${NEW_EEPROM_CONFIG}" "${BOOTLOADER_UPDATE_IMAGE}"
+         --config "${NEW_EEPROM_CONFIG}" \
+         --timestamp "$(date -u +%s)" \
+         "${BOOTLOADER_UPDATE_IMAGE}"
+   else
+      "${script_dir}/rpi-eeprom-config" \
+         --out "${TMP_EEPROM_IMAGE}" \
+         --timestamp "$(date -u +%s)" \
+         "${BOOTLOADER_UPDATE_IMAGE}"
    fi
 }
 
@@ -200,7 +211,7 @@ applyRecoveryUpdate()
         # and the current timestamp.
         rpi-eeprom-digest -i "${TMP_EEPROM_IMAGE}" -o "${BOOTFS}/pieeprom.sig"
 
-        cp -f "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
+        cp -fv "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
                 || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
 
         # For NFS mounts ensure that the files are readable to the TFTP user
@@ -225,7 +236,7 @@ applyRecoveryUpdate()
       RPI_EEPROM_SELF_UPDATE=0
    fi
 
-   # Setting bootlaoder_update=0 was really intended for use with network-boot with shared
+   # Setting bootloader_update=0 was really intended for use with network-boot with shared
    # config.txt files. However, if it looks as though self-update has been disabled then
    # assume recovery.bin is required.
    config_txt="${BOOTFS}/config.txt"
@@ -237,8 +248,33 @@ applyRecoveryUpdate()
 
    [ "${BOOTLOADER_CURRENT_VERSION}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
 
-   if [ "${RPI_EEPROM_SELF_UPDATE}" != "1" ]; then
-      echo "Using recovery.bin for EEPROM update"
+   # For immediate updates via flash the recovery.bin update is created and then discarded if the
+   # flashrom update was successful. For SD boot (most common) this provides a rollback in the event
+   # of power loss.
+   if [ "${RPI_EEPROM_USE_FLASHROM}" = 1 ]; then
+      echo
+      echo "UPDATING bootloader."
+      echo
+      echo "*** WARNING: Do not disconnect the power until the update is complete ***"
+      echo "If a problem occurs then the Raspberry Pi Imager may be used to create"
+      echo "a bootloader rescue SD card image which restores the default bootloader image."
+      echo
+      FLASHROM_LOG="$(mktemp)"
+      echo "flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 -w ${BOOTFS}/pieeprom.upd"
+      if flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 -w "${BOOTFS}/pieeprom.upd" > "${FLASHROM_LOG}"; then
+         # Success - remove update files from the boot partition
+         removePreviousUpdates
+         echo "UPDATE SUCCESSFUL"
+      else
+         # Leave the recovery files in case the EEPROM has been partially updated
+         cat "${FLASHROM_LOG}"
+         die "UPDATE FAILED"
+      fi
+      return
+   elif [ "${RPI_EEPROM_SELF_UPDATE}" = "1" ]; then
+      echo "Using self-update"
+   else
+      echo "Copying recovery.bin to ${BOOTFS} for EEPROM update"
       cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
    fi
 
@@ -267,6 +303,25 @@ applyUpdate() {
             die "rpi-eeprom checksums failed - try reinstalling this package"
          fi
       ) || die "Unable to validate EEPROM image package checksums"
+   fi
+
+   # Disable flashrom if the SPI device is not found
+   if [ "${RPI_EEPROM_USE_FLASHROM}" = 1 ]; then
+      flashrom_probe_ok=0
+      if ! [ -e "${SPIDEV}" ]; then
+         echo "WARNING: SPI device ${SPIDEV} not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
+      fi
+
+      if ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > /dev/null 2>&1; then
+         echo "WARNING: Flashrom probe of ${SPIDEV} failed"
+      else
+         flashrom_probe_ok=1
+      fi
+      if [ "${flashrom_probe_ok}" != 1 ]; then
+         echo "Setting RPI_EEPROM_USE_FLASHROM to 0"
+         echo
+         export RPI_EEPROM_USE_FLASHROM=0
+      fi
    fi
 
    applyRecoveryUpdate
@@ -334,13 +389,20 @@ checkDependencies() {
       BCM_CHIP=2711
       EEPROM_SIZE=524288
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1599135103}"
+
+      SPIDEV=/dev/spidev0.0
    elif [ $(((0x$BOARD_INFO >> 12) & 15)) = 4 ]; then
       BCM_CHIP=2712
       EEPROM_SIZE=2097152
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1697650217}"
+      SPIDEV=/dev/spidev10.0
    else
       chipNotSupported
    fi
+
+   # Default to off - in the future Raspberry Pi 5 may default to using flashrom if
+   # flashrom is available.
+   [ -z "${RPI_EEPROM_USE_FLASHROM}" ] && RPI_EEPROM_USE_FLASHROM=0
 
    FIRMWARE_IMAGE_DIR="${FIRMWARE_ROOT}-${BCM_CHIP}/${FIRMWARE_RELEASE_STATUS}"
    if ! [ -d "${FIRMWARE_IMAGE_DIR}" ]; then
@@ -358,6 +420,18 @@ checkDependencies() {
       echo "The recommended method for flashing the EEPROM is rpiboot."
       echo "See: https://github.com/raspberrypi/usbboot/blob/master/Readme.md"
       echo "Run with -h for more information."
+      echo
+      echo "To enable flashrom programming of the EEPROM"
+      echo "Add these the following entries to /etc/default/rpi-eeprom-update"
+      echo "RPI_EEPROM_USE_FLASHROM=1"
+      echo "CM4_ENABLE_RPI_EEPROM_UPDATE=1"
+      echo 
+      echo "and these entries to config.txt and reboot"
+      echo "[cm4]"
+      echo "dtparam=spi=on"
+      echo "dtoverlay=audremap"
+      echo "dtoverlay=spi-gpio40-45"
+      echo
       exit ${EXIT_SUCCESS}
    fi
 
@@ -403,6 +477,10 @@ checkDependencies() {
 
    if [ "${BCM_CHIP}" = 2711 ] && [ ! -f "${RECOVERY_BIN}" ]; then
       die "${RECOVERY_BIN} not found."
+   fi
+
+   if ! command -v flashrom > /dev/null; then
+      RPI_EEPROM_USE_FLASHROM=0
    fi
 }
 
@@ -542,6 +620,22 @@ N.B. If there is a power failure during SELF_UPDATE the EEPROM write may fail an
 usbboot must be used to flash the bootloader EEPROM. SELF_UPDATE is not recommended
 for updating the bootloader on remote systems.
 
+FLASHROM:
+
+If the RPI_EEPROM_USE_FLASHROM variable is set to 1 then flashrom is used to perform
+an immediate update to the SPI flash rather than installing the recovery.bin plus
+pieeprom.upd files. The power must not be disconnected during this update otherwise the
+EEPROM will need to be re-flashed using the Rasberry Pi Imager bootloader restore feature.
+
+On Raspberry Pi 4, CM4, CM4-S and Pi400 flashrom updates are not enabled by default
+because the SPI GPIOs are shared with analog audio. To enable this add the following
+entries to config.txt. This moves analog audio to GPIO pins 12,13 and may not be
+compatible with some HATS / CM4 IO boards.
+
+dtparam=spi=on
+dtoverlay=audremap
+dtoverlay=spi-gpio40-45
+
 EOF
   exit ${EXIT_SUCCESS}
 }
@@ -595,7 +689,9 @@ findBootFS()
    elif [ -z "$BOOTFS" ]; then
       if ! BOOTFS=$(/usr/lib/raspberrypi-sys-mods/get_fw_loc 2> /dev/null); then
          for BOOTFS in /boot/firmware /boot; do
-            if findmnt --fstab "$BOOTFS" > /dev/null; then
+            if [ -f "${BOOTFS}/config.txt" ]; then
+               break
+            elif findmnt --fstab "$BOOTFS" > /dev/null; then
                break
             fi
          done
@@ -714,7 +810,7 @@ checkAndApply()
    fi
 
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
-      echo "*** INSTALLING EEPROM UPDATES ***"
+      echo "*** PREPARING EEPROM UPDATES ***"
       echo ""
 
       printVersions
@@ -727,7 +823,7 @@ checkAndApply()
 fileUpdate()
 {
    removePreviousUpdates
-   echo "*** INSTALLING ${BOOTLOADER_UPDATE_IMAGE} ${VL805_UPDATE_IMAGE} ***"
+   echo "*** CREATED UPDATE ${BOOTLOADER_UPDATE_IMAGE} ${VL805_UPDATE_IMAGE} ***"
    echo
 
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
