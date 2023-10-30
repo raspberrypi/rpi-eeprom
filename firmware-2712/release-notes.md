@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-10-30: UPG watchdog support + SD reset fixes (default + latest)
+
+* Fix SDIO / WiFi clock-setup for BOOT_ORDER=0xf14
+* Fix SD power-on-reset
+* Firmware support for improved watchdog driver
+* Update DHCP Option97 to be R,P,i,5 on Pi5
+
 2023-10-18: Display autodetect + HAT gpiomap (default + latest) (automatic update)
 
 * Add support for HAT gpiomap for improved HAT compatibility.
