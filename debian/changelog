@@ -1,3 +1,10 @@
+rpi-eeprom (20.1-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2023-10-30: 2712: UPG watchdog support + SD reset fixes (default + latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 06 Nov 2023 14:50:44 +0000
+
 rpi-eeprom (20.0-2) bookworm; urgency=medium
 
   [ TM ]
