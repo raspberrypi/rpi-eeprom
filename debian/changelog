@@ -1,3 +1,9 @@
+rpi-eeprom (20.1-2) bookworm; urgency=medium
+
+  * Fix dependencies for bookworm
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 09 Nov 2023 13:16:11 +0000
+
 rpi-eeprom (20.1-1) bookworm; urgency=medium
 
   [ Tim Gover ]
