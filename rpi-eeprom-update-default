@@ -2,8 +2,10 @@
 FIRMWARE_ROOT=/lib/firmware/raspberrypi/bootloader
 FIRMWARE_RELEASE_STATUS="default"
 FIRMWARE_BACKUP_DIR="/var/lib/raspberrypi/bootloader/backup"
-USE_FLASHROM=0
 EEPROM_CONFIG_HOOK=
 
 # BOOTFS can be set here to override auto-detection in rpi-eeprom-update
 #BOOTFS=/boot
+
+# Use flashrom if available to update the bootloader without rebooting - Raspberry Pi 5
+#RPI_EEPROM_USE_FLASHROM=1
