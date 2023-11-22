@@ -1,5 +1,16 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-11-20: Auto-detect support for PCIe expansion HAT (default + latest)
+
+* Add autodetect support for PCIe expansion HATs
+* Add PCIE_PROBE=1 to the EEPROM config for custom PCIe exapansion
+  designs that do not support the upcoming HAT spec. This gives
+  similar behaviour to CM4 where PCIe x1 is enumerated to discover NVMe
+  devices.
+* Fix loading of multiple initramfs images that are not 32-bit aligned sizes
+  https://github.com/raspberrypi/firmware/issues/1843
+* Kernel load performance improvement - remove a memcpy
+
 2023-10-30: UPG watchdog support + SD reset fixes (default + latest)
 
 * Fix SDIO / WiFi clock-setup for BOOT_ORDER=0xf14
