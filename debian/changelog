@@ -1,3 +1,11 @@
+rpi-eeprom (20.2-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Add the option to use flashrom for updates on Raspberry Pi 5
+  * pieeprom-2023-11-20: 2712: Auto-detect support for PCIe expansion HAT (default + latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 22 Nov 2023 19:01:42 +0000
+
 rpi-eeprom (20.1-3) bookworm; urgency=medium
 
   * d/c: Remove raspi-firmware dependency
