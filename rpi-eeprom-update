@@ -19,6 +19,7 @@ elif [ -d /lib/firmware/raspberrypi/bootloader ] || [ -d /lib/firmware/raspberry
 else
    # Work from local git checkout
    LOCAL_MODE=1
+   IGNORE_DPKG_CHECKSUMS=1
    FIRMWARE_ROOT="${script_dir}/firmware"
 fi
 
@@ -529,7 +530,6 @@ Options:
       Ignores the FREEZE_VERSION flag in bootloader and is intended for manual
       firmware updates.
    -h Display help text and exit
-   -i Ignore package checksums - for rpi-eeprom developers.
    -j Write status information using JSON notation (requires -m option)
    -l Returns the full path to the latest available EEPROM image file according
       to the FIRMWARE_RELEASE_STATUS and FIRMWARE_IMAGE_DIR settings.
@@ -915,7 +915,8 @@ AUTO_UPDATE_VL805=0
 SILENT_UPDATE=0
 MACHINE_OUTPUT=""
 JSON_OUTPUT="no"
-IGNORE_DPKG_CHECKSUMS=${LOCAL_MODE}
+# Ignore dpkg checksums by default so that rpi-update can install new binaries into /lib/firmware
+IGNORE_DPKG_CHECKSUMS=${IGNORE_DPKG_CHECKSUMS:-1}
 PACKAGE_INFO_DIR="/var/lib/dpkg/info/"
 if [ ! -d "${PACKAGE_INFO_DIR}" ]; then
    IGNORE_DPKG_CHECKSUMS=1
@@ -945,7 +946,9 @@ while getopts A:abdhilf:m:ju:rs option; do
       ;;
    f) BOOTLOADER_UPDATE_IMAGE="${OPTARG}"
       ;;
-   i) IGNORE_DPKG_CHECKSUMS=1
+   i)
+      # Script default is 1 but this could have been set to zero in the defaults file
+      IGNORE_DPKG_CHECKSUMS=1
       ;;
    j) JSON_OUTPUT="yes"
       ;;
