@@ -1,5 +1,14 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-12-06: Initialise DWC PHY (latest)
+
+* Initialise the DWC PHY to enable DWC host+peripheral support under Linux.
+  Requires https://github.com/raspberrypi/linux/commit/82069a7a02632aa60fa5c69415bf891ede7d6fd4
+* Force PWM on 3V3 supply if cameras or HATs are connected or if power_force_3v3_pwm=1 in config.txt
+  Resolves an image quality issue with the GS camera.
+* Add support for C(arm_min_freq) < 1500 MHz (must be at >= 200 MHz)
+* Manufacturing test updates for DVFS.
+
 2023-11-20: Auto-detect support for PCIe expansion HAT (default + latest)
 
 * Add autodetect support for PCIe expansion HATs
