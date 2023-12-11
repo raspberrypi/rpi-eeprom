@@ -1,3 +1,11 @@
+rpi-eeprom (20.3-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom: Disable the dpkg checksum validation by default
+  * pieeprom-2023-12-06: 2712: Initialise DWC PHY (latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 11 Dec 2023 09:01:56 +0000
+
 rpi-eeprom (20.2-1) bookworm; urgency=medium
 
   [ Tim Gover ]
