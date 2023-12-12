@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-12-12: Promote 2023-12-06 to default release.
+
 2023-12-06: Initialise DWC PHY (latest)
 
 * Initialise the DWC PHY to enable DWC host+peripheral support under Linux.
