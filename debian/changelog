@@ -1,3 +1,11 @@
+rpi-eeprom (20.4-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * imager: 2712: Add NVMe into default boot configurations
+  * pieeprom-2023-12-12: 2712: Promote 2023-12-06 to default release.
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 12 Dec 2023 09:56:48 +0000
+
 rpi-eeprom (20.3-1) bookworm; urgency=medium
 
   [ Tim Gover ]
