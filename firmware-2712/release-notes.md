@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2023-12-17: Promote 2023-12-14 to default release
+* Bump to the default release now that the partition number fix is confirmed.
+
 2023-12-14: Fix boot partition parameter (latest)
 * Fix an issue where the boot partition parameter in PM_RSTS was cleared
   before being checked.
