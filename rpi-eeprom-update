@@ -458,7 +458,7 @@ checkDependencies() {
    # reduce the number of dependencies on VCHI.
    if ! [ -f "${DT_BOOTLOADER_TS}" ]; then
       if ! command -v vcgencmd > /dev/null; then
-         die "vcgencmd not found. Try installing the libraspberrypi-bin package."
+         die "vcgencmd not found. Try installing the raspi-utils package."
       fi
    fi
 
@@ -477,7 +477,7 @@ checkDependencies() {
    fi
 
    if ! command -v sha256sum > /dev/null; then
-      die "sha256sum not found. Try installing the coreutilities package."
+      die "sha256sum not found. Try installing the coreutils package."
    fi
 
    if [ "${BCM_CHIP}" = 2711 ] && [ ! -f "${RECOVERY_BIN}" ]; then
