@@ -365,7 +365,7 @@ getBootloaderUpdateVersion() {
 }
 
 chipNotSupported() {
-   echo "This tool only works with Raspberry Pi4 and Rapberry Pi5"
+   echo "This tool only works with Raspberry Pi 4 and Raspberry Pi 5"
    exit ${EXIT_SUCCESS}
 }
 
