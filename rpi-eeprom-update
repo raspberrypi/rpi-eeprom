@@ -450,6 +450,10 @@ checkDependencies() {
       die "lspci not found. Try installing the pciutils package."
    fi
 
+   if ! command -v strings > /dev/null; then
+      die "strings not found. Try installing the binutils package."
+   fi
+
    # vcgencmd bootloader_version is deprecated. Use device-tree if available to
    # reduce the number of dependencies on VCHI.
    if ! [ -f "${DT_BOOTLOADER_TS}" ]; then
