@@ -365,7 +365,7 @@ getBootloaderUpdateVersion() {
 }
 
 chipNotSupported() {
-   echo "This tool only works with Raspberry Pi 4 and Raspberry Pi 5"
+   echo "Device does not a have a Raspberry Pi bootloader EEPROM (e.g. Pi 4 or Pi 5). Skipping bootloader update."
    exit ${EXIT_SUCCESS}
 }
 
