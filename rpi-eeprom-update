@@ -365,7 +365,7 @@ getBootloaderUpdateVersion() {
 }
 
 chipNotSupported() {
-   echo "This tool only works with Raspberry Pi4 and Rapberry Pi5"
+   echo "Device does not a have a Raspberry Pi bootloader EEPROM (e.g. Pi 4 or Pi 5). Skipping bootloader update."
    exit ${EXIT_SUCCESS}
 }
 
@@ -450,11 +450,15 @@ checkDependencies() {
       die "lspci not found. Try installing the pciutils package."
    fi
 
+   if ! command -v strings > /dev/null; then
+      die "strings not found. Try installing the binutils package."
+   fi
+
    # vcgencmd bootloader_version is deprecated. Use device-tree if available to
    # reduce the number of dependencies on VCHI.
    if ! [ -f "${DT_BOOTLOADER_TS}" ]; then
       if ! command -v vcgencmd > /dev/null; then
-         die "vcgencmd not found. Try installing the libraspberrypi-bin package."
+         die "vcgencmd not found. Try installing the raspi-utils package."
       fi
    fi
 
@@ -473,7 +477,7 @@ checkDependencies() {
    fi
 
    if ! command -v sha256sum > /dev/null; then
-      die "sha256sum not found. Try installing the coreutilities package."
+      die "sha256sum not found. Try installing the coreutils package."
    fi
 
    if [ "${BCM_CHIP}" = 2711 ] && [ ! -f "${RECOVERY_BIN}" ]; then
