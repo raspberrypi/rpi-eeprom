@@ -1,3 +1,20 @@
+rpi-eeprom (20.5-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * imager: Update imager release to 2023-12-06
+  * pieeprom-2023-12-14: 2712: Fix boot partition parameter (latest)
+  * rpi-eeprom-update: Tweak chipNotSupported message
+  * pieeprom-2023-12-14: 2712: Promote pieeprom-2023-12-14 to default
+
+  [ Andrew Scheller ]
+  * Fix typo in warning message
+  * rpi-eeprom-update: Fix package-names in error messages
+
+  [ Pavel Djundik ]
+  * Check that `strings` exists, suggest installing `binutils`
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 04 Jan 2024 11:10:49 +0000
+
 rpi-eeprom (20.4-1) bookworm; urgency=medium
 
   [ Tim Gover ]
