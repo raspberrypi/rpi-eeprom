@@ -6,7 +6,7 @@ body:
     value: |
       **Is this the right place for my bug report?**
       
-      * This repository contains the Raspberry Pi 4, Pi400 and CM4 bootloader EEPROM images and installation scripts.      
+      * This repository contains the Raspberry Pi 5, Raspberry Pi 4, Pi400, CM4 and CM4-S bootloader EEPROM images and installation scripts.      
       * Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware).
       * Please report USB issues which occur after the OS has started at the Linux repo [github.com/raspberrypi/linux/](https://github.com/raspberrypi/linux/).
       * If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it. 
@@ -39,10 +39,12 @@ body:
     description: On which device you are facing the bug?
     multiple: true
     options:
+      - Raspberry Pi 5
       - Raspberry Pi 4 Mod. B
       - Raspberry Pi 400
       - Raspberry Pi CM4
       - Raspberry Pi CM4 Lite
+      - Raspberry Pi CM4-S
       - Other
   validations:
     required: true
@@ -52,7 +54,7 @@ body:
   attributes:
     label: Bootloader configuration.
     description: |      
-      Copy and paste the results of `vcgencmd bootloader_config` or describe the failing configuration.
+      Copy and paste the results of `rpi-eeprom-config` or describe the failing configuration.
       
       * `rpi-eeprom-update` saves a backup of the previous bootloader configuration to `/var/lib/raspberrypi/bootloader/backup` before it schedules the update.
       * `rpi-eeprom-config pieeprom.upd` can be used to read the contents of an EEPROM image.
