@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-01-05: Fix handling of FAT files without LFNs.
+* Fix issues with SFN entries sometimes being treated as LFNs
+  see https://github.com/raspberrypi/rpi-eeprom/issues/514
+* Add a dedicated message for "M.2 HAT" not being found instead of
+  the generic 'unsupported boot order' message when NVMe boot is
+  skipped.
+
 2023-12-17: Promote 2023-12-14 to default release
 * Bump to the default release now that the partition number fix is confirmed.
 
