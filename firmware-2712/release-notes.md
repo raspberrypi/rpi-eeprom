@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-01-08: Promote 2024-01-05 to default (automatic update)
+
 2024-01-05: Fix handling of FAT files without LFNs.
 * Fix issues with SFN entries sometimes being treated as LFNs
   see https://github.com/raspberrypi/rpi-eeprom/issues/514
