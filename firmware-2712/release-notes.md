@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-01-15: Add support for network-install (latest)
+* Add support for Network Install
+* Preliminary D0 firmware support
+
 2024-01-08: Promote 2024-01-05 to default (automatic update)
 
 2024-01-05: Fix handling of FAT files without LFNs.
