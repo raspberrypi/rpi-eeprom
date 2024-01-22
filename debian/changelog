@@ -1,3 +1,13 @@
+rpi-eeprom (21.1-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2024-01-15: 2712: Add support for network-install (latest)
+  * 2024-01-18: 2711: Fix issue with minimal sized FAT partition - STABLE
+  * pieeprom-2024-01-22: 2711: Fix issue boot.img end sector check - STABLE
+  * 2024-01-22: 2712: Fixes for small boot.img files + SD CD indicator (latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 22 Jan 2024 17:18:45 +0000
+
 rpi-eeprom (21.0-1) bookworm; urgency=medium
 
   [ Tim Gover ]
