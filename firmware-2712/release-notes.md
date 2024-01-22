@@ -1,5 +1,17 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-01-22: Add support for network-install (latest)
+* Fix issue boot.img end sector check - STABLE
+  See:  https://github.com/raspberrypi/rpi-eeprom/issues/521
+* Fix handling of files that use the last cluster in the partition
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/521
+* Fix SD card detection
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/523
+
+2024-01-15: Add support for network-install (latest)
+* Add support for Network Install
+* Preliminary D0 firmware support
+
 2024-01-08: Promote 2024-01-05 to default (automatic update)
 
 2024-01-05: Fix handling of FAT files without LFNs.
