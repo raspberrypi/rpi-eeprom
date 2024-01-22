@@ -1,5 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-01-22 - Fix issue boot.img end sector check - STABLE
+   * See https://github.com/raspberrypi/rpi-eeprom/issues/521
+
 ## 2024-01-18 - Fix issue with minimal sized FAT partition - STABLE
    * Fix handling of files that use the last cluster in the partition
      https://github.com/raspberrypi/rpi-eeprom/issues/521
