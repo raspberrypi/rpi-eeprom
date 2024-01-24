@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-01-24: NVMe boot fix for WD NVMe (latest)
+* Add a workaround for an issue seen when booting with WD Blue SN550 NVMe SSD
+
 2024-01-22: Add support for network-install (latest)
 * Fix issue boot.img end sector check - STABLE
   See:  https://github.com/raspberrypi/rpi-eeprom/issues/521
