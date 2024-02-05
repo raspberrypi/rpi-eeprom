@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-02-05: Add support for HAT+ POE HATs (latest)
+* Add support for probing HAT+ POE HATs
+* Implement DWC3 specific XHCI quirks
+
 2024-01-24: NVMe boot fix for WD NVMe (latest)
 * Add a workaround for an issue seen when booting with WD Blue SN550 NVMe SSD
 
