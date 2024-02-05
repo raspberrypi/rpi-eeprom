@@ -404,6 +404,10 @@ checkDependencies() {
    # Default to off - in the future Raspberry Pi 5 may default to using flashrom if
    # flashrom is available.
    [ -z "${RPI_EEPROM_USE_FLASHROM}" ] && RPI_EEPROM_USE_FLASHROM=0
+   if [ "${RPI_EEPROM_USE_FLASHROM}" -eq 1 ] && ! command -v flashrom > /dev/null; then
+      echo "WARNING: flashrom not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
+      RPI_EEPROM_USE_FLASHROM=0
+   fi
 
    FIRMWARE_IMAGE_DIR="${FIRMWARE_ROOT}-${BCM_CHIP}/${FIRMWARE_RELEASE_STATUS}"
    if ! [ -d "${FIRMWARE_IMAGE_DIR}" ]; then
@@ -482,10 +486,6 @@ checkDependencies() {
 
    if [ "${BCM_CHIP}" = 2711 ] && [ ! -f "${RECOVERY_BIN}" ]; then
       die "${RECOVERY_BIN} not found."
-   fi
-
-   if ! command -v flashrom > /dev/null; then
-      RPI_EEPROM_USE_FLASHROM=0
    fi
 }
 
