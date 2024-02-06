@@ -1,3 +1,16 @@
+rpi-eeprom (21.2-1) bookworm; urgency=medium
+
+  [ Peter Harper ]
+  * 2024-01-24: NVMe boot fix for WD NVMe (latest)
+
+  [ Shogo Yamazaki ]
+  * Print warning when flashrom is not found, instead of silently ignoring it
+
+  [ Tim Gover ]
+  * pieeprom-2024-02-05: 2712: Add support for HAT+ POE HATs (latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 06 Feb 2024 19:07:49 +0000
+
 rpi-eeprom (21.1-1) bookworm; urgency=medium
 
   [ Tim Gover ]
