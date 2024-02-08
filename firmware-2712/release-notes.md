@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-02-08: Adjust SDRAM refresh based on temperature (latest)
+
+* Adjust the SDRAM refresh interval based on the temperature. This
+  addresses the gap in performance between the 8GB and 4GB variants.
+  See https://github.com/raspberrypi/firmware/issues/1854
+* Preliminary support for signed boot.
+
 2024-02-05: Add support for HAT+ POE HATs (latest)
 * Add support for probing HAT+ POE HATs
 * Implement DWC3 specific XHCI quirks
