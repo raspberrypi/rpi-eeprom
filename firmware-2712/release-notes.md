@@ -1,5 +1,10 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-02-14: Fix vcgencmd otp_dump and implement C(initial_turbo) (latest)
+* Fix a regression that caused vcgencmd otp_dump to fail.
+* Implement C(initial_turbo) on Pi5
+  See: https://github.com/raspberrypi/firmware/issues/1864
+
 2024-02-08: Adjust SDRAM refresh based on temperature (latest)
 
 * Adjust the SDRAM refresh interval based on the temperature. This
