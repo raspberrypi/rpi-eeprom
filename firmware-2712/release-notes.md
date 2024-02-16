@@ -1,5 +1,13 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-02-16: u-boot loading and thermal throttling fixes (latest) (default)
+* arm_loader: Move non-kernels back to 512KB
+  See: https://github.com/raspberrypi/firmware/issues/1868
+
+* Limit throttled frequency to OS requested frequency rather than
+  config.txt frequency.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/518
+
 2024-02-14: Fix vcgencmd otp_dump and implement C(initial_turbo) (latest)
 * Fix a regression that caused vcgencmd otp_dump to fail.
 * Implement C(initial_turbo) on Pi5
