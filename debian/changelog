@@ -1,3 +1,12 @@
+rpi-eeprom (21.3-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2024-02-08: 2712: Adjust SDRAM refresh based on temperature (latest)
+  * 2024-02-14: 2712: Adjust SDRAM refresh based on temperature (latest)
+  * 2024-02-16: 2712: u-boot loading and thermal throttling fixes (latest) (default)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 16 Feb 2024 19:46:59 +0000
+
 rpi-eeprom (21.2-1) bookworm; urgency=medium
 
   [ Peter Harper ]
