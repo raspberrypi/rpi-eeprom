@@ -397,6 +397,8 @@ checkDependencies() {
       EEPROM_SIZE=2097152
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1704470260}"
       SPIDEV=/dev/spidev10.0
+      # Default is to use flashrom if availableon BCM2712
+      RPI_EEPROM_USE_FLASHROM=${RPI_EEPROM_USE_FLASHROM:-1}
    else
       chipNotSupported
    fi
