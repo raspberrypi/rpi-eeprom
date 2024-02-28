@@ -19,6 +19,7 @@ VALID_IMAGE_SIZES = [512 * 1024, 2 * 1024 * 1024]
 BOOTCONF_TXT = 'bootconf.txt'
 BOOTCONF_SIG = 'bootconf.sig'
 PUBKEY_BIN = 'pubkey.bin'
+CACERT_DER = 'cacert.der'
 
 # Each section starts with a magic number followed by a 32 bit offset to the
 # next section (big-endian).
@@ -515,6 +516,7 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
     parser.add_argument('-p', '--pubkey', help='Signed boot only. The name of the RSA public key file to store in the EEPROM', required=False)
     parser.add_argument('-x', '--extract', action='store_true', default=False, help='Extract the modifiable files (boot.conf, pubkey, signature)', required=False)
     parser.add_argument('-t', '--timestamp', help='Set the timestamp in the EEPROM image file', required=False)
+    parser.add_argument('--cacertder', help='The name of a CA Certificate DER encoded file to store in the EEPROM', required=False)
     parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
 
@@ -545,6 +547,8 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
                 image.update_file(args.digest, BOOTCONF_SIG)
             if args.pubkey is not None:
                 image.update_key(args.pubkey, PUBKEY_BIN)
+            if args.cacertder is not None:
+                image.update_file(args.cacertder, CACERT_DER)
             image.write()
         elif args.config is None and args.timestamp is not None:
             image.write()
