@@ -141,7 +141,7 @@ def get_latest_eeprom():
     """
     Returns the path of the latest EEPROM image file if it exists.
     """
-    latest = shell_cmd(['rpi-eeprom-update', '-l']).rstrip()
+    latest = ''.join(shell_cmd(['rpi-eeprom-update', '-l']).splitlines()[-1:]).rstrip()
     if not os.path.exists(latest):
         exit_error("EEPROM image '%s' not found" % latest)
     return latest
