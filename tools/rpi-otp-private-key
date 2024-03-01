@@ -6,6 +6,8 @@ FORCE=0
 READ_KEY=""
 WRITE_KEY=""
 OUTPUT_BINARY=0
+ROW_COUNT=8
+ROW_OFFSET=0
 
 die() {
     echo "$@" >&2
@@ -25,10 +27,12 @@ usage() {
       N.B. OTP bits can never change from 1 to 0.
    -w Writes the new key to OTP memory.
    -y Skip the confirmation prompt when writing to OTP.
+   -l Specify key length in words. Defaults to 8 words (32 bytes). Pi 5 supports up to 16 words (64 bytes).
+   -o word Offset into the keystore to use, e.g. 0-7 for Pi 4, 0-15 for Pi 5. Defaults to zero.
 
-   <key> is a 64 digit hex number (256 bit) e.g. to generate a 256 random number run 'openssl rand -hex 32'
+   <key> is usually a 64 digit hex number (256 bit) e.g. to generate a 256 random number run 'openssl rand -hex 32'
 
-   IMPORTANT: Raspberry Pi 4 and earlier revisions do not have a hardware secure key store. These OTP rows are visible
+   IMPORTANT: Raspberry Pi 5 and earlier revisions do not have a hardware secure key store. These OTP rows are visible
    to any user in the 'video' group via vcmailbox. Therefore this functionality is only suitable for key
    storage if the OS has already been restricted using the signed boot functionality.
 
@@ -46,8 +50,8 @@ check_key_set() {
 }
 
 read_key() {
-    out=READ_KEY="$(vcmailbox 0x00030081 40 40 0 8 0 0 0 0 0 0 0 0)" || die "Failed to read the current key from OTP"
-    READ_KEY="$(echo "${out}" | sed 's/0x//g' | awk '{for(i=8;i<16;i++) printf $i; print ""}')"
+    out=READ_KEY="$(vcmailbox 0x00030081 $((8 + $ROW_COUNT * 4)) $((8 + $ROW_COUNT * 4)) $ROW_OFFSET $ROW_COUNT 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)" || die "Failed to read the current key from OTP"
+    READ_KEY="$(echo "${out}" | sed 's/0x//g' | awk -v last=$((8 + $ROW_COUNT)) '{for(i=8;i<last;i++) printf $i; print ""}')"
 }
 
 write_key() {
@@ -55,19 +59,19 @@ write_key() {
     # Normalize formatting and check the length
     key="$(echo "${key}" | tr 'A-Z' 'a-z')"
     key="$(echo "${key}" | sed 's/[^a-f0-9]//g')"
-    [ "$(echo -n "${key}" | wc -c)" = 64 ] || die "Invalid key parameter"
+    [ "$(echo -n "${key}" | wc -c)" = $(($ROW_COUNT * 4 * 2)) ] || die "Invalid key parameter"
 
     count=0
     key_params=""
-    while [ ${count} -lt 8 ]; do
+    while [ ${count} -lt $ROW_COUNT ]; do
         start=$(((count * 8) + 1))
-    end=$((start + 7))
-    key_params="${key_params} 0x$(echo -n "${key}" | cut -c${start}-${end})"
-    count=$((count + 1))
+        end=$((start + 7))
+        key_params="${key_params} 0x$(echo -n "${key}" | cut -c${start}-${end})"
+        count=$((count + 1))
     done
 
     if [ "${YES}" = 0 ] && [ -t 0 ]; then
-       echo "Write ${key} to OTP?"
+       echo "Write ${key} of $ROW_COUNT words to OTP starting at word offset $ROW_OFFSET?"
        echo
        echo "WARNING: Updates to OTP registers are permanent and cannot be undone."
 
@@ -79,13 +83,13 @@ write_key() {
        fi
     fi
 
-    vcmailbox 0x38081 40 40 0 8 ${key_params} || die "Failed to write key"
+    vcmailbox 0x38081 $((8 + $ROW_COUNT * 4)) $((8 + $ROW_COUNT * 4)) $ROW_OFFSET $ROW_COUNT ${key_params} || die "Failed to write key"
     read_key
     [ "${READ_KEY}" = "${key}" ] || die "Key readback check failed. ${out}"
 }
 
 YES=0
-while getopts bcfhw:y option; do
+while getopts bcfhw:yl:o: option; do
     case "${option}" in
         b) OUTPUT_BINARY=1
             ;;
@@ -102,12 +106,60 @@ while getopts bcfhw:y option; do
         w) WRITE_KEY="${OPTARG}"
             ;;
         y) YES=1
-           ;;
+            ;;
+        l) ROW_COUNT="${OPTARG}"
+            ;;
+        o) ROW_OFFSET="${OPTARG}"
+            ;;
         *) echo "Unknown argument \"${option}\""
             usage
             ;;
     esac
 done
+
+if [ -f "/sys/firmware/devicetree/base/system/linux,revision" ]; then
+    BOARD_INFO="$(od -v -An -t x1 /sys/firmware/devicetree/base/system/linux,revision | tr -d ' \n')"
+elif grep -q Revision /proc/cpuinfo; then
+    BOARD_INFO="$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' < /proc/cpuinfo)"
+elif command -v vcgencmd > /dev/null; then
+    BOARD_INFO="$(vcgencmd otp_dump | grep '30:' | sed 's/.*://')"
+else
+    die "No Raspberry Pi board info found"
+fi
+if [ $(((0x$BOARD_INFO >> 23) & 1)) = 0 ]; then
+    die "Chip not supported"
+fi
+if [ $(((0x$BOARD_INFO >> 12) & 15)) = 3 ]; then
+    MAX_ROW_COUNT=8
+elif [ $(((0x$BOARD_INFO >> 12) & 15)) = 4 ]; then
+    MAX_ROW_COUNT=16
+else
+    die "Chip not supported"
+fi
+if [ -z "$ROW_COUNT" ] || [ "$ROW_COUNT" -ne "$ROW_COUNT" ] 2>/dev/null; then
+    die "Key length not a number"
+fi
+if [ $ROW_COUNT -lt 1 ]; then
+    die "Length too small"
+fi
+if [ $ROW_COUNT -gt $MAX_ROW_COUNT ]; then
+    die "Length too big"
+fi
+if [ -z "$ROW_OFFSET" ] || [ "$ROW_OFFSET" -ne "$ROW_OFFSET" ] 2>/dev/null; then
+    die "Offset is not a number"
+fi
+if [ $ROW_OFFSET -lt 0 ]; then
+    die "Offset too small"
+fi
+if [ ${ROW_OFFSET} -gt $(($MAX_ROW_COUNT - $ROW_COUNT)) ]; then
+    die "Offset too big"
+fi
+if [ -z $(which vcmailbox) ]; then
+    die "vcmailbox command missing"
+fi
+if [ -z $(which xxd) ] && [ "$OUTPUT_BINARY" -eq "1" ]; then
+    die "xxd command missing"
+fi
 
 if [ -n "${WRITE_KEY}" ]; then
     if [ "${FORCE}" = 0 ] && check_key_set; then
