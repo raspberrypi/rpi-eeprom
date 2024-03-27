@@ -34,18 +34,27 @@ checkDependencies() {
        if ! command -v xxd > /dev/null; then
           die "xxd not found. Try installing the xxd package."
        fi
-   fi 
+   fi
 }
 
 usage() {
 cat <<EOF
 rpi-eeprom-digest [-k RSA_KEY] -i IMAGE -o OUTPUT
 
-Creates a .sig file containing the sha256 digest of the IMAGE and an optional
-RSA signature of that hash.
+Tool to generate .sig files containing the SHA256 digest and optional
+RSA signature. Typically this tool is used by rpi-eeprom-update to
+generate a hash to guard against file-system corruption for EEPROM updates
+OR for signing OS images (boot.img) for secure-boot.
+
+This tool CANNOT be used directly to sign an bootloader EEPROM image
+for secure-boot because the signed data is bootloader configuration file
+rather than the entire flash image.
+To create signed bootloader images please see
+https://github.com/raspberrypi/usbboot/tree/master/secure-boot-recovery/README.md
+
 
 Options:
-   -i The source image.
+   -i The source image e.g. boot.img
    -o The name of the digest/signature file.
    -k Optional RSA private key.
 
@@ -58,16 +67,20 @@ The bootloader only verifies RSA signatures in signed boot mode
 
 Examples:
 
-# Generate RSA signature for the EEPROM config file.
-rpi-eeprom-digest -k private.pem -i bootconf.txt  -o bootconf.sig
-
 # Generate the normal sha256 hash to guard against file-system corruption
 rpi-eeprom-digest -i pieeprom.bin -o pieeprom.sig
 rpi-eeprom-digest -i vl805.bin -o vl805.sig
 
+# Generate a signed OS ramdisk image for secure-boot
+rpi-eeprom-digest -k private.pem -i boot.img -o boot.sig
+
+# Generate RSA signature for the EEPROM config file
+# As used by update-pieeprom.sh in usbboot/secure-boot-recovery
+rpi-eeprom-digest -k private.pem -i bootconf.txt  -o bootconf.sig
+
 # To verify the signature of an existing .sig file using the public key.
 # N.B The key file must be the PUBLIC key in PEM format.
-rpi-eeprom-digest -k public.pem -i pieeprom.bin -v pieeprom.sig
+rpi-eeprom-digest -k public.pem -i boot.bin -v boot.sig
 
 EOF
 exit 0
