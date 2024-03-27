@@ -20,6 +20,7 @@ BOOTCONF_TXT = 'bootconf.txt'
 BOOTCONF_SIG = 'bootconf.sig'
 PUBKEY_BIN = 'pubkey.bin'
 CACERT_DER = 'cacert.der'
+BOOTCODE_BIN = 'bootcode.bin'
 
 # Each section starts with a magic number followed by a 32 bit offset to the
 # next section (big-endian).
@@ -297,14 +298,22 @@ class BootloaderImage(object):
         length = -1
         is_last = False
 
-        next_offset = self._image_size - ERASE_ALIGN_SIZE # Don't create padding inside the bootloader scratch page
-        for i in range(0, len(self._sections)):
+        if filename == BOOTCODE_BIN:
+            next_offset = 0
+            dst_filename = filename
+            i = 0
             s = self._sections[i]
-            if s.magic == FILE_MAGIC and s.filename == filename:
-                is_last = (i == len(self._sections) - 1)
-                offset = s.offset
-                length = s.length
-                break
+            offset = s.offset
+            length = s.length
+        else:
+            next_offset = self._image_size - ERASE_ALIGN_SIZE # Don't create padding inside the bootloader scratch page
+            for i in range(0, len(self._sections)):
+                s = self._sections[i]
+                if s.magic == FILE_MAGIC and s.filename == filename:
+                    is_last = (i == len(self._sections) - 1)
+                    offset = s.offset
+                    length = s.length
+                    break
 
         # Find the start of the next non padding section
         i += 1
@@ -318,30 +327,43 @@ class BootloaderImage(object):
         debug('%s offset %d length %d is-last %d next %d' % (filename, ret[0], ret[1], ret[2], ret[3]))
         return ret
 
-    def update(self, src_bytes, dst_filename):
+    def update(self, src_bytes, dst_filename, bootcode = False):
         """
         Replaces a modifiable file with specified byte array.
         """
-        hdr_offset, length, is_last, next_offset = self.find_file(dst_filename)
-        update_len = len(src_bytes) + FILE_HDR_LEN
+        if bootcode:
+            hdr_offset, length, is_last, next_offset = self.find_file(dst_filename)
+            struct.pack_into('>L', self._bytes, hdr_offset + 4, len(src_bytes))
+            struct.pack_into(("%ds" % len(src_bytes)), self._bytes, hdr_offset + 8, src_bytes)
+            pad_start = hdr_offset + len(src_bytes) + 8
+            is_last = False
+            debug("bootcode padded to %d" % next_offset);
+            if next_offset < 128 * 1024:
+                raise Exception("update-bootcode: Can't update image - 128K must be reserved for bootcode")
+            if next_offset < 0:
+                raise Exception("update-bootcode: Failed to find next section")
 
-        if hdr_offset + update_len > self._image_size - ERASE_ALIGN_SIZE:
-            raise Exception('No space available - image past EOF.')
+        else:
+            hdr_offset, length, is_last, next_offset = self.find_file(dst_filename)
+            update_len = len(src_bytes) + FILE_HDR_LEN
 
-        if hdr_offset < 0:
-            raise Exception('Update target %s not found' % dst_filename)
+            if hdr_offset + update_len > self._image_size - ERASE_ALIGN_SIZE:
+                raise Exception('No space available - image past EOF.')
 
-        if hdr_offset + update_len > next_offset:
-            raise Exception('Update %d bytes is larger than section size %d' % (update_len, next_offset - hdr_offset))
+            if hdr_offset < 0:
+                raise Exception('Update target %s not found' % dst_filename)
 
-        new_len = len(src_bytes) + FILENAME_LEN + 4
-        struct.pack_into('>L', self._bytes, hdr_offset + 4, new_len)
-        struct.pack_into(("%ds" % len(src_bytes)), self._bytes,
-                         hdr_offset + 4 + FILE_HDR_LEN, src_bytes)
+            if hdr_offset + update_len > next_offset:
+                raise Exception('Update %d bytes is larger than section size %d' % (update_len, next_offset - hdr_offset))
 
-        # If the new file is smaller than the old file then set any old
-        # data which is now unused to all ones (erase value)
-        pad_start = hdr_offset + 4 + FILE_HDR_LEN + len(src_bytes)
+            new_len = len(src_bytes) + FILENAME_LEN + 4
+            struct.pack_into('>L', self._bytes, hdr_offset + 4, new_len)
+            struct.pack_into(("%ds" % len(src_bytes)), self._bytes,
+                             hdr_offset + 4 + FILE_HDR_LEN, src_bytes)
+
+            # If the new file is smaller than the old file then set any old
+            # data which is now unused to all ones (erase value)
+            pad_start = hdr_offset + 4 + FILE_HDR_LEN + len(src_bytes)
 
         # Add padding up to 8-byte boundary
         while pad_start % 8 != 0:
@@ -380,10 +402,11 @@ class BootloaderImage(object):
         Replaces the contents of dst_filename in the EEPROM with the contents of src_file.
         """
         src_bytes = open(src_filename, 'rb').read()
-        if len(src_bytes) > MAX_FILE_SIZE:
+        bootcode = dst_filename == BOOTCODE_BIN
+        if not bootcode and len(src_bytes) > MAX_FILE_SIZE:
             raise Exception("src file %s is too large (%d bytes). The maximum size is %d bytes."
                             % (src_filename, len(src_bytes), MAX_FILE_SIZE))
-        self.update(src_bytes, dst_filename)
+        self.update(src_bytes, dst_filename, bootcode)
 
     def set_timestamp(self, timestamp):
         """
@@ -409,14 +432,22 @@ class BootloaderImage(object):
 
     def get_file(self, filename):
         hdr_offset, length, is_last, next_offset = self.find_file(filename)
-        offset = hdr_offset + 4 + FILE_HDR_LEN
-        file_bytes = self._bytes[offset:offset+length-FILENAME_LEN-4]
+        if filename == BOOTCODE_BIN:
+            offset = hdr_offset + 8
+            file_bytes = self._bytes[offset:offset+length]
+        else:
+            offset = hdr_offset + 4 + FILE_HDR_LEN
+            file_bytes = self._bytes[offset:offset+length-FILENAME_LEN-4]
+
         return file_bytes
 
     def extract_files(self):
         for i in range(0, len(self._sections)):
             s = self._sections[i]
-            if s.magic == FILE_MAGIC:
+            if s.magic == MAGIC and s.offset == 0:
+                file_bytes = self.get_file(BOOTCODE_BIN)
+                open(BOOTCODE_BIN, 'wb').write(file_bytes)
+            elif s.magic == FILE_MAGIC:
                 file_bytes = self.get_file(s.filename)
                 open(s.filename, 'wb').write(file_bytes)
 
@@ -515,6 +546,7 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
     parser.add_argument('-d', '--digest', help='Signed boot only. The name of the .sig file generated by rpi-eeprom-dgst for config.txt ', required=False)
     parser.add_argument('-p', '--pubkey', help='Signed boot only. The name of the RSA public key file to store in the EEPROM', required=False)
     parser.add_argument('-x', '--extract', action='store_true', default=False, help='Extract the modifiable files (boot.conf, pubkey, signature)', required=False)
+    parser.add_argument('-b', '--bootcode', help='Signed boot 2712 only. The name of the customer signed bootcode.bin file to store in the EEPROM', required=False)
     parser.add_argument('-t', '--timestamp', help='Set the timestamp in the EEPROM image file', required=False)
     parser.add_argument('--cacertder', help='The name of a CA Certificate DER encoded file to store in the EEPROM', required=False)
     parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
@@ -539,7 +571,10 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
         image = BootloaderImage(args.eeprom, args.out)
         if args.timestamp is not None:
             image.set_timestamp(args.timestamp)
-        if args.config is not None:
+        if args.bootcode is not None:
+            image.update_file(args.bootcode, BOOTCODE_BIN)
+            image.write()
+        elif args.config is not None:
             if not os.path.exists(args.config):
                 exit_error("config file '%s' not found" % args.config)
             image.update_file(args.config, BOOTCONF_TXT)
