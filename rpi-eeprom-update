@@ -110,6 +110,10 @@ die() {
    exit ${EXIT_FAILED}
 }
 
+warn() {
+   echo "$@" >&2
+}
+
 getBootloaderConfig() {
    # Prefer extracting bootloader's config from DT.
    #
@@ -192,9 +196,9 @@ applyRecoveryUpdate()
    getBootloaderCurrentVersion
    BOOTLOADER_UPDATE_VERSION=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
    if [ "${BOOTLOADER_CURRENT_VERSION}" -gt "${BOOTLOADER_UPDATE_VERSION}" ]; then
-      echo "   WARNING: Installing an older bootloader version."
-      echo "            Update the rpi-eeprom package to fetch the latest bootloader images."
-      echo
+      warn "   WARNING: Installing an older bootloader version."
+      warn "            Update the rpi-eeprom package to fetch the latest bootloader images."
+      warn
    fi
    echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
    echo "    UPDATE: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
@@ -254,9 +258,10 @@ applyRecoveryUpdate()
    # of power loss.
    if [ "${RPI_EEPROM_USE_FLASHROM}" = 1 ]; then
       echo
-      echo "UPDATING bootloader."
+      echo "UPDATING bootloader. This could take up to a minute. Please wait"
       echo
-      echo "*** WARNING: Do not disconnect the power until the update is complete ***"
+      echo "*** Do not disconnect the power until the update is complete ***"
+      echo
       echo "If a problem occurs then the Raspberry Pi Imager may be used to create"
       echo "a bootloader rescue SD card image which restores the default bootloader image."
       echo
@@ -310,11 +315,11 @@ applyUpdate() {
    if [ "${RPI_EEPROM_USE_FLASHROM}" = 1 ]; then
       flashrom_probe_ok=0
       if ! [ -e "${SPIDEV}" ]; then
-         echo "WARNING: SPI device ${SPIDEV} not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
+         warn "WARNING: SPI device ${SPIDEV} not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
       fi
 
       if ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > /dev/null 2>&1; then
-         echo "WARNING: Flashrom probe of ${SPIDEV} failed"
+         warn "WARNING: Flashrom probe of ${SPIDEV} failed"
       else
          flashrom_probe_ok=1
       fi
@@ -405,10 +410,12 @@ checkDependencies() {
 
    # Default to off - in the future Raspberry Pi 5 may default to using flashrom if
    # flashrom is available.
-   [ -z "${RPI_EEPROM_USE_FLASHROM}" ] && RPI_EEPROM_USE_FLASHROM=0
-   if [ "${RPI_EEPROM_USE_FLASHROM}" -eq 1 ] && ! command -v flashrom > /dev/null; then
-      echo "WARNING: flashrom not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
-      RPI_EEPROM_USE_FLASHROM=0
+   if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      [ -z "${RPI_EEPROM_USE_FLASHROM}" ] && RPI_EEPROM_USE_FLASHROM=0
+      if [ "${RPI_EEPROM_USE_FLASHROM}" -eq 1 ] && ! command -v flashrom > /dev/null; then
+         warn "WARNING: flashrom not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
+         RPI_EEPROM_USE_FLASHROM=0
+      fi
    fi
 
    FIRMWARE_IMAGE_DIR="${FIRMWARE_ROOT}-${BCM_CHIP}/${FIRMWARE_RELEASE_STATUS}"
@@ -710,11 +717,11 @@ findBootFS()
 
    if [ "${BCM_CHIP}" = 2712 ]; then
       if ! [ -e "${BOOTFS}/config.txt" ]; then
-         echo "WARNING: BOOTFS: \"${BOOTFS}/config.txt\" not found. Please check boot directory"
+         warn "WARNING: BOOTFS: \"${BOOTFS}/config.txt\" not found. Please check boot directory"
       fi
    else
       if [ "$(find "${BOOTFS}/" -name "*.elf" | wc -l)" = 0 ]; then
-         echo "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
+         warn "WARNING: BOOTFS: \"${BOOTFS}\" contains no .elf files. Please check boot directory"
       fi
    fi
 }
