@@ -50,7 +50,7 @@ check_key_set() {
 }
 
 read_key() {
-    out=READ_KEY="$(vcmailbox 0x00030081 $((8 + ROW_COUNT * 4)) $((8 + ROW_COUNT * 4)) $ROW_OFFSET $ROW_COUNT 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)" || die "Failed to read the current key from OTP"
+    out=READ_KEY="$(vcmailbox 0x00030081 $((8 + ROW_COUNT * 4)) $((8 + ROW_COUNT * 4)) "$ROW_OFFSET" "$ROW_COUNT" 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)" || die "Failed to read the current key from OTP"
     READ_KEY="$(echo "${out}" | sed 's/0x//g' | awk -v last=$((8 + ROW_COUNT)) '{for(i=8;i<last;i++) printf $i; print ""}')"
 }
 
@@ -63,7 +63,7 @@ write_key() {
 
     count=0
     key_params=""
-    while [ ${count} -lt $ROW_COUNT ]; do
+    while [ ${count} -lt "$ROW_COUNT" ]; do
         start=$(((count * 8) + 1))
         end=$((start + 7))
         key_params="${key_params} 0x$(echo -n "${key}" | cut -c${start}-${end})"
@@ -83,7 +83,7 @@ write_key() {
        fi
     fi
 
-    vcmailbox 0x38081 $((8 + ROW_COUNT * 4)) $((8 + ROW_COUNT * 4)) $ROW_OFFSET $ROW_COUNT ${key_params} || die "Failed to write key"
+    vcmailbox 0x38081 $((8 + ROW_COUNT * 4)) $((8 + ROW_COUNT * 4)) "$ROW_OFFSET" "$ROW_COUNT" "${key_params}" || die "Failed to write key"
     read_key
     [ "${READ_KEY}" = "${key}" ] || die "Key readback check failed. ${out}"
 }
@@ -139,25 +139,25 @@ fi
 if [ -z "$ROW_COUNT" ] || [ "$ROW_COUNT" -ne "$ROW_COUNT" ] 2>/dev/null; then
     die "Key length not a number"
 fi
-if [ $ROW_COUNT -lt 1 ]; then
+if [ "$ROW_COUNT" -lt 1 ]; then
     die "Length too small"
 fi
-if [ $ROW_COUNT -gt $MAX_ROW_COUNT ]; then
+if [ "$ROW_COUNT" -gt $MAX_ROW_COUNT ]; then
     die "Length too big"
 fi
 if [ -z "$ROW_OFFSET" ] || [ "$ROW_OFFSET" -ne "$ROW_OFFSET" ] 2>/dev/null; then
     die "Offset is not a number"
 fi
-if [ $ROW_OFFSET -lt 0 ]; then
+if [ "$ROW_OFFSET" -lt 0 ]; then
     die "Offset too small"
 fi
-if [ ${ROW_OFFSET} -gt $((MAX_ROW_COUNT - ROW_COUNT)) ]; then
+if [ "${ROW_OFFSET}" -gt $((MAX_ROW_COUNT - ROW_COUNT)) ]; then
     die "Offset too big"
 fi
-if [ -z $(which vcmailbox) ]; then
+if [ -z "$(which vcmailbox)" ]; then
     die "vcmailbox command missing"
 fi
-if [ -z $(which xxd) ] && [ "$OUTPUT_BINARY" -eq "1" ]; then
+if [ -z "$(which xxd)" ] && [ "$OUTPUT_BINARY" -eq "1" ]; then
     die "xxd command missing"
 fi
 
