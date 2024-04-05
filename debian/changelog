@@ -1,3 +1,21 @@
+rpi-eeprom (21.5-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Output warnings to stderr
+  * rpi-eeprom-update: Only check for flashrom during an update
+  * tools: rpi-otp-private-key: Update to same version as usbboot
+  * tools: Preliminary tool support for signed-boot on 2712
+  * tools: rpi-eeprom-digest: Improve docs for secure-boot
+  * 2024-04-05: 2712: HAT+ fixes for max-current, custom CA cert for net install and enable over-clocking to > 3GHz (latest)
+
+  [ Peter Harper ]
+  * Add new cacertder option
+
+  [ Serge Schneider ]
+  * Install tools/ and add python3-pycryptodome dependency
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 05 Apr 2024 15:22:05 +0100
+
 rpi-eeprom (21.4-1) bookworm; urgency=medium
 
   [ Tim Gover ]
