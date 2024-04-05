@@ -11,7 +11,7 @@ Vcs-Git: https://github.com/raspberrypi/rpi-eeprom.git
 Package: rpi-eeprom
 Architecture: all
 Depends: ${shlibs:Depends}, ${misc:Depends}, raspi-utils | libraspberrypi-bin, python3,
- binutils, pciutils
+ binutils, pciutils, python3-pycryptodome
 Breaks: rpi-eeprom-images (<<7.2)
 Replaces: rpi-eeprom-images (<<7.2)
 Recommends: flashrom

@@ -1,6 +1,10 @@
 rpi-eeprom-config usr/bin/
 rpi-eeprom-update usr/bin/
 rpi-eeprom-digest usr/bin/
+tools/rpi-bootloader-key-convert usr/bin/
+tools/rpi-otp-private-key usr/bin/
+tools/rpi-sign-bootcode usr/bin/
+
 debian/default/ etc/
 
 firmware-2711/default lib/firmware/raspberrypi/bootloader-2711/
