@@ -57,7 +57,7 @@ read_key() {
 write_key() {
     key="${1}"
     # Normalize formatting and check the length
-    key="$(echo "${key}" | tr 'A-Z' 'a-z')"
+    key="$(echo "${key}" | tr '[:upper:]' '[:lower:]')"
     key="$(echo "${key}" | sed 's/[^a-f0-9]//g')"
     [ "$(echo -n "${key}" | wc -c)" = $((ROW_COUNT * 4 * 2)) ] || die "Invalid key parameter"
 
