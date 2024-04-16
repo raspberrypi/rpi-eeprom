@@ -1,3 +1,14 @@
+rpi-eeprom (21.6-1) bookworm; urgency=medium
+
+  [ Cody Scott ]
+  * Remove variable expansion in arithmetic
+
+  [ Tim Gover ]
+  * pieeprom-2024-04-15: 2711: Fix tryboot mode in secure-boot - STABLE
+  * pieeprom-2024-04-15: 2711: Promote stable release to DEFAULT
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 16 Apr 2024 10:01:53 +0100
+
 rpi-eeprom (21.5-1) bookworm; urgency=medium
 
   [ Tim Gover ]
