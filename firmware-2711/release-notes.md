@@ -1,5 +1,11 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-04-16 - Build 2711 firmware from the common 2711/2712 tree - DEFAULT
+   * The 2711 firmware is now built from the common mainline
+     tree for 2711 and 2712. This does not enable any new features
+     on Pi4 but should make it easier to provide bug fixes
+     in common areas e.g. file-system and provisioning.
+
 ## 2024-04-15 - Fix tryboot mode in secure-boot - DEFAULT
    * Promote the secure-boot fix to the DEFAULT release.
 
