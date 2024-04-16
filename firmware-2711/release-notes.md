@@ -1,5 +1,12 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-04-15 - Fix tryboot mode in secure-boot - DEFAULT
+   * Promote the secure-boot fix to the DEFAULT release.
+
+## 2024-04-15 - Fix tryboot mode in secure-boot - STABLE
+   * Fix an issue where the tryboot flag was being reset and lost during
+     the secure-boot initialization.
+
 ## 2024-01-22 - Fix issue boot.img end sector check - STABLE
    * See https://github.com/raspberrypi/rpi-eeprom/issues/521
 
