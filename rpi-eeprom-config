@@ -463,6 +463,7 @@ class BootloaderImage(object):
                 sys.stdout.write(config_bytes)
 
 def main():
+    global DEBUG
     """
     Utility for reading and writing the configuration file in the
     Raspberry Pi bootloader EEPROM image.
@@ -548,8 +549,10 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
     parser.add_argument('-b', '--bootcode', help='Signed boot 2712 only. The name of the customer signed bootcode.bin file to store in the EEPROM', required=False)
     parser.add_argument('-t', '--timestamp', help='Set the timestamp in the EEPROM image file', required=False)
     parser.add_argument('--cacertder', help='The name of a CA Certificate DER encoded file to store in the EEPROM', required=False)
+    parser.add_argument('--debug', help='Debug logging for this tool', action='store_true', required=False)
     parser.add_argument('eeprom', nargs='?', help='Name of EEPROM file to use as input')
     args = parser.parse_args()
+    DEBUG = args.debug
 
     if (args.edit or args.apply is not None) and os.getuid() != 0:
         exit_error("--edit/--apply must be run as root")
