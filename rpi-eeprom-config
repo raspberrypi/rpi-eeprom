@@ -510,7 +510,7 @@ Operating modes:
    The configuration file will be taken from:
        * The blconfig reserved memory nvmem device
        * The cached bootloader configuration 'vcgencmd bootloader_config'
-       * The current pending update - typically /boot/pieeprom.upd
+       * The current pending update - typically /boot/firmware/pieeprom.upd
 
    sudo -E rpi-eeprom-config --edit [pieeprom.bin]
 
@@ -524,8 +524,7 @@ Operating modes:
    the corresponding RSA public key.
 
    Requires Python Cryptodomex libraries and OpenSSL. To install on Raspberry Pi OS run:-
-   sudo apt install openssl python-pip
-   sudo python3 -m pip install cryptodomex
+   sudo apt install python3-pycryptodome
 
    rpi-eeprom-digest -k private.pem -i bootconf.txt -o bootconf.sig
    rpi-eeprom-config --config bootconf.txt --digest bootconf.sig --pubkey public.pem --out pieeprom-signed.bin pieeprom.bin
@@ -571,10 +570,15 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
         image = BootloaderImage(args.eeprom, args.out)
         if args.timestamp is not None:
             image.set_timestamp(args.timestamp)
+
         if args.bootcode is not None:
             image.update_file(args.bootcode, BOOTCODE_BIN)
-            image.write()
-        elif args.config is not None:
+
+        if args.cacertder is not None:
+            image.update_file(args.cacertder, CACERT_DER)
+
+        if args.config is not None:
+            # The public key, EEPROM config and signature should be set together
             if not os.path.exists(args.config):
                 exit_error("config file '%s' not found" % args.config)
             image.update_file(args.config, BOOTCONF_TXT)
@@ -582,10 +586,9 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
                 image.update_file(args.digest, BOOTCONF_SIG)
             if args.pubkey is not None:
                 image.update_key(args.pubkey, PUBKEY_BIN)
-            if args.cacertder is not None:
-                image.update_file(args.cacertder, CACERT_DER)
-            image.write()
-        elif args.config is None and args.timestamp is not None:
+
+        if args.config is not None or args.timestamp is not None or args.bootcode is not None or args.cacertder is not None:
+            debug("Writing image")
             image.write()
         else:
             image.read()
