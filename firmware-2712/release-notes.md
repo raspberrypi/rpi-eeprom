@@ -1,5 +1,11 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-04-18: Update RP1 firmware to extend PCIe L1 entry timeout to 32 us (latest)
+* Extend PCIe L1 entry timeout to 32us
+  Fix xhci soft reset on link-down
+  Set useful xhci compatibility bits in GUCTL
+  See https://github.com/raspberrypi/firmware/issues/1877
+
 2024-04-17: Fix TRYBOOT flag in secure-boot mode (latest)
 * Fix issue that caused the TRYBOOT flag to be lost in secure-boot mode.
 * dtoverlay: Use %u when converting u32s to strings
