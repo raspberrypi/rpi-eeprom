@@ -1,5 +1,22 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-04-18: Promote the 2024-04-17 release to the default release (default) (automatic update)
+* Select pieeprom-2024-04-17.bin to be the new default release and bump the
+  automatic update minimum version to this.
+
+2024-04-18: Update RP1 firmware to extend PCIe L1 entry timeout to 32 us (latest)
+* Extend PCIe L1 entry timeout to 32us
+  Fix xhci soft reset on link-down
+  Set useful xhci compatibility bits in GUCTL
+  See https://github.com/raspberrypi/firmware/issues/1877
+
+2024-04-17: Fix TRYBOOT flag in secure-boot mode (latest)
+* Fix issue that caused the TRYBOOT flag to be lost in secure-boot mode.
+* dtoverlay: Use %u when converting u32s to strings
+   See: https://github.com/raspberrypi/linux/issues/6039
+* Improved debug messages for secure-boot.
+* Generate the bootloader diagnostics qrcode at run time.
+
 2024-04-05: HAT+ fixes for max-current, custom CA cert for net install and enable over-clocking to > 3GHz (latest)
 * bootloader: clock_2712: Remove restriction on arm_freq <= 3000
   See: https://github.com/raspberrypi/firmware/issues/1876

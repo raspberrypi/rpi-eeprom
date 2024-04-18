@@ -1,5 +1,15 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-04-17 - Build Pi4 firmware from the mainline branch - STABLE
+  * Switch to building the Pi4 firmware from the common Pi4/Pi5
+    mainline release. This doesn't change the Pi4 features
+    but should make it quicker to release bug fixes in common code.
+  * Fix issue that caused the TRYBOOT flag to be lost in secure-boot mode.
+  * dtoverlay: Use %u when converting u32s to strings
+     See: https://github.com/raspberrypi/linux/issues/6039
+  * Improved debug messages for secure-boot.
+  * Generate the bootloader diagnostics qrcode at run time.
+
 ## 2024-04-15 - Fix tryboot mode in secure-boot - DEFAULT
    * Promote the secure-boot fix to the DEFAULT release.
 
