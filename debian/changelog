@@ -1,3 +1,17 @@
+rpi-eeprom (22.0-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-config: Process bootcode arg with other file replacements
+  * rpi-eeprom-config: Add --debug flag to args
+  * pieeprom-2024-04-17: 2712: 2711: Build Pi4 and Pi5 firmware from the same branch
+  * pieeprom-2024-04-18: 2712: Update RP1 firmware to extend PCIe L1 entry timeout to 32 us (latest)
+  * pieeprom-2024-04-17: 2712: Promote to default release (automatic update)
+
+  [ Andrew Scheller ]
+  * rpi-eeprom-config: fix rpi-eeprom-dgst typo in usage-text
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 18 Apr 2024 10:48:18 +0100
+
 rpi-eeprom (21.6-1) bookworm; urgency=medium
 
   [ Cody Scott ]
