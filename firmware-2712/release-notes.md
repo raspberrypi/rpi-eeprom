@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-04-18: Promote the 2024-04-17 release to the default release (default) (automatic update)
+* Select pieeprom-2024-04-17.bin to be the new default release and bump the
+  automatic update minimum version to this.
+
 2024-04-18: Update RP1 firmware to extend PCIe L1 entry timeout to 32 us (latest)
 * Extend PCIe L1 entry timeout to 32us
   Fix xhci soft reset on link-down
