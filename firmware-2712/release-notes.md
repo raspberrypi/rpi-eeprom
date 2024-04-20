@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-04-20: Fix SDRAM refesh timing (default) (automatic update)
+* Fix a possible performance regression on Pi5.
+
 2024-04-18: Promote the 2024-04-17 release to the default release (default) (automatic update)
 * Select pieeprom-2024-04-17.bin to be the new default release and bump the
   automatic update minimum version to this.
