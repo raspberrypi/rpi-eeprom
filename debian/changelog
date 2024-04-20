@@ -1,3 +1,10 @@
+rpi-eeprom (23.0-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2024-04-20: 2712: Fix SDRAM default refresh timings
+
+ -- Serge Schneider <serge@raspberrypi.com>  Sat, 20 Apr 2024 13:07:22 +0100
+
 rpi-eeprom (22.0-1) bookworm; urgency=medium
 
   [ Tim Gover ]
