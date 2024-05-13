@@ -1,5 +1,17 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+2024-05-13: Add support for NVMe boot with PCIe switches (latest)
+* Add preliminary support for booting NVMe devices behind PCIe switches.
+  See: https://github.com/raspberrypi/firmware/issues/1833
+* Fix MAX_RESTARTS parameter
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/576
+* arm_dt: Support HAT EEPROM dtparams
+* Fix reporting of the partition number via DT
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/575
+* Resolve HID counting bug which caused Network Install to fail on some keyboards
+  See: Fixes https://github.com/raspberrypi/rpi-eeprom/issues/574
+* Pull PCIE DET_WAKE high by default on CM5
+
 2024-04-20: Fix SDRAM refesh timing (default) (automatic update)
 * Fix a possible performance regression on Pi5.
 
