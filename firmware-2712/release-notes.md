@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-05-17: Ignore bootloader updates for Pi5 on Pi4 - (latest)
+* Add timestamps to UART log messages
+
 2024-05-13: Add support for NVMe boot with PCIe switches (latest)
 * Add preliminary support for booting NVMe devices behind PCIe switches.
   See: https://github.com/raspberrypi/firmware/issues/1833
