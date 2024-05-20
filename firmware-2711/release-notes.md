@@ -1,5 +1,17 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-05-17 - Ignore bootloader updates for Pi5 on Pi4 - (latest)
+  * Add timestamps to UART log messages.
+  * Add support for [tryboot] conditional the bootloader EEPROM
+    config file.
+    See: https://github.com/raspberrypi/rpi-eeprom/issues/454
+  * Fix MAX_RESTARTS parameter
+    See: https://github.com/raspberrypi/rpi-eeprom/issues/576
+  * Add recovery_reboot option to config.txt for rpiboot which causes
+    the system to reboot after updating the bootloader.
+  * Improve secure-boot OTP provisioning logging.
+  * Fix setting to enable secure-boot mode on Pi4B
+
 ## 2024-04-17 - Build Pi4 firmware from the mainline branch - STABLE
   * Switch to building the Pi4 firmware from the common Pi4/Pi5
     mainline release. This doesn't change the Pi4 features
