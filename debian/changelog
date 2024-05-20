@@ -1,3 +1,13 @@
+rpi-eeprom (23.1-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * LICENSE: Update for qrcodegen
+  * 2024-05-13: 2712: Add support for NVMe boot with PCIe switches (latest)
+  * pieeprom-2024-05-17: 2711: Ignore bootloader updates for Pi5 on Pi4 - (latest)
+  * pieeprom: 2024-05-17: 2712: Ignore bootloader updates for Pi5 on Pi4 - (latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 20 May 2024 06:17:25 +0100
+
 rpi-eeprom (23.0-1) bookworm; urgency=medium
 
   [ Tim Gover ]
