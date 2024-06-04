@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-06-04: Fix [pi5] config.txt conditional state (latest)
+* The [pi5] conditional statement should apply to the entire pi5
+  family i.e. include cm5 as well.
+* Bump SDIO bus priorities to that a GPU/RAM intensive processes
+  can't unnecessarily stall an I/O processes.
+* Assorted log message tidyups.
+
 ## 2024-05-17: Ignore bootloader updates for Pi5 on Pi4 - (latest)
 * Add timestamps to UART log messages
 
