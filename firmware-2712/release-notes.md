@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-06-05: CM5 bringup changes (latest)
+* Minor changes to support CM5 bringup and test.
+
 ## 2024-06-04: Fix [pi5] config.txt conditional state (latest)
 * The [pi5] conditional statement should apply to the entire pi5
   family i.e. include cm5 as well.
