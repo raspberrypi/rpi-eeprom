@@ -1,3 +1,12 @@
+rpi-eeprom (23.2-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * 2024-06-04: 2712: Fix [pi5] config.txt conditional state (latest)
+  * 2024-06-05: 2712: CM5 bringup changes (latest)
+  * pieeprom-2024-06-05: 2712: Promote pieeprom-2024-06-05 to the default release (default)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 12 Jun 2024 10:04:44 +0100
+
 rpi-eeprom (23.1-1) bookworm; urgency=medium
 
   [ Tim Gover ]
