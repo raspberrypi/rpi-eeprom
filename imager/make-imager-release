@@ -8,4 +8,4 @@ script_dir=$(cd "$(dirname "$0")" && pwd)
 ${script_dir}/make-release critical 2023-01-11 000138c0 "${script_dir}/2711-config" release-2711 rpi-boot-eeprom-recovery 2711
 
 # Pi5
-${script_dir}/make-release critical 2024-04-20 "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
+${script_dir}/make-release critical 2024-06-05 "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
