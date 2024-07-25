@@ -1,5 +1,14 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-07-05 (recovery.bin) - Enable program_rpioboot_gpio - (latest)
+  * Enable the usage of program_rpiboot_gpio in config.txt for recovery.bin
+    without requiring secure-boot to be enabled.
+    This may be useful CI systems provisioning images on Pi4B / Pi400
+    via RPIBOOT.
+    This is an OTP setting and cannot be reverted after programming.
+
+    See https://www.raspberrypi.com/documentation/computers/config_txt.html#program_rpiboot_gpio
+
 ## 2024-05-17 - Ignore bootloader updates for Pi5 on Pi4 - (latest)
   * Add timestamps to UART log messages.
   * Add support for [tryboot] conditional the bootloader EEPROM
