@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-07-25: Support CM4 nEXTRST on CM5
+* Drive nEXTRST on CM5 for CM4IO compatibility.
+* Preliminary changes for CM5 Lite.
+
 ## 2024-06-11: Promote pieeprom-2024-06-05 to the default release (default)
 
 ## 2024-06-05: CM5 bringup changes (latest)
