@@ -1,5 +1,14 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-07-30: Optimized SDRAM timings for Pi5 8GB (default)
+* Optimize all-banks/per-bank refresh timings for Pi5 8GB
+* Improve compatibility for booting from some USB SD card readers
+    https://github.com/raspberrypi/rpi-eeprom/issues/527
+* Add enable_rp1_uart=1 to config.txt to initialise RP1 UART0 immediately
+  prior to starting the ARMs get earlycon on 40-pin header (pins 14,15)
+  Also requires pciex4_reset=0 in config.txt
+  earlycon=pl011,0x1f00030000,115200n8
+
 ## 2024-07-25: Support CM4 nEXTRST on CM5
 * Drive nEXTRST on CM5 for CM4IO compatibility.
 * Preliminary changes for CM5 Lite.
