@@ -1,5 +1,11 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-07-30 - USB boot fixes for CM4-S and interop improvments (latest)
+  * Resolve USB boot regression in 2024-04-17 relase on CM4S
+    See https://github.com/raspberrypi/rpi-eeprom/issues/588
+  * Improve compatibility for booting from some USB SD card readers
+    https://github.com/raspberrypi/rpi-eeprom/issues/527
+
 ## 2024-07-05 (recovery.bin) - Enable program_rpioboot_gpio - (latest)
   * Enable the usage of program_rpiboot_gpio in config.txt for recovery.bin
     without requiring secure-boot to be enabled.
