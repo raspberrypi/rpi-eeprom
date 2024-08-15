@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-07-30: Promote the 2024-07-30 release to default (default)
+
 ## 2024-08-14 - (recovery.bin) Add support for OTP metadata (latest)
 * Update to recovery.bin to output metadata about OTP during rpiboot
 
