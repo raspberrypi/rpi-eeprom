@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-08-14 - (recovery.bin) Add support for OTP metadata (latest)
+* Update to recovery.bin to output metadata about OTP during rpiboot
+
 ## 2024-07-30: Optimized SDRAM timings for Pi5 8GB (latest)
 * Optimize all-banks/per-bank refresh timings for Pi5 8GB
 * Improve compatibility for booting from some USB SD card readers
