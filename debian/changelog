@@ -1,3 +1,26 @@
+rpi-eeprom (24.0-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * imager: Bump 2712 release to 2024-06-05
+  * imager: make-release: Drop the 'default' (unused) BOOT_ORDER release zip
+  * pieeprom-2024-07-25: 2712: Support CM4 nEXTRST on CM5
+  *  2024-07-05: 2711: (recovery.bin) - Enable program_rpioboot_gpio - (latest)
+  * rpi-eeprom-digest: Fix help text regarding secure-boot support
+  * rpi-eeprom-update: Don't display the cancel/revert message in flashrom mode
+  * pieeprom-2024-07-30: 2711:  USB boot fixes for CM4-S and interop improvments
+    (latest)
+  * pieeprom-2024-07-30: 2712: Optimized SDRAM timings for Pi5 8GB (latest)
+  * 2024-08-14 - (recovery.bin) Add support for OTP metadata (latest)
+  * pieeprom: 2024-07-30: 2712: Promote the 2024-07-30 release to default
+    (default)
+
+  [ andrum993 ]
+  * release-notes.md: update heading formatting for older releases
+  * Update release-notes.md
+  * BCM2712 release-notes.md - correct notes for most recent 2 releases
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 16 Aug 2024 01:18:51 +0100
+
 rpi-eeprom (23.2-1) bookworm; urgency=medium
 
   [ Tim Gover ]
