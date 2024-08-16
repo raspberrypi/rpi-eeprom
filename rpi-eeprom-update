@@ -286,7 +286,10 @@ applyRecoveryUpdate()
 
    echo ""
    echo "EEPROM updates pending. Please reboot to apply the update."
-   echo "To cancel a pending update run \"sudo rpi-eeprom-update -r\"."
+
+   if [ "${RPI_EEPROM_USE_FLASHROM}" = 0 ]; then
+      echo "To cancel a pending update run \"sudo rpi-eeprom-update -r\"."
+   fi
 }
 
 applyUpdate() {

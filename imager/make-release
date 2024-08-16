@@ -90,7 +90,6 @@ rm -rf "${output_dir}"
 mkdir "${output_dir}"
 
 # Build the different boot priority flavours
-gen_release "${config_dir}/boot-conf-default.txt" "${output_dir}/${output_basename}-${tag}.zip"
 for variant in sd usb network; do
    gen_release "${config_dir}/boot-conf-${variant}.txt" "${output_dir}/${output_basename}-${tag}-${variant}.zip"
 done

@@ -63,7 +63,7 @@ If a private key in PEM format is supplied then the RSA signature of the
 sha256 digest is included in the .sig file. Currently, the bootloader only
 supports sha256 digests signed with a 2048bit RSA key.
 The bootloader only verifies RSA signatures in signed boot mode
-(not available yet) and only for the EEPROM config file and the signed image.
+and only for the EEPROM config file and the signed image.
 
 Examples:
 
