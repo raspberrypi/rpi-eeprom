@@ -23,5 +23,5 @@ up-to-date and updates the EEPROM" \
 
 debian/rpi-eeprom-config.1:
 	help2man -N --version-string="${DEB_VERSION_UPSTREAM}" --help-option="-h" \
-		--name="Bootloader EEPROM configuration tool for the Raspberry Pi 4B" \
+		--name="Bootloader EEPROM configuration tool for the Raspberry Pi 4/5" \
 		--output=$@ ./rpi-eeprom-config
