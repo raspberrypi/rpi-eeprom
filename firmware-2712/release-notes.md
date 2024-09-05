@@ -19,8 +19,8 @@
     https://github.com/raspberrypi/rpi-eeprom/issues/527
 * Add enable_rp1_uart=1 to config.txt to initialise RP1 UART0 immediately
   prior to starting the ARMs get earlycon on 40-pin header (pins 14,15)
-  Also requires pciex4_reset=0 in config.txt
-  earlycon=pl011,0x1f00030000,115200n8
+  Also requires pciex4_reset=0 in config.txt, and
+  earlycon=pl011,0x1f00030000,115200n8 in cmdline.txt
 
 ## 2024-07-25: Support CM4 nEXTRST on CM5 (latest)
 * Drive nEXTRST on CM5 for CM4IO compatibility.
@@ -34,8 +34,8 @@
 ## 2024-06-04: Fix [pi5] config.txt conditional state (latest)
 * The [pi5] conditional statement should apply to the entire pi5
   family i.e. include cm5 as well.
-* Bump SDIO bus priorities to that a GPU/RAM intensive processes
-  can't unnecessarily stall an I/O processes.
+* Bump SDIO bus priorities so that a GPU/RAM intensive process
+  can't unnecessarily stall I/O.
 * Assorted log message tidyups.
 
 ## 2024-05-17: Ignore bootloader updates for Pi5 on Pi4 - (latest)
