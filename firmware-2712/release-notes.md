@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-09-10: Fix lockup on 7" DSI panel clones (latest)
+* Fix lockup regression with some 3rd party 7" DSI panels
+  See: https://github.com/raspberrypi/linux/issues/6341
+
 ## 2024-09-05: Fix self-update if EEPROM is write-protected  (latest)
 * arm_dt: Consult the hat_map for all HATs
 * USB boot - ignore RP2 / RP3 MSD device in BOOTSEL mode.
