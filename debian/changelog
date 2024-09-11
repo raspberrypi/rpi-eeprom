@@ -1,3 +1,13 @@
+rpi-eeprom (25.1-1) bookworm; urgency=medium
+
+  [ andrum993 ]
+  * 2712 release-notes.md: fix typo
+
+  [ Tim Gover ]
+  * pieeprom-2024-09-10: 2712: Fix filename
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 11 Sep 2024 21:48:48 +0100
+
 rpi-eeprom (25.0-1) bookworm; urgency=medium
 
   [ Tim Gover ]
