@@ -1,5 +1,13 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-09-05: Fix self-update if EEPROM is write-protected (latest)
+* arm_dt: Consult the hat_map for all HATs
+* USB boot - ignore RP2 / RP3 MSD device in BOOTSEL mode.
+* recovery.bin - Fix erase_eeprom to not block reboot_recovery
+* Fix self-update to continue to boot instead of retrying forever
+  if the EEPROM is write protected.
+  https://github.com/raspberrypi/rpi-eeprom/issues/597
+
 ## 2024-08-14 (recovery.bin) -  Add support for OTP metadata (latest)
 * Update to recovery.bin to output metadata about OTP during rpiboot
 

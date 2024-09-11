@@ -1,5 +1,19 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-09-11: Promote 2024-10-09 release (default) (automatic update)
+
+## 2024-09-10: Fix lockup on 7" DSI panel clones (latest)
+* Fix lockup regression with some 3rd party 7" DSI panels
+  See: https://github.com/raspberrypi/linux/issues/6341
+
+## 2024-09-05: Fix self-update if EEPROM is write-protected  (latest)
+* arm_dt: Consult the hat_map for all HATs
+* USB boot - ignore RP2 / RP3 MSD device in BOOTSEL mode.
+* recovery.bin - Fix erase_eeprom to not block reboot_recovery
+* Fix self-update to continue to boot instead of retrying forever
+  if the EEPROM is write protected.
+  https://github.com/raspberrypi/rpi-eeprom/issues/597
+
 ## 2024-07-30: Promote the 2024-07-30 release to default (default)
 
 ## 2024-08-14 - (recovery.bin) Add support for OTP metadata (latest)
@@ -11,8 +25,8 @@
     https://github.com/raspberrypi/rpi-eeprom/issues/527
 * Add enable_rp1_uart=1 to config.txt to initialise RP1 UART0 immediately
   prior to starting the ARMs get earlycon on 40-pin header (pins 14,15)
-  Also requires pciex4_reset=0 in config.txt
-  earlycon=pl011,0x1f00030000,115200n8
+  Also requires pciex4_reset=0 in config.txt, and
+  earlycon=pl011,0x1f00030000,115200n8 in cmdline.txt
 
 ## 2024-07-25: Support CM4 nEXTRST on CM5 (latest)
 * Drive nEXTRST on CM5 for CM4IO compatibility.
@@ -26,8 +40,8 @@
 ## 2024-06-04: Fix [pi5] config.txt conditional state (latest)
 * The [pi5] conditional statement should apply to the entire pi5
   family i.e. include cm5 as well.
-* Bump SDIO bus priorities to that a GPU/RAM intensive processes
-  can't unnecessarily stall an I/O processes.
+* Bump SDIO bus priorities so that a GPU/RAM intensive process
+  can't unnecessarily stall I/O.
 * Assorted log message tidyups.
 
 ## 2024-05-17: Ignore bootloader updates for Pi5 on Pi4 - (latest)

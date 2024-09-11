@@ -11,5 +11,5 @@ To reset the bootloader back to factory defaults use [Raspberry Pi Imager](https
 * [Config.txt boot options](https://www.raspberrypi.com/documentation/computers/config_txt.html#boot-options)
 * [Bootloader EEPROM](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-boot-eeprom)
 * [Bootloader configuration](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-bootloader-configuration)
-* [Updating the Compute Module 4 bootloader](https://www.raspberrypi.com/documentation/computers/compute-module.html#cm4bootloader)
+* [Updating the Compute Module 4 bootloader](https://www.raspberrypi.com/documentation/computers/compute-module.html#update-the-compute-module-bootloader)
 * [Releases and release notes](releases.md)
