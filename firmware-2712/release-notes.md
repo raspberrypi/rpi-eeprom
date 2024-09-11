@@ -1,6 +1,6 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
-## 2024-09-11: Promote 2024-10-09 release (default) (automatic update)
+## 2024-09-11: Promote 2024-09-10 release (default) (automatic update)
 
 ## 2024-09-10: Fix lockup on 7" DSI panel clones (latest)
 * Fix lockup regression with some 3rd party 7" DSI panels
