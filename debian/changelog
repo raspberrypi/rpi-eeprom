@@ -1,3 +1,23 @@
+rpi-eeprom (25.0-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * image: Update 2712 release to 2024-07-30
+  * pieeprom-2024-09-05: 2712: 2711: Fix self-update if EEPROM is write-protected (latest)
+  * 2024-09-10: 2712: Fix lockup on 7" DSI panel clones (latest)
+  * pieeprom-2024-10-09: 2712: Promote to default release (automatic update)
+
+  [ andrum993 ]
+  * Update release-notes.md
+
+  [ Nicolai Buchwitz ]
+  * Fix docs link to CM4 bootloader
+
+  [ Serge Schneider ]
+  * Update package description to include Pi 5
+  * d/c: Remove libraspberrypi-bin from Depends
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 11 Sep 2024 14:52:15 +0100
+
 rpi-eeprom (24.0-1) bookworm; urgency=medium
 
   [ Tim Gover ]
