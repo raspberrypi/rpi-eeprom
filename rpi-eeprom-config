@@ -180,7 +180,7 @@ def apply_update(config, eeprom=None, config_src=None):
 
     # If flashrom is used then the command will not return until the EEPROM
     # has been updated so use a larger timeout.
-    shell_cmd(args, timeout=20, echo=True)
+    shell_cmd(args, timeout=60, echo=True)
 
 def edit_config(eeprom=None):
     """
