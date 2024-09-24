@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-09-24: Promote 2024-09-23 release (default) (automatic update)
+
 ## 2024-09-23: SDRAM performance tuning (latest)
 * Allow BANKLOW to be configured by SDRAM_BANKLOW parameter
 * Manufacturing test updates
