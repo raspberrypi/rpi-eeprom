@@ -11,7 +11,7 @@
 ## 2024-08-14 (recovery.bin) -  Add support for OTP metadata (latest)
 * Update to recovery.bin to output metadata about OTP during rpiboot
 
-## 2024-07-30 - USB boot fixes for CM4-S and interop improvments (latest)
+## 2024-07-30 - USB boot fixes for CM4-S and interop improvements (latest)
   * Resolve USB boot regression in 2024-04-17 relase on CM4S
     See https://github.com/raspberrypi/rpi-eeprom/issues/588
   * Improve compatibility for booting from some USB SD card readers
