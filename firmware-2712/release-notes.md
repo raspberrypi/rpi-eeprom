@@ -1,5 +1,28 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-10-10: Add support to override the boot-mode at power on (latest)
+
+* Introduce a new boot-menu feature where pressing SPACE at power on
+  gives the user a one-shot option to select a different boot mode.
+  e.g. Select USB boot if the default SD card is corrupted or unavailable.
+* Display the bootloader network-install UI for longer on a cold boot to make
+  this feature more visible to first time users.
+  To revert to the previous behaviour remove NET_INSTALL_AT_POWER_ON=1
+  from the bootloader config.
+* Support non-UUID HAT mapping
+  Extend the HAT map support to allow matching on product and vendor
+  strings, as well as product ID and version. As a minimum, there must
+  be a product string - if that matches, the other keys are considered.
+  Without a product key, the UUID is compared as before.
+* Remove requirement for GPT ptable array  to be at LBA-2
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/585
+* 2712C1 clock manager improvements to slightly reduce idle power ~50mW saving
+* Adjust SDRAM page-hold and auto-precharge to improve performance.
+  ~2% improvement with Geekbench 6
+* armstubs: 2712: Rebuild with updated max-power throttle and direct stream settings
+  See: https://github.com/raspberrypi/arm-trusted-firmware/commit/fc45bc492dd655f9ea4893a384527341a48cf03d
+* debug: Only display the program_pubkey log if configuring secure-boot
+
 ## 2024-09-24: Promote 2024-09-23 release (default) (automatic update)
 
 ## 2024-09-23: SDRAM performance tuning (latest)
