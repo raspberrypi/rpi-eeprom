@@ -1,6 +1,6 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
-## 2024-10-10: Add support to override the boot-mode at power on (latest)
+## 2024-10-09: Add support to override the boot-mode at power on (latest)
 
 * Introduce a new boot-menu feature where pressing SPACE at power on
   gives the user a one-shot option to select a different boot mode.
