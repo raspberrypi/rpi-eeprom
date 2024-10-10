@@ -1,5 +1,23 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-10-10: Use soft-reset to preseve SDRAM contents after ramoops (latest)
+
+SD card high-speed/low-voltage mode can only be exited by powercycling.
+Pi 4s before rev 1.4 lack the power switch required to do this, so must
+resort to a global reset that turns off many things, including SDRAM.
+
+To ensure correct operation, the bootloader checks that the SD I/O
+voltage is the expected 3.3V, forcing a power cycle if it isn't.
+However, this doesn't take advantage of presence of the dedicated SD
+power switch, always forcing a global reset, a consequence of which can
+be the loss of SDRAM content - including any ramoops dump of the crash
+logs.
+
+Make the bootloader more SD_PWR_ON aware, only triggering a global reset
+if one isn't found.
+
+See: https://github.com/raspberrypi/linux/issues/5298
+
 ## 2024-09-05: Fix self-update if EEPROM is write-protected (latest)
 * arm_dt: Consult the hat_map for all HATs
 * USB boot - ignore RP2 / RP3 MSD device in BOOTSEL mode.
