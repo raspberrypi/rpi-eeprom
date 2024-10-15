@@ -22,6 +22,10 @@
 * armstubs: 2712: Rebuild with updated max-power throttle and direct stream settings
   See: https://github.com/raspberrypi/arm-trusted-firmware/commit/fc45bc492dd655f9ea4893a384527341a48cf03d
 * debug: Only display the program_pubkey log if configuring secure-boot
+* Default to 2GB start for PCI bus addresses on 2711 and 2712
+  This change also constrains the window size to 2GB, so all PCI bus address
+  assignments fall below 4GB, avoiding a potential bug with 32-bit BARs in
+  esoteric bus topologies (e.g. lots of GPUs).
 
 ## 2024-09-24: Promote 2024-09-23 release (default) (automatic update)
 

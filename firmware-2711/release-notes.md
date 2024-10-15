@@ -2,21 +2,33 @@
 
 ## 2024-10-10: Use soft-reset to preseve SDRAM contents after ramoops (latest)
 
-SD card high-speed/low-voltage mode can only be exited by powercycling.
-Pi 4s before rev 1.4 lack the power switch required to do this, so must
-resort to a global reset that turns off many things, including SDRAM.
+* SD card high-speed/low-voltage mode can only be exited by powercycling.
+  Pi 4s before rev 1.4 lack the power switch required to do this, so must
+  resort to a global reset that turns off many things, including SDRAM.
 
-To ensure correct operation, the bootloader checks that the SD I/O
-voltage is the expected 3.3V, forcing a power cycle if it isn't.
-However, this doesn't take advantage of presence of the dedicated SD
-power switch, always forcing a global reset, a consequence of which can
-be the loss of SDRAM content - including any ramoops dump of the crash
-logs.
+  To ensure correct operation, the bootloader checks that the SD I/O
+  voltage is the expected 3.3V, forcing a power cycle if it isn't.
+  However, this doesn't take advantage of presence of the dedicated SD
+  power switch, always forcing a global reset, a consequence of which can
+  be the loss of SDRAM content - including any ramoops dump of the crash
+  logs.
 
-Make the bootloader more SD_PWR_ON aware, only triggering a global reset
-if one isn't found.
-
-See: https://github.com/raspberrypi/linux/issues/5298
+  Make the bootloader more SD_PWR_ON aware, only triggering a global reset
+  if one isn't found.
+  See: https://github.com/raspberrypi/linux/issues/5298
+* Remove requirement for GPT ptable array  to be at LBA-2
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/585
+* Introduce a new boot-menu feature where pressing SPACE at power on
+  gives the user a one-shot option to select a different boot mode.
+  e.g. Select USB boot if the default SD card is corrupted or unavailable.
+* Display the bootloader network-install UI for longer on a cold boot to make
+  this feature more visible to first time users.
+  To revert to the previous behaviour remove NET_INSTALL_AT_POWER_ON=1
+  from the bootloader config.
+* Default to 2GB start for PCI bus addresses on 2711 and 2712
+  This change also constrains the window size to 2GB, so all PCI bus address
+  assignments fall below 4GB, avoiding a potential bug with 32-bit BARs in
+  esoteric bus topologies (e.g. lots of GPUs).
 
 ## 2024-09-05: Fix self-update if EEPROM is write-protected (latest)
 * arm_dt: Consult the hat_map for all HATs
