@@ -1,5 +1,13 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-10-21: Fix PCIe BAR issue for some switches  (latest)
+
+* Fix PCIe BAR setup issue which prevented NVMe boot from working with some PCIe switches
+  See: https://github.com/raspberrypi/firmware/issues/1833
+* Boot-menu improvements
+  Remain in the forced boot mode until the menu is used to select a different
+  boot-mode or reset to the original boot-order.
+
 ## 2024-10-10: Add support to override the boot-mode at power on (latest)
 
 * Introduce a new boot-menu feature where pressing SPACE at power on

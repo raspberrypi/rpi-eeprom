@@ -1,5 +1,11 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-10-21: Fix PCIe BAR issue for some switches  (latest)
+
+* Boot-menu improvements
+  Remain in the forced boot mode until the menu is used to select a different
+  boot-mode or reset to the original boot-order.
+
 ## 2024-10-10: Use soft-reset to preseve SDRAM contents after ramoops (latest)
 
 * SD card high-speed/low-voltage mode can only be exited by powercycling.
