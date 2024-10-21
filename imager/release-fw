@@ -1,0 +1,71 @@
+#!/bin/sh
+
+set -e
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+
+die() {
+   echo "$@" >&2
+   exit 1
+}
+
+cleanup() {
+   if [ -d "${TMP_DIR}" ]; then
+      rm -rf "${TMP_DIR}"
+   fi
+}
+
+trap cleanup EXIT
+TMP_DIR=$(mktemp -d)
+tarball="$1"
+
+do_release() {
+   (
+      branch="${1}"
+      chip_id="${2}"
+
+      if [ "${chip_id}" != "2711" ] && [ "${chip_id}" != "2712" ]; then
+         die "Invalid chip_id \"${branch}\" chip_id must be \"2711\" or \"2712\""
+      fi
+      cd "${TMP_DIR}/${chip_id}"
+
+      fw_out="${script_dir}/../firmware-${chip_id}/${branch}"
+
+      pwd
+      TS="$(strings recovery.bin | grep BUILD_TIMESTAMP | sed 's/.*=//g')"
+      DATE="$(date -u -d@${TS} +%Y-%m-%d)"
+      echo "recovery.bin ${TS} ${DATE}"
+      cp -fv recovery.bin "${fw_out}"
+
+      TS="$(strings pieeprom.bin | grep BUILD_TIMESTAMP | sed 's/.*=//g')"
+      DATE="$(date -u -d@${TS} +%Y-%m-%d)"
+      echo "pieeprom.bin ${TS} ${DATE}"
+      cp -fv pieeprom.bin "${fw_out}/pieeprom-${DATE}.bin"
+   )
+}
+
+usage()
+{
+cat <<EOF
+Usage:
+release-fw: release.tar default|latest 2711 2712
+EOF
+}
+
+[ -f "$tarball" ] || die "Release tarball ${1} not found"
+cd "${TMP_DIR}"
+tar -vxf "${tarball}"
+
+branch="${2}"
+if [ "${branch}" != "default" ] && [ "${branch}" != "latest" ]; then
+   die "Invalid branch \"${branch}\" branch must be \"default\" or \"latest\""
+fi
+
+if [ -n "${3}" ]; then
+   do_release "${branch}" "${3}"
+fi
+
+if [ -n "${4}" ]; then
+   do_release "${branch}" "${4}"
+fi
+
