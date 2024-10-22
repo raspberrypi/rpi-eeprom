@@ -1,3 +1,20 @@
+rpi-eeprom (26.1-1) bookworm; urgency=medium
+
+  [ Harry Horsperg ]
+  * Update release-notes.md
+
+  [ Andrew Scheller ]
+  * Add missing 'sudo' to rpi-eeprom-config's help-text
+
+  [ Tim Gover ]
+  * 2024-10-10: 2712: Add support to override the boot-mode at power on (latest)
+  * 2024-10-10: 2711: Use soft-reset to preseve SDRAM contents after ramoops (latest)
+  * release-notes: Additional updates for the 2024-10-10 release
+  * image: Add release-fw helper script
+  * pieeprom- 2024-10-21: 2712: 2711: Fix PCIe BAR issue for some switches  (latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 22 Oct 2024 17:27:28 +0100
+
 rpi-eeprom (26.0-1) bookworm; urgency=medium
 
   [ Tim Gover ]
