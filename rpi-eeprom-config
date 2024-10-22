@@ -488,7 +488,7 @@ Operating modes:
    rpi-eeprom-config --config boot.conf --out newimage.bin pieeprom.bin
 
    The new image file can be installed via rpi-eeprom-update
-   rpi-eeprom-update -d -f newimage.bin
+   sudo rpi-eeprom-update -d -f newimage.bin
 
 4. Applies a given config file to an EEPROM image and invokes rpi-eeprom-update
    to schedule an update of the bootloader when the system is rebooted.
