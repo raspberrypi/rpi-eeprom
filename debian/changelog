@@ -1,3 +1,15 @@
+rpi-eeprom (26.2-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * firmware: 2712: Archive old releases
+  * firmware: 2711: Archive firmware older than the last automatic update (2023-01-11)
+  * pieeprom-2024-11-05: 2712: NUMA - Add system_heap.max_order=0 when needed (latest)
+
+  [ Andrew Scheller ]
+  * Fix release-notes typo
+
+ -- Serge Schneider <serge@raspberrypi.com>  Tue, 05 Nov 2024 18:35:03 +0000
+
 rpi-eeprom (26.1-1) bookworm; urgency=medium
 
   [ Harry Horsperg ]
