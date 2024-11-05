@@ -3,7 +3,7 @@
 ## 2024-11-05: NUMA - Add system_heap.max_order=0 when needed (latest)
 
 * NUMA - Add system_heap.max_order=0 when needed - configure this
-  setting automtically depedning on whether NUMA is enabled.
+  setting automatically depending on whether NUMA is enabled.
 
 ## 2024-10-21: Fix PCIe BAR issue for some switches  (latest)
 
