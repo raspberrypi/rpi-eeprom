@@ -1,5 +1,10 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-11-05: NUMA - Add system_heap.max_order=0 when needed (latest)
+
+* NUMA - Add system_heap.max_order=0 when needed - configure this
+  setting automtically depedning on whether NUMA is enabled.
+
 ## 2024-10-21: Fix PCIe BAR issue for some switches  (latest)
 
 * Fix PCIe BAR setup issue which prevented NVMe boot from working with some PCIe switches
