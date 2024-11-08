@@ -2,7 +2,7 @@
 
 ## 2024-11-07: recovery.bin - Update default release to latest version (default)
 
-* Update recovery.bin to the most recent version required for CM5
+* Update recovery.bin to the most recent version required for CM5 and Pi500.
   (firmware version 2024-10-21)
 
 ## 2024-11-05: NUMA - Add system_heap.max_order=0 when needed (latest)
