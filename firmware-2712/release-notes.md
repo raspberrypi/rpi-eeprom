@@ -1,5 +1,22 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-11-12: Enable initial_turbo=60 by default (latest)
+
+* net-install: Fix keyboard detection on hubs
+* recovery: Always enable UART debug output on 2712
+* Set POWER_OFF_ON_HALT defaults
+  The default value for POWER_OFF_ON_HALT on CM5 and Pi 500 will be 1.
+  Pi5 defaults to 0 for backwards compatibility.
+* boot-time: Remove unnecessary 1 second delay when configuring DWC2 controller.
+* Enable initial_turbo=60 by default
+  This reduces the time to get load and decompress the kernel.
+* logging: Remove superfluous newline on SDRAM refresh changed messages
+* Fix initial_turbo duration
+  The timeout counter for the previous implementation could run too quickly
+  causing the initial-turbo timeout to end earlier than expected.
+* rp1-fw: Add the mailbox firmware interface, and PIO support that uses it.
+* rp1-fw: Turn off unused 25MHz Ethernet refclk
+
 ## 2024-11-07: recovery.bin - Update default release to latest version (default)
 
 * Update recovery.bin to the most recent version required for CM5 and Pi500.
