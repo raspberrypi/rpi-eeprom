@@ -92,7 +92,11 @@ writeSig() {
    sha256sum "${IMAGE}" | awk '{print $1}' > "${OUTPUT}"
 
    # Include the update-timestamp
-   echo "ts: $(date -u +%s)" >> "${OUTPUT}"
+   if [ -n "${SOURCE_DATE_EPOCH}" ] ; then
+       echo "ts: ${SOURCE_DATE_EPOCH}" >> "${OUTPUT}"
+   else
+       echo "ts: $(date -u +%s)" >> "${OUTPUT}"
+   fi
 
    if [ -n "${KEY}" ]; then
       [ -f "${KEY}" ] || die "RSA private \"${KEY}\" not found"
