@@ -1,3 +1,15 @@
+rpi-eeprom (26.4-1) bookworm; urgency=medium
+
+  [ Rasmus Villemoes ]
+  * rpi-eeprom-digest: honour SOURCE_DATE_EPOCH
+
+  [ Tim Gover ]
+  * 2712: release-notes: Update note for min supported version
+  * pieeprom: 2024-11-12-2712: Enable initial_turbo=60 by default (latest)
+  * imager: gitignore: Ignore the imager build directories
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 13 Nov 2024 10:36:28 +0000
+
 rpi-eeprom (26.3-1) bookworm; urgency=medium
 
   [ Tim Gover ]
