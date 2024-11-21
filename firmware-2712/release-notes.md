@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-11-12: Promote 2024-11-12 to default release (default)
+
+* Promote 2024-11 to the default release and archive older versions.
+
 ## 2024-11-12: Enable initial_turbo=60 by default (latest)
 
 * net-install: Fix keyboard detection on hubs
