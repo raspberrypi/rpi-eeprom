@@ -1,3 +1,10 @@
+rpi-eeprom (26.5-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom: 2024-11-12-2712: Promote 2024-11-12 to default release (default)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Fri, 22 Nov 2024 17:10:51 +0000
+
 rpi-eeprom (26.4-1) bookworm; urgency=medium
 
   [ Rasmus Villemoes ]
