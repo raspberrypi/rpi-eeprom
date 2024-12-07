@@ -1,5 +1,13 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-12-07: Enable banklow (and so NUMA) by default (latest)
+
+* Enable banklow (and so NUMA) by default
+  banklow=1 (2712) and banklow=3 (2711) give the best performance.
+* enable_uart=1 now enables a Linix UART console on the 40-pin header
+  unless a cable is detected on the dedicated boot-uart.
+* Recreate internal bl31 stub from clean git tree to fix dirty commit message.
+
 ## 2024-11-27: rp1fw: Add FIFO_STATE & DRAIN_TX, fix CAN_ADD_PROGRAM (default)
 
 * rp1fw: Add FIFO_STATE & DRAIN_TX, fix CAN_ADD_PROGRAM
