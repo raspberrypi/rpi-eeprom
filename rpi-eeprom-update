@@ -189,6 +189,32 @@ prepareImage()
    fi
 }
 
+runFlashrom()
+{
+   attempts=5
+   freq=16000
+
+   # If flashrom fails then retry at a lower speed.
+   while [ ${attempts} -gt 0 ]; do
+      echo "flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -w ${BOOTFS}/pieeprom.upd"
+      if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -w "${BOOTFS}/pieeprom.upd" >> "${FLASHROM_LOG}"; then
+         echo "Verifying update"
+         if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -v "${BOOTFS}/pieeprom.upd" >> "${FLASHROM_LOG}"; then
+            echo "VERIFY: SUCCESS"
+            return 0
+         else
+            echo "VERIFY: FAIL"
+         fi
+      fi
+      freq=8000
+      attempts=$((attempts - 1))
+      if [ ${attempts} -gt 0 ]; then
+         echo "Failed to update bootloader using flashrom. Retrying."
+      fi
+   done
+   return 1
+}
+
 applyRecoveryUpdate()
 {
    [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || [ -n "${VL805_UPDATE_IMAGE}" ] || die "No update images specified"
@@ -266,8 +292,7 @@ applyRecoveryUpdate()
       echo "a bootloader rescue SD card image which restores the default bootloader image."
       echo
       FLASHROM_LOG="$(mktemp)"
-      echo "flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 -w ${BOOTFS}/pieeprom.upd"
-      if flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 -w "${BOOTFS}/pieeprom.upd" > "${FLASHROM_LOG}"; then
+      if runFlashrom; then
          # Success - remove update files from the boot partition
          removePreviousUpdates
          echo "UPDATE SUCCESSFUL"
