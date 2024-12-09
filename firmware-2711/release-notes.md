@@ -1,5 +1,10 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2024-12-07: Enable banklow (and so NUMA) by default (latest)
+
+* Enable banklow (and so NUMA) by default
+  banklow=1 (2712) and banklow=3 (2711) give the best performance.
+
 ## 2024-10-21: Fix PCIe BAR issue for some switches  (latest)
 
 * Boot-menu improvements
