@@ -1,3 +1,14 @@
+rpi-eeprom (26.6-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * imager: remove unused boot-conf-default.txt files
+  * image: 2712: Update config for POWER_OFF_ON_HALT and NET_INSTALL_AT_POWER_ON
+  * imager: Update 2712 imager release to 2024-11-12
+  * pieeprom-2024-11-27: 2712: rp1fw: Add FIFO_STATE & DRAIN_TX, fix CAN_ADD_PROGRAM (latest)
+  * pieeprom-2024-12-07: 2711: 2712: Enable NUMA by default (latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 09 Dec 2024 18:10:36 +0000
+
 rpi-eeprom (26.5-1) bookworm; urgency=medium
 
   [ Tim Gover ]
