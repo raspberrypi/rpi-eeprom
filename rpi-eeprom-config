@@ -111,7 +111,7 @@ def exit_error(msg):
     sys.stderr.write("ERROR: %s\n" % msg)
     sys.exit(1)
 
-def shell_cmd(args, timeout=5, echo=False):
+def shell_cmd(args, timeout=10, echo=False):
     """
     Executes a shell command waits for completion returning STDOUT. If an
     error occurs then exit and output the subprocess stdout, stderr messages
@@ -180,7 +180,7 @@ def apply_update(config, eeprom=None, config_src=None):
 
     # If flashrom is used then the command will not return until the EEPROM
     # has been updated so use a larger timeout.
-    shell_cmd(args, timeout=60, echo=True)
+    shell_cmd(args, timeout=180, echo=True)
 
 def edit_config(eeprom=None):
     """
