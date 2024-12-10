@@ -80,7 +80,7 @@ body:
   attributes:
     label: Bootloader logs
     description: |
-       If the problem can't be diagnosed from the bootloader HDMI diagnostics screen then we'll normally need to see more detailed logs to diagnose the problem. The bootloader and GPU firmware can be configured to enable log output to the UART pins `14` and `15` on the [40-pin GPIO header](https://www.raspberrypi.com/documentation/computers/os.html#gpio-and-the-40-pin-header)
+       If the problem can't be diagnosed from the bootloader HDMI diagnostics screen then we'll normally need to see more detailed logs to diagnose the problem. The bootloader and GPU firmware can be configured to enable log output to the UART (GPIOs `14` and `15`, pins `8` and `10` on the [40-pin GPIO header](https://www.raspberrypi.com/documentation/computers/os.html#gpio-and-the-40-pin-header, or on the Debug header on a Pi 5)
          * To enable UART logging from the bootloader specify [BOOT_UART=1](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#BOOT_UART) in the EEPROM config
          * To enable UART logging from the `start.elf` GPU firmware stage add [uart_2ndstage=1](https://www.raspberrypi.com/documentation/computers/config_txt.html#uart_2ndstage) to `config.txt`.
          * If you are familiar with using Wireshark then it's also possible to use [NETCONSOLE](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#NETCONSOLE) write logs to UDP packets.
