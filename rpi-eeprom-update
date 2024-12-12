@@ -902,6 +902,11 @@ checkVersion()
 
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
       echo "*** UPDATE AVAILABLE ***"
+      echo ""
+      echo "Run \"sudo rpi-eeprom-update -a\" to install this update now."
+      echo
+      echo "To configure the bootloader update policy run \"sudo ${RPI_EEPROM_UPDATE_CONFIG_TOOL}\""
+      echo ""
       printVersions
       write_status_info "EXIT_UPDATE_REQUIRED"
       exit ${EXIT_UPDATE_REQUIRED}
