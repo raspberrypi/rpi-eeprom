@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-12-15: Add net install to boot menu (latest)
+
+* Add net install to boot menu
+  Press N (or shift).
+* enable_uart: Require enable_uart=1 to enable RP1 UART console
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/643
+
 ## 2024-12-07: Enable banklow (and so NUMA) by default (latest)
 
 * Enable banklow (and so NUMA) by default

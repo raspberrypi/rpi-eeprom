@@ -111,7 +111,7 @@ def exit_error(msg):
     sys.stderr.write("ERROR: %s\n" % msg)
     sys.exit(1)
 
-def shell_cmd(args, timeout=5, echo=False):
+def shell_cmd(args, timeout=10, echo=False):
     """
     Executes a shell command waits for completion returning STDOUT. If an
     error occurs then exit and output the subprocess stdout, stderr messages
@@ -171,8 +171,6 @@ def apply_update(config, eeprom=None, config_src=None):
     sys.stdout.write("Updating bootloader EEPROM\n image: %s\nconfig_src: %s\nconfig: %s\n%s\n%s\n%s\n" %
                      (eeprom_image, config_src, config, '#' * 80, config_str, '#' * 80))
 
-    sys.stdout.write("\n*** To cancel this update run 'sudo rpi-eeprom-update -r' ***\n\n")
-
     # Ignore APT package checksums so that this doesn't fail when used
     # with EEPROMs with configs delivered outside of APT.
     # The checksums are really just a safety check for automatic updates.
@@ -180,7 +178,7 @@ def apply_update(config, eeprom=None, config_src=None):
 
     # If flashrom is used then the command will not return until the EEPROM
     # has been updated so use a larger timeout.
-    shell_cmd(args, timeout=60, echo=True)
+    shell_cmd(args, timeout=180, echo=True)
 
 def edit_config(eeprom=None):
     """
