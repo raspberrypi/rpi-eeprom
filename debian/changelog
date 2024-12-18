@@ -1,3 +1,17 @@
+rpi-eeprom (26.7-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Add retries and verification to flashrom stage
+  * rpi-eeprom-config: Increase default timeouts
+  * rpi-eeprom-config: Remove misleading message about cancelling updates
+  * rpi-eeprom-update: Update user prompt to indicate how to install update immediately
+  * pieeprom-2024-12-15: 2712: Add net install to boot menu (latest)
+
+  [ Phil Elwell ]
+  * bug_report template: Be more precise about the UART pins
+
+ -- Serge Schneider <serge@raspberrypi.com>  Wed, 18 Dec 2024 09:03:39 +0000
+
 rpi-eeprom (26.6-1) bookworm; urgency=medium
 
   [ Tim Gover ]
