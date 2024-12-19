@@ -1,5 +1,19 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2024-12-19: Disable fan PWM before shutdown (latest)
+
+* Disable fan PWM before shutdown
+  Drive the RP1 fan PWM GPIO high before entering the VPU
+  sleep (POWER_OFF_ON_HALT=0) to stop the fan spinning.
+* Disable fan PWM GPIO between RP1 init and fan probe
+  Drive fan PWM GPIO high during early boot to disable the fan
+  until it is probed during the device-tree setup stage.
+  This stops the spinning at max rpm during network-install.
+* arm_dt: enable_uart defaults to 0 on 2712
+  The default value of enable_uart on 2712 is 0, regardless of the
+  presence of the debug UART cable, so guarantee that the default is
+  always set correctly.
+
 ## 2024-12-15: Add net install to boot menu (latest)
 
 * Add net install to boot menu
