@@ -1,5 +1,22 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-06: Stop the fan after after fan-probe (latest)
+
+* Stop the fan after after fan-probe
+  After the fan-probe has completed drive the fan PWM GPIO
+  to high if a fan was detected and let the OS take over.
+* Add SD_QUIRKS for hardware bringup / workarounds
+  Add a new SD_QUIRKS flags property which can be used to
+  disable high-speed mode (bit 0). Other bits are reserved for
+  future use.
+* Change uart_2ndstage default to 1 on Pi5
+  Change the default to 1 because this gives useful diagnostics
+  for device-tree loading with minimal overhead. Set uart_2ndstage=0
+  or BOOT_UART=0 to disable this.
+* Move M.2 HAT+ detection to early boot.
+  Initialse M.2 HAT+ detection before DDR init to give NVMe
+  drive firmware more time to boot.
+
 ## 2024-12-19: Disable fan PWM before shutdown (latest)
 
 * Disable fan PWM before shutdown
