@@ -1,5 +1,10 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-07: Fixup M.2 HAT+ detection (latest)
+
+* Fix a potential timing issue introduced in the 2025-01-06
+  release when enabling PCIE_PWR when booting from SD/USB.
+
 ## 2025-01-06: Stop the fan after after fan-probe (latest)
 
 * Stop the fan after after fan-probe
