@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-08: Update SDRAM refresh timings for BCM2712D0 products (latest)
+
+* Update SDRAM timings for BCM2712D0 products.
+
 ## 2025-01-07: Fixup M.2 HAT+ detection (latest)
 
 * Fix a potential timing issue introduced in the 2025-01-06
