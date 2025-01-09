@@ -1,5 +1,45 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-08: Update SDRAM refresh timings for BCM2712D0 products (latest)
+
+* Update SDRAM timings for BCM2712D0 products.
+
+## 2025-01-07: Fixup M.2 HAT+ detection (latest)
+
+* Fix a potential timing issue introduced in the 2025-01-06
+  release when enabling PCIE_PWR when booting from SD/USB.
+
+## 2025-01-06: Stop the fan after after fan-probe (latest)
+
+* Stop the fan after after fan-probe
+  After the fan-probe has completed drive the fan PWM GPIO
+  to high if a fan was detected and let the OS take over.
+* Add SD_QUIRKS for hardware bringup / workarounds
+  Add a new SD_QUIRKS flags property which can be used to
+  disable high-speed mode (bit 0). Other bits are reserved for
+  future use.
+* Change uart_2ndstage default to 1 on Pi5
+  Change the default to 1 because this gives useful diagnostics
+  for device-tree loading with minimal overhead. Set uart_2ndstage=0
+  or BOOT_UART=0 to disable this.
+* Move M.2 HAT+ detection to early boot.
+  Initialse M.2 HAT+ detection before DDR init to give NVMe
+  drive firmware more time to boot.
+
+## 2024-12-19: Disable fan PWM before shutdown (latest)
+
+* Disable fan PWM before shutdown
+  Drive the RP1 fan PWM GPIO high before entering the VPU
+  sleep (POWER_OFF_ON_HALT=0) to stop the fan spinning.
+* Disable fan PWM GPIO between RP1 init and fan probe
+  Drive fan PWM GPIO high during early boot to disable the fan
+  until it is probed during the device-tree setup stage.
+  This stops the spinning at max rpm during network-install.
+* arm_dt: enable_uart defaults to 0 on 2712
+  The default value of enable_uart on 2712 is 0, regardless of the
+  presence of the debug UART cable, so guarantee that the default is
+  always set correctly.
+
 ## 2024-12-15: Add net install to boot menu (latest)
 
 * Add net install to boot menu
