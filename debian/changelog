@@ -1,3 +1,13 @@
+rpi-eeprom (26.8-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2024-12-19: 2712: Disable PWM fan at shutdown (POWER_OFF_ON_HALT=0) (latest)
+  * pieeprom-2025-01-06: 2712: Stop the fan after fan-probe (latest)
+  * pieeprom-2025-01-07: 2712: Fixup M.2 HAT+ detection (latest)
+  * pieeprom-2025-01-08: 2712: Update SDRAM timings for BCM2712D0 products (latest)
+
+ -- Serge Schneider <serge@raspberrypi.com>  Thu, 09 Jan 2025 08:45:31 +0000
+
 rpi-eeprom (26.7-1) bookworm; urgency=medium
 
   [ Tim Gover ]
