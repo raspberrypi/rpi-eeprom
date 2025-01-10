@@ -1,0 +1,26 @@
+include:
+  - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
+
+default:
+  tags:
+    - salsa-amd64
+
+variables:
+  SALSA_CI_ARM_RUNNER_TAG: salsa-arm64
+  SALSA_CI_DISABLE_BUILD_PACKAGE_ARM64: 0
+  SALSA_CI_DISABLE_BUILD_PACKAGE_ARMHF: 0
+  SALSA_CI_DISABLE_VERSION_BUMP: 1
+  # These require priviledged docker containers to work
+  SALSA_CI_DISABLE_AUTOPKGTEST: 1
+  SALSA_CI_DISABLE_PIUPARTS: 1
+  SALSA_CI_DISABLE_REPROTEST: 1
+  SALSA_CI_IMAGES_LINTIAN: ${SALSA_CI_IMAGES}/lintian:bookworm
+  # Work around lintian bug in bookworm
+  # https://lists.debian.org/debian-lint-maint/2024/02/msg00039.html
+  SALSA_CI_LINTIAN_SUPPRESS_TAGS: 'bad-distribution-in-changes-file'
+
+extract-source:
+  variables:
+    GIT_DEPTH: 0
+  before_script:
+    -  git fetch origin master:master
