@@ -7,20 +7,20 @@ tools/rpi-sign-bootcode usr/bin/
 
 debian/default/ etc/
 
-firmware-2711/default lib/firmware/raspberrypi/bootloader-2711/
-firmware-2711/latest lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/default usr/lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/latest usr/lib/firmware/raspberrypi/bootloader-2711/
 
-firmware-2711/critical lib/firmware/raspberrypi/bootloader-2711/
-firmware-2711/stable lib/firmware/raspberrypi/bootloader-2711/
-firmware-2711/beta lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/critical usr/lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/stable usr/lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/beta usr/lib/firmware/raspberrypi/bootloader-2711/
 
-firmware-2711/release-notes.md lib/firmware/raspberrypi/bootloader-2711/
+firmware-2711/release-notes.md usr/lib/firmware/raspberrypi/bootloader-2711/
 
-firmware-2712/default lib/firmware/raspberrypi/bootloader-2712/
-firmware-2712/latest lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/default usr/lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/latest usr/lib/firmware/raspberrypi/bootloader-2712/
 
-firmware-2712/critical lib/firmware/raspberrypi/bootloader-2712/
-firmware-2712/stable lib/firmware/raspberrypi/bootloader-2712/
-firmware-2712/beta lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/critical usr/lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/stable usr/lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/beta usr/lib/firmware/raspberrypi/bootloader-2712/
 
-firmware-2712/release-notes.md lib/firmware/raspberrypi/bootloader-2712/
+firmware-2712/release-notes.md usr/lib/firmware/raspberrypi/bootloader-2712/
