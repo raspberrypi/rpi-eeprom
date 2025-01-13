@@ -4,7 +4,7 @@
 
 * Improved SDRAM refresh timings for Pi5 - 16GB
 * Add an option to wait for the power button to be pressed before booting.
-  If POWER_OFF_ON_HALT=1 and WAIT_FOR_POWER_BTN=1 in the bootloader
+  If POWER_OFF_ON_HALT=1 and WAIT_FOR_POWER_BUTTON=1 in the bootloader
   config then the bootloader will wait for either the power button
   to be pressed or an RTC alarm before booting. The wait state
   switches the PMIC to STANDBY mode which is the lowest possible
