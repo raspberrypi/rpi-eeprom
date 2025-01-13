@@ -1,3 +1,12 @@
+rpi-eeprom (26.8-2) bookworm; urgency=medium
+
+  * Move files from /lib to /usr/lib
+  * Bump standards version to 4.6.2
+  * Bump compat version to 12
+  * Update lintian-overrides
+
+ -- Serge Schneider <serge@raspberrypi.com>  Mon, 13 Jan 2025 14:56:01 +0000
+
 rpi-eeprom (26.8-1) bookworm; urgency=medium
 
   [ Tim Gover ]
