@@ -1,5 +1,19 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-14: Add set_reboot_order API (latest)
+
+* Add set_reboot_order API and config.txt properties
+  If set_reboot_order is defined in config.txt or set via vcmailbox
+  then this will override the bootloader config BOOT_ORDER property
+  on the next reboot. The parameter is stored in a reset safe register
+  and is cleared by the bootloader after reading it.
+  Typically, the config.txt value only be used via rpiboot to
+  override the boot-order on the next reboot. Otherwise, it should
+  reside in a conditional section so that the boot order is not
+  overridden on every reboot.
+  Example, test network boot
+  sudo vcmailbox 0x0003808b 4 4 0xf4612; sudo reboot
+
 ## 2025-01-13: Improved SDRAM refresh timings for Pi5 16GB (latest)
 
 * Improved SDRAM refresh timings for Pi5 - 16GB
