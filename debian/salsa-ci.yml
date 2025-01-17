@@ -1,10 +1,6 @@
 include:
   - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
 
-default:
-  tags:
-    - salsa-amd64
-
 variables:
   SALSA_CI_ARM_RUNNER_TAG: salsa-arm64
   SALSA_CI_DISABLE_BUILD_PACKAGE_ARM64: 0
