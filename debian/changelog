@@ -1,3 +1,18 @@
+rpi-eeprom (26.9-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2025-01-13: 2712: Improved SDRAM refresh timings for Pi5 -
+    16GB (latest)
+  * pieeprom-2025-01-14: 2712: Add set_reboot_order API (latest)
+
+  [ Serge Schneider ]
+  * Add salsa-ci.yml
+
+  [ andrum993 ]
+  * 2712 release-notes.md: correct name of new config parameter
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 17 Jan 2025 16:05:43 +0000
+
 rpi-eeprom (26.8-2) bookworm; urgency=medium
 
   * Move files from /lib to /usr/lib
