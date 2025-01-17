@@ -19,5 +19,6 @@ variables:
 extract-source:
   variables:
     GIT_DEPTH: 0
+    GIT_STRATEGY: clone
   before_script:
     -  git fetch origin master:master
