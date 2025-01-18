@@ -1,5 +1,5 @@
 
-FIRMWARE_ROOT=/lib/firmware/raspberrypi/bootloader
+FIRMWARE_ROOT=/usr/lib/firmware/raspberrypi/bootloader
 FIRMWARE_RELEASE_STATUS="default"
 FIRMWARE_BACKUP_DIR="/var/lib/raspberrypi/bootloader/backup"
 EEPROM_CONFIG_HOOK=

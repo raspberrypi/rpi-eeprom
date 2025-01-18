@@ -14,6 +14,8 @@ LOCAL_MODE=0
 if [ -n "$FIRMWARE_ROOT" ]; then
    # Provided by environment
    true
+elif [ -d /usr/lib/firmware/raspberrypi/bootloader ] || [ -d /usr/lib/firmware/raspberrypi/bootloader-2711 ] || [ -d /usr/lib/firmware/raspberrypi/bootloader-2712 ]; then
+   FIRMWARE_ROOT=/usr/lib/firmware/raspberrypi/bootloader
 elif [ -d /lib/firmware/raspberrypi/bootloader ] || [ -d /lib/firmware/raspberrypi/bootloader-2711 ] || [ -d /lib/firmware/raspberrypi/bootloader-2712 ]; then
    FIRMWARE_ROOT=/lib/firmware/raspberrypi/bootloader
 else
