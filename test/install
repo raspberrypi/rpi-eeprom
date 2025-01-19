@@ -20,14 +20,14 @@ CONFIG="/etc/default/rpi-eeprom-update"
 [ "$(id -u)" = "0" ] || die "$0 Must be run as root - try 'sudo $0 [-b]'"
 
 # Clear out the old firmware
-rm -rf /lib/firmware/raspberrypi/bootloader
-rm -rf /lib/firmware/raspberrypi/bootloader-2711
-rm -rf /lib/firmware/raspberrypi/bootloader-2712
+rm -rf /usr/lib/firmware/raspberrypi/bootloader
+rm -rf /usr/lib/firmware/raspberrypi/bootloader-2711
+rm -rf /usr/lib/firmware/raspberrypi/bootloader-2712
 
-mkdir -p /lib/firmware/raspberrypi/bootloader-2711
-rsync -alv "${FIRMWARE_DIR}-2711"/* /lib/firmware/raspberrypi/bootloader-2711 || echo "Failed"
-mkdir -p /lib/firmware/raspberrypi/bootloader-2712
-rsync -alv "${FIRMWARE_DIR}-2712"/* /lib/firmware/raspberrypi/bootloader-2712 || echo "Failed"
+mkdir -p /usr/lib/firmware/raspberrypi/bootloader-2711
+rsync -alv "${FIRMWARE_DIR}-2711"/* /usr/lib/firmware/raspberrypi/bootloader-2711 || echo "Failed"
+mkdir -p /usr/lib/firmware/raspberrypi/bootloader-2712
+rsync -alv "${FIRMWARE_DIR}-2712"/* /usr/lib/firmware/raspberrypi/bootloader-2712 || echo "Failed"
 
 cp -fv "${script_dir}/../rpi-eeprom-config" /usr/bin
 cp -fv "${script_dir}/../rpi-eeprom-digest" /usr/bin
