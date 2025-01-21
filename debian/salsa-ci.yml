@@ -1,5 +1,6 @@
 include:
   - https://salsa.debian.org/salsa-ci-team/pipeline/raw/master/recipes/debian.yml
+  - $CI_SERVER_URL/$CI_PROJECT_NAMESPACE/salsa-ci/-/raw/pios/rpi.yml
 
 variables:
   SALSA_CI_ARM_RUNNER_TAG: salsa-arm64
@@ -22,3 +23,6 @@ extract-source:
     GIT_STRATEGY: clone
   before_script:
     - git fetch origin master:master
+
+publish to apt:
+  extends: .publish-public
