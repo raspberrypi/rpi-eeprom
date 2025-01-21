@@ -21,4 +21,4 @@ extract-source:
     GIT_DEPTH: 0
     GIT_STRATEGY: clone
   before_script:
-    -  git fetch origin master:master
+    - git fetch origin master:master
