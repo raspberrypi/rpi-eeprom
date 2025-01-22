@@ -1,5 +1,15 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-22: Add DT /chosen property signed-boot boot.img hash (latest)
+
+* Add DT /chosen property signed-boot boot.img hash
+  Make the sha256 hash of the boot.img file available via
+  device-tree /proc/device-tree/chosen/bootloader/boot_img_sha256 if
+  signed boot is enabled.
+* filesystem: GPT autoboot/reboot partition number fixes for Pi4 and older
+* Fix problems when setting arm_freq_min=arm_freq and display clocks
+  if performance governor is not enabled.
+
 ## 2025-01-14: Add set_reboot_order API (latest)
 
 * Add set_reboot_order API and config.txt properties
