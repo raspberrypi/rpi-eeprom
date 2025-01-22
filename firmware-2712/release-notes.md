@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-22: Promote 2025-01-22 to default release (default)
+
 ## 2025-01-22: Add DT /chosen property signed-boot boot.img hash (latest)
 
 * Add DT /chosen property signed-boot boot.img hash
