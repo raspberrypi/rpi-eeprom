@@ -1,3 +1,21 @@
+rpi-eeprom (27.0-1) bookworm; urgency=medium
+
+  [ Serge Schneider ]
+  * salsa-ci: remove default runner tag
+  * salsa-ci: enable aptly
+  * salsa-ci: set GIT_STRATEGY to 'clone'
+  * salsa-ci: fix minor typo
+  * salsa-ci: Add rpi jobs
+
+  [ Tim Gover ]
+  * scripts: Failover to /usr/lib before /lib if FIRMWARE_ROOT is not set
+  * test: Update test script
+  * pieeprom-2025-01-22: 2712: Add DT property for hash of signed boot
+    image (latest)
+  * 2025-01-22: 2712: Promote 2025-01-22 to default release (default)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Wed, 22 Jan 2025 10:28:39 +0000
+
 rpi-eeprom (26.9-1) bookworm; urgency=medium
 
   [ Tim Gover ]
