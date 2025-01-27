@@ -1,5 +1,27 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-01-27: Walk the partition table if the requested partition is not bootable (latest)
+
+* Walk the partition table if the requested partition is not bootable
+  Previously, if the specified boot partition was not bootable the
+  bootloader would stop and advance to the next BOOT_ORDER. If the
+  new PARTITION_WALK option is set to 1 the bootloader will now
+  check each partition in turn starting from the specified partition
+  before advancing the BOOT_ORDER.
+  This feature is intended for use with A/B systems to handle the case
+  where autoboot.txt is missing / corrupted. This change enables
+  the system to failover to the next available bootable partition.
+  The autoboot.txt file is not scanned during the partition-walk
+  phase i.e. there is no recursive processing of autoboot.txt files.
+  This option is only supported on physical block devices
+  (SD, NVMe, USB) and not RAMDISK. USB assumes a single high speed
+  device, partition walks on multiple USB devices is not recommended
+  and may cause timeouts.
+* Improve keyboard handling in boot menu
+  Try and make it more likely that we have enough time to perform key
+  detection.
+  Ignore mice, which were being enumerated and slowing things down.
+
 ## 2025-01-22: Promote 2025-01-22 to default release (default)
 
 ## 2025-01-22: Add DT /chosen property signed-boot boot.img hash (latest)
