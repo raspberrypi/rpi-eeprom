@@ -1,5 +1,40 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-02-11: recovery: Walk partitions to delete recovery.bin (latest)
+
+* recovery: Walk partitions to delete recovery.bin
+  Previously, recovery.bin would fail to delete itself
+  if the bootrom loaded recovery.bin where there are multiple FAT
+  partitions and the first partition does not contain recovery.bin
+  Update the rename code to walk the partition table to find
+  the recovery.bin file to delete.
+* Enable overriding of high partition numbers
+  Previously, the PARTITION=N bootloader config setting would only
+  be used at power on reset or if the partition number passed to
+  reboot was zero.
+  Change the behaviour so that the bootloader config PARTITION
+  property can override the reboot partition number if the reboot
+  parameter is > 31.
+* Walk the partition table if the requested partition is not bootable
+  Previously, if the specified boot partition was not bootable the
+  bootloader would stop and advance to the next BOOT_ORDER. If the
+  new PARTITION_WALK option is set to 1 the bootloader will now
+  check each partition in turn starting from the specified partition
+  before advancing the BOOT_ORDER.
+  This feature is intended for use with A/B systems to handle the case
+  where autoboot.txt is missing / corrupted. This change enables
+  the system to failover to the next available bootable partition.
+  The autoboot.txt file is not scanned during the partition-walk
+  phase i.e. there is no recursive processing of autoboot.txt files.
+  This option is only supported on physical block devices
+  (SD, NVMe, USB) and not RAMDISK. USB assumes a single high speed
+  device, partition walks on multiple USB devices is not recommended
+  and may cause timeouts.
+* Improve keyboard handling in boot menu
+  Try and make it more likely that we have enough time to perform key
+  detection.
+  Ignore mice, which were being enumerated and slowing things down.
+
 ## 2024-12-07: Enable banklow (and so NUMA) by default (latest)
 
 * Enable banklow (and so NUMA) by default
