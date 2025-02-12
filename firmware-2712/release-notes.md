@@ -1,5 +1,9 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-02-12: Fixup change to disable 3.7V PMIC output on CM5 no-wifi (latest)
+
+* Fixup change to disable 3.7V PMIC output on CM5 no-wifi
+
 ## 2025-02-11: CM5 no-Wifi stability improvements (latest)
 
 * recovery: Walk partitions to delete recovery.bin
