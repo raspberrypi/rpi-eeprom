@@ -1,3 +1,19 @@
+rpi-eeprom (27.1-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * imager: 2712: Move imager release to 2025-01-22
+  * pieeprom-2025-01-27: 2712: Add PARTITION_WALK option (latest)
+  * pieeprom-2025-02-11: 2712: CM5 no-wifi stability improvements (latest)
+  * pieeprom-2025-02-11: 2711: Walk partitions to delete recovery.bin
+    (latest)
+  * pieeprom-2025-02-12: 2712: Fixup change to disable 3.7V WiFi power on
+    CM5 no-wifi (latest)
+
+  [ Serge Schneider ]
+  * salsa-ci: minimise yaml file and set variables on group level instead
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 14 Feb 2025 08:12:22 +0000
+
 rpi-eeprom (27.0-1) bookworm; urgency=medium
 
   [ Serge Schneider ]
