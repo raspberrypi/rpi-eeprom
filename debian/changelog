@@ -1,3 +1,9 @@
+rpi-eeprom (27.3-1) bookworm; urgency=medium
+
+  * gpb: Use pios/bookworm branch
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 17 Feb 2025 19:08:41 +0000
+
 rpi-eeprom (27.2-1) bookworm; urgency=medium
 
   * pieeprom-2025-02-11-2711: Promote to default release
