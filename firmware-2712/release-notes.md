@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-02-17: Promote 2025-02-12 to the default release (default)
+
 ## 2025-02-12: Fixup change to disable 3.7V PMIC output on CM5 no-wifi (latest)
 
 * Fixup change to disable 3.7V PMIC output on CM5 no-wifi
