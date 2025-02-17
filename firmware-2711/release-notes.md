@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-02-17: Promote 2025-02-11 to default release (default)
+
 ## 2025-02-11: recovery: Walk partitions to delete recovery.bin (latest)
 
 * recovery: Walk partitions to delete recovery.bin
