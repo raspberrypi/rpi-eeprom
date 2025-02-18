@@ -6,8 +6,12 @@ Files: *
 Copyright: 2019, Raspberry Pi (Trading) Ltd.
 License: BSD-3
 
-Files: firmware/*
+Files: firmware-2711/*
 Copyright: 2019, Raspberry Pi (Trading) Ltd.
+License: custom
+
+Files: firmware-2712/*
+Copyright: 2024, Raspberry Pi (Trading) Ltd.
 License: custom
 
 License: BSD-3
