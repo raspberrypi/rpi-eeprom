@@ -1,3 +1,11 @@
+rpi-eeprom (27.4-1) bookworm; urgency=medium
+
+  * pieeprom-2025-02-12: 2712: Promote to default release
+  * license: Update wildcards for firmware
+  * firmware: 2712: Fixup commit to promote 2025-02-12 release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 18 Feb 2025 09:42:04 +0000
+
 rpi-eeprom (27.3-1) bookworm; urgency=medium
 
   * gpb: Use pios/bookworm branch
