@@ -59,11 +59,12 @@ Options:
    -k Optional RSA private key.
 
 RSA signing
-If a private key in PEM format is supplied then the RSA signature of the
-sha256 digest is included in the .sig file. Currently, the bootloader only
-supports sha256 digests signed with a 2048bit RSA key.
-The bootloader only verifies RSA signatures in signed boot mode
-and only for the EEPROM config file and the signed image.
+If a private key in PEM format or a pkcs#11 URI is supplied then the
+RSA signature of the sha256 digest is included in the .sig
+file. Currently, the bootloader only supports sha256 digests signed
+with a 2048bit RSA key.  The bootloader only verifies RSA signatures
+in signed boot mode and only for the EEPROM config file and the signed
+image.
 
 Examples:
 
@@ -77,6 +78,9 @@ rpi-eeprom-digest -k private.pem -i boot.img -o boot.sig
 # Generate RSA signature for the EEPROM config file
 # As used by update-pieeprom.sh in usbboot/secure-boot-recovery
 rpi-eeprom-digest -k private.pem -i bootconf.txt  -o bootconf.sig
+
+# Similarly, but specifying the key with a PKCS#11 URI
+rpi-eeprom-digest -k pkcs11:token=deadbeef;object=bl-key;type=private;pin-value=1234 -i bootconf.txt  -o bootconf.sig
 
 # To verify the signature of an existing .sig file using the public key.
 # N.B The key file must be the PUBLIC key in PEM format.
@@ -99,8 +103,7 @@ writeSig() {
    fi
 
    if [ -n "${KEY}" ]; then
-      [ -f "${KEY}" ] || die "RSA private \"${KEY}\" not found"
-      "${OPENSSL}" dgst -sign "${KEY}" -keyform PEM -sha256 -out "${SIG_TMP}" "${IMAGE}"
+      "${OPENSSL}" dgst ${ENGINE_OPTS} -sign "${KEY}" -sha256 -out "${SIG_TMP}" "${IMAGE}"
       echo "rsa2048: $(xxd -c 4096 -p < "${SIG_TMP}")" >> "${OUTPUT}"
    fi
 }
@@ -113,7 +116,7 @@ verifySig() {
    [ -n "${sig_hex}" ] || die "No RSA signature in ${sig_file}"
 
    echo ${sig_hex} | xxd -c 4096 -p -r > "${TMP_DIR}/sig.bin"
-   "${OPENSSL}" dgst -verify "${KEY}" -signature "${TMP_DIR}/sig.bin" "${IMAGE}" || die "${IMAGE} not verified"
+   "${OPENSSL}" dgst ${ENGINE_OPTS} -verify "${KEY}" -signature "${TMP_DIR}/sig.bin" "${IMAGE}" || die "${IMAGE} not verified"
 }
 
 OUTPUT=""
@@ -142,6 +145,18 @@ checkDependencies
 
 [ -n "${IMAGE}" ] || usage
 [ -f "${IMAGE}" ] || die "Source image \"${IMAGE}\" not found"
+[ "${VERIFY}" != 1 ] || [ -n "${KEY}" ] || die "Option -v also requires passing public key via -k"
+
+if [ -n "${KEY}" ] ; then
+    if [ -f "${KEY}" ] ; then
+        ENGINE_OPTS=
+    elif echo "${KEY}" | grep -q "^pkcs11:" ; then
+        ENGINE_OPTS="-engine pkcs11 -keyform engine"
+    else
+        die "RSA key \"${KEY}\" not found"
+    fi
+fi
+
 if [ "${VERIFY}" = 1 ]; then
    verifySig "${SIGNATURE}"
 else
