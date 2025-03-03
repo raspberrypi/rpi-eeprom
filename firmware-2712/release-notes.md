@@ -1,5 +1,16 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-03-03: Fix bootloader pull configuration on 2712D0 (latest)
+
+* Fix pull configuration on 2712D0
+  2712D0 uses a horrendously sparse set of pad control registers. Make
+  the pull-setting code sufficiently complex to cope.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/672
+* Disable UARTA for CM5s without WiFi
+  Just as CM5s without WiFI don't need the SDIO interface, the Bluetooth
+  UART is unconnected. Disable the DT node to avoid kernel warnings and
+  save some cycles.
+
 ## 2025-02-17: Promote 2025-02-12 to the default release (default)
 
 ## 2025-02-12: Fixup change to disable 3.7V PMIC output on CM5 no-wifi (latest)
