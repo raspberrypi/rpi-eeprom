@@ -1,5 +1,23 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-03-10: Add [boot_partition] filter plus SDRAM init fixes (latest)
+
+* Update SDRAM init timings to intermittent 8-flash SDRAM init errors
+  on some boards.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/67
+* config: Fix missing initialisation of selected_expr to 1 in config.txt
+  Without an [all] section the new expression filter might default to
+  false. This impacts the bootloader early parsing of config.txt
+  for things like boot_ramdisk rather than the later config.txt pass
+  for device-tree parsing.
+* config_loader: Add support [boot_partition=N] as an expression filter
+  The boot_partition tests whether the partition number N matches
+  the number that the system is booting from. This expression is
+  only supported in config.txt and is designed to make it easier
+  to have common boot.img ramdisks in an A/B system where the
+  conditional loads a different cmdline.txt file depending on
+  which partition boot.img is loaded from.
+
 ## 2025-03-03: Fix bootloader pull configuration on 2712D0 (latest)
 
 * Fix pull configuration on 2712D0
