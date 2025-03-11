@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-03-10: Promote 2025-03-10 release to default (default)
+
 ## 2025-03-10: Add [boot_partition] filter plus SDRAM init fixes (latest)
 
 * Update SDRAM init timings to intermittent 8-flash SDRAM init errors
