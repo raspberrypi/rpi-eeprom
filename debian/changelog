@@ -1,3 +1,17 @@
+rpi-eeprom (27.5-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * image: Update 2711 plus 2712 images and enable boot-menu on 2711
+  * pieeprom-2025-03-03: 2712: Fix bootloader pull configuration on
+    BCM2712D0 (latest)
+  * pieeprom-2025-03-10: 2712: Add [boot_partition] filter plus SDRAM init
+    fixes (latest)
+
+  [ Rasmus Villemoes ]
+  * rpi-eeprom-digest: support specifying keys via PKCS#11 URI
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 11 Mar 2025 08:56:32 +0000
+
 rpi-eeprom (27.4-1) bookworm; urgency=medium
 
   * pieeprom-2025-02-12: 2712: Promote to default release
