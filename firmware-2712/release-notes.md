@@ -1,5 +1,17 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-03-19: Log the fan speed at boot (latest)
+
+* Log the fan speed at boot
+  Record the fan RPM (and the maximum seen) during boot, so that it is
+  accessible using "sudo vclog -m".
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/678
+* Add current_supply to HAT+ support
+  Refactor the HAT library to make it more self-contained, and combine
+  the I2C address detection and the reading of the EEPROM contents.
+  Use it to allow the earlier boot stages to check for a current_supply
+  setting in the EEPROM of a normal (non-stackable) HAT+.
+
 ## 2025-03-10: Promote 2025-03-10 release to default (default)
 
 ## 2025-03-10: Add [boot_partition] filter plus SDRAM init fixes (latest)
