@@ -40,8 +40,11 @@ body:
     multiple: true
     options:
       - Raspberry Pi 5
+      - Raspberry Pi 500
       - Raspberry Pi 4 Mod. B
       - Raspberry Pi 400
+      - Raspberry Pi CM5
+      - Raspberry Pi CM5 Lite
       - Raspberry Pi CM4
       - Raspberry Pi CM4 Lite
       - Raspberry Pi CM4-S
