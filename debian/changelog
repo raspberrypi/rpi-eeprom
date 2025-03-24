@@ -1,3 +1,15 @@
+rpi-eeprom (27.6-1) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2025-03-10-12: Promote 2025-10-03 to the default release
+  * firmware: 2712: Archive old '2712' 'latest' firmware
+  * pieeprom-2025-03-19: 2712: Log the fan speed at boot (latest)
+
+  [ Nicolai Buchwitz ]
+  * bug_report template: Add missing CM5 + pi500
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 24 Mar 2025 13:11:55 +0000
+
 rpi-eeprom (27.5-1) bookworm; urgency=medium
 
   [ Tim Gover ]
