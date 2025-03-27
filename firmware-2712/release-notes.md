@@ -1,5 +1,14 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-03-27: os_check: cm5: Check for CM5 specific dtbs (latest)
+
+* os_check: cm5: Check for CM5 specific dtbs
+  Check for BCM2712 support in bcm2712-rpi-cm5-cm5io.dtb
+  or bcm2712-rpi-cm5l-cm5io.dtb on CM5 instead of bcm2712-rpi-5-b.dtb.
+  This avoids needing to put os_check=1 or specifying device_tree
+  in config.txt in minimal images for CM5.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/682
+
 ## 2025-03-19: Log the fan speed at boot (latest)
 
 * Log the fan speed at boot
