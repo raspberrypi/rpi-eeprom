@@ -6,8 +6,12 @@
 # a hard dependency on OpenSSL.
 
 set -e
+set -u
 
 OPENSSL=${OPENSSL:-openssl}
+KEY=""
+SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-""}
+HSM_WRAPPER=""
 
 die() {
    echo "$@" >&2
@@ -46,29 +50,30 @@ RSA signature. Typically this tool is used by rpi-eeprom-update to
 generate a hash to guard against file-system corruption for EEPROM updates
 OR for signing OS images (boot.img) for secure-boot.
 
-This tool CANNOT be used directly to sign an bootloader EEPROM image
-for secure-boot because the signed data is bootloader configuration file
+This tool CANNOT be used directly to sign a bootloader EEPROM image
+for secure-boot because the signed data is the bootloader configuration file
 rather than the entire flash image.
-To create signed bootloader images please see
+To create signed bootloader images, please see
 https://github.com/raspberrypi/usbboot/tree/master/secure-boot-recovery/README.md
 
 
 Options:
-   -i The source image e.g. boot.img
-   -o The name of the digest/signature file.
-   -k Optional RSA private key.
+   -i The source image, e.g., boot.img
+   -o The name of the digest/signature file
+   -k Optional RSA private key
+   -H The name of the HSM wrapper script to invoke - default ""
 
-RSA signing
-If a private key in PEM format or a pkcs#11 URI is supplied then the
-RSA signature of the sha256 digest is included in the .sig
-file. Currently, the bootloader only supports sha256 digests signed
-with a 2048bit RSA key.  The bootloader only verifies RSA signatures
+RSA signing:
+If a private key in PEM format or a PKCS#11 URI is supplied, then the
+RSA signature of the SHA256 digest is included in the .sig
+file. Currently, the bootloader only supports SHA256 digests signed
+with a 2048-bit RSA key. The bootloader only verifies RSA signatures
 in signed boot mode and only for the EEPROM config file and the signed
 image.
 
 Examples:
 
-# Generate the normal sha256 hash to guard against file-system corruption
+# Generate the normal SHA256 hash to guard against file-system corruption
 rpi-eeprom-digest -i pieeprom.bin -o pieeprom.sig
 rpi-eeprom-digest -i vl805.bin -o vl805.sig
 
@@ -77,9 +82,14 @@ rpi-eeprom-digest -k private.pem -i boot.img -o boot.sig
 
 # Generate RSA signature for the EEPROM config file
 # As used by update-pieeprom.sh in usbboot/secure-boot-recovery
-rpi-eeprom-digest -k private.pem -i bootconf.txt  -o bootconf.sig
+rpi-eeprom-digest -k private.pem -i bootconf.txt -o bootconf.sig
+
+# Generate RSA signature for the EEPROM config file and delegate 
+# the signing process to a HSM wrapper script instead of using the private key directly.
+rpi-eeprom-digest -H hsm-wrapper -i bootconf.txt -o bootconf.sig
 
 # Similarly, but specifying the key with a PKCS#11 URI
+# (Deprecated - use HSM wrapper instead)
 rpi-eeprom-digest -k pkcs11:token=deadbeef;object=bl-key;type=private;pin-value=1234 -i bootconf.txt  -o bootconf.sig
 
 # To verify the signature of an existing .sig file using the public key.
@@ -102,7 +112,9 @@ writeSig() {
        echo "ts: $(date -u +%s)" >> "${OUTPUT}"
    fi
 
-   if [ -n "${KEY}" ]; then
+   if [ -n "${HSM_WRAPPER}" ]; then
+      echo "rsa2048: $("${HSM_WRAPPER}" -a rsa2048-sha256 "${IMAGE}")" >> "${OUTPUT}"
+   elif [ -n "${KEY}" ]; then
       "${OPENSSL}" dgst ${ENGINE_OPTS} -sign "${KEY}" -sha256 -out "${SIG_TMP}" "${IMAGE}"
       echo "rsa2048: $(xxd -c 4096 -p < "${SIG_TMP}")" >> "${OUTPUT}"
    fi
@@ -115,17 +127,19 @@ verifySig() {
    sig_hex="$(grep rsa2048 "${sig_file}" | cut -f 2 -d ' ')"
    [ -n "${sig_hex}" ] || die "No RSA signature in ${sig_file}"
 
-   echo ${sig_hex} | xxd -c 4096 -p -r > "${TMP_DIR}/sig.bin"
+   echo "${sig_hex}" | xxd -c 4096 -p -r > "${TMP_DIR}/sig.bin"
    "${OPENSSL}" dgst ${ENGINE_OPTS} -verify "${KEY}" -signature "${TMP_DIR}/sig.bin" "${IMAGE}" || die "${IMAGE} not verified"
 }
 
 OUTPUT=""
 VERIFY=0
-while getopts i:k:ho:v: option; do
+while getopts i:H:k:ho:v: option; do
    case "${option}" in
    i) IMAGE="${OPTARG}"
       ;;
    k) KEY="${OPTARG}"
+      ;;
+   H) HSM_WRAPPER="${OPTARG}"
       ;;
    o) OUTPUT="${OPTARG}"
       ;;
