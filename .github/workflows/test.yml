@@ -10,6 +10,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Create and activate virtual environment
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          
+      - name: Install dependencies
+        run: |
+          pip install pycryptodomex
+      
       - name: Run EEPROM Config Tests
         run: |
           cd test
