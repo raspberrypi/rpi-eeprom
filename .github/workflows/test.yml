@@ -1,0 +1,17 @@
+name: Test EEPROM Config
+
+on:
+  pull_request:
+    branches: [ 'master' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run EEPROM Config Tests
+        run: |
+          cd test
+          chmod +x test-rpi-eeprom-config
+          ./test-rpi-eeprom-config 
