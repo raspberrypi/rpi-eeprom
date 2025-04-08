@@ -1,5 +1,13 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-04-07: arm_dt: Revert to using the max fan speed (latest)
+
+* arm_dt: Revert to using the max fan speed
+  It has been reported that the presence of a cooling fan at boot time
+  can lead to a maximum observed fan speed of ~300 but a current speed
+  of 0. The absence of a fan results in 0s for both metrics.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/690
+
 ## 2025-03-27: os_check: cm5: Check for CM5 specific dtbs (latest)
 
 * os_check: cm5: Check for CM5 specific dtbs
