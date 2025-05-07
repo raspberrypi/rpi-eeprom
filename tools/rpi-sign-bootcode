@@ -2,8 +2,11 @@
 
 import argparse
 import base64
+import os
 import struct
+import subprocess
 import sys
+import tempfile
 
 # python3 -m pip install pycryptodomex
 from Cryptodome.Hash import HMAC, SHA1, SHA256
@@ -105,6 +108,30 @@ class ImageFile:
         debug("%08x %20s: [%6d] %s" % (self.pos(), 'RSA', len(arr), pem_file))
         self.append(arr)
 
+        h = SHA256.new()
+        h.update(key.n.to_bytes(256, byteorder='little'))
+        h.update(key.e.to_bytes(8, byteorder='little'))
+        d = h.hexdigest()
+        pub_str = ""
+        for i in range(int(len(d)/8)):
+           pub_str += "0x%s%s%s%s, " % (d[i*8+6:i*8+8], d[i*8+4:i*8+6], d[i*8+2:i*8+4], d[i*8+0:i*8+2])
+        debug("Public key SHA256(N,e) = %s" % pub_str)
+
+    def append_rsa_signature_pkcs11(self, hsm_wrapper):
+        temp = tempfile.NamedTemporaryFile(delete=False)
+        temp.write(self._bytes)
+        temp.close() # close and flush before spawning PKCS#11 wrapper
+
+        res = subprocess.run([hsm_wrapper, "-a", "rsa2048-sha256", temp.name], capture_output=True)
+        debug(res.stderr)
+        if res.returncode != 0:
+            os.unlink(temp.name)
+            raise Exception(f"HSM wrapper failed with exit code {res.returncode}: {res.stderr.decode()}")
+        signature = res.stdout.decode()
+        os.unlink(temp.name)
+        self.append(bytearray.fromhex(signature))
+        debug("PKCS11 %08x %20s: [%6d] signature %s" % (self.pos(), 'RSA2048 - SHA256', len(signature), signature))
+
     def append_rsa_signature(self, digest_alg, private_pem):
         """
         Append a RSA 2048 signature of the SHA256 of the data so far
@@ -132,19 +159,13 @@ class ImageFile:
             if len(hmac_key) != expected_keylen:
                 raise Exception("Bad key length %d expected %d" % (len(hmac_key), expected_keylen))
 
-        if digest_alg == 'hmac-sha256':
-            digest = HMAC.new(base64.b16decode(hmac_key, True), self._bytes, digestmod=SHA256)
-        elif digest_alg == 'hmac-sha1':
-            digest = HMAC.new(base64.b16decode(hmac_key, True), self._bytes, digestmod=SHA1)
-        elif digest_alg == 'sha256':
-            digest = SHA256.new(self._bytes)
-        elif digest_alg == 'sha1':
-            digest = SHA1.new(self._bytes)
+        if digest_alg == 'hmac-sha1':
+            h = HMAC.new(base64.b16decode(hmac_key, True), self._bytes, digestmod=SHA1)
         else:
             raise Exception("Digest not supported %s" % (digest_alg))
 
-        debug("%08x %20s: [%6d] %s" % (self.pos(), digest_alg, len(digest.digest()), digest.hexdigest()))
-        self.append(digest.digest())
+        debug("%08x %20s: [%6d] %s" % (self.pos(), digest_alg, len(h.digest()), h.hexdigest()))
+        self.append(h.digest())
 
     def pos(self):
         return len(self._bytes)
@@ -161,7 +182,7 @@ class ImageFile:
     def close(self):
         self._of.close()
 
-def create_2711_image(output, bootcode, private_key, private_keynum, hmac):
+def create_2711_image(output, bootcode, private_key=None, private_keynum=0, hmac=None, hsm_wrapper=None):
     """
     Create a 2711 C0 secure-boot compatible seconds stage signed binary.
     """
@@ -169,22 +190,31 @@ def create_2711_image(output, bootcode, private_key, private_keynum, hmac):
     image.append_file(bootcode)
     image.append_length()
     image.append_keynum(private_keynum)
-    image.append_rsa_signature('sha1', private_key)
+    if hsm_wrapper:
+        image.append_rsa_signature_pkcs11(hsm_wrapper)
+    else:
+        image.append_rsa_signature('sha1', private_key)
     image.append_digest('hmac-sha1', hmac)
     image.write()
     image.close()
 
-def create_2712_image(output, bootcode, private_key, private_keynum, private_version):
+def create_2712_image(output, bootcode, private_version=0, public_key=None, private_key=None, private_keynum=0, hsm_wrapper=None):
     """
-    Create 2712 signed bootloader. The HMAC is removed and the full public key is appended.
+    Create a prototype 2712 signed bootloader. The HMAC is removed and the
+    full public key is appended.
     """
     image = ImageFile(output, MAX_BIN_SIZE)
     image.append_file(bootcode)
     image.append_length()
     image.append_keynum(private_keynum)
     image.append_version(private_version)
-    image.append_rsa_signature('sha256', private_key)
-    image.append_public_key(private_key)
+    if hsm_wrapper is not None:
+        debug(f"Call HSM wrapper {hsm_wrapper}")
+        image.append_rsa_signature_pkcs11(hsm_wrapper)
+        image.append_public_key(public_key)
+    else:
+        image.append_rsa_signature('sha256', private_key)
+        image.append_public_key(private_key)
     image.write()
     image.close()
 
@@ -193,37 +223,43 @@ def main():
     Signs a second stage bootloader image.
 
     Examples:
-        2711 mode:
-        rpi-sign-bootcode --debug -c 2711 -i bootcode.bin.clr -o bootcode.bin -k 2711_rsa_priv_0.pem -n 0 -m bootcode-production.key
-
-        2712 C1 and D0 mode:
-          * HMAC not included on 2712
-          * RSA public key included - ROM just contains the hashes of the RPi public keys.
-
-        Customer counter-signed signed:
+    
+        Customer counter-signed:
           * Exactly the same as Raspberry Pi signing but the input is the Raspberry Pi signed bootcode.bin
           * The key number will probably always be 16 to indicate a customer signing
 
         rpi-sign-bootcode --debug -c 2712 -i bootcode.bin.sign2 -o bootcode.bin -k customer.pem
+
+        PKCS#1 v1.5 - HSM wrapper:
+          * hsm-wrapper takes a single argument which is a temporary filename containing the data to sign
+          * hsm-wrapper outputs the PKCS#1 v1.5 signature in hex format
+          * hsm-wrapper must return a non-zero exit code if signing fails
+          * hsm-wrapper requires the -a rsa2048-sha256 parameter to specify the algorithm
+          * There is no facility to pass the private key or custom HSM arguments - the caller should generate a dedicated wrapper script
+          * The public key in PEM format MUST be specified with the -p option
+
+        rpi-sign-bootcode --debug -c 2712 -i bootcode.bin.sign2 -o bootcode.bin -p public.pem -H hsm-wrapper
     """
     parser = argparse.ArgumentParser(help_text)
-    parser.add_argument('-o', '--output', required=False, help='Output filename . If not specified the signed images is written to stdout in base64 format')
+    parser.add_argument('-o', '--output', required=False, help='Output filename. If not specified, the signed image is written to stdout in base64 format')
     parser.add_argument('-c', '--chip', required=True, type=int, help='Chip number')
-    parser.add_argument('-i', '--input', required=False, help='Path of the unsigned bootcode.bin file OR RPi signed bootcode file sign with the customer key. If NULLL the binary is read from stdin in base64 format')
+    parser.add_argument('-i', '--input', required=False, help='Path of the unsigned bootcode.bin file OR RPi signed bootcode file to be signed with the customer key. If NULL, the binary is read from stdin in base64 format')
     parser.add_argument('-m', '--hmac', required=False, help='Path of the HMAC key file')
-    parser.add_argument('-k', '--private-key', dest='private_key', required=True, help='Path of RSA private key (PEM format)')
+    parser.add_argument('-k', '--private-key', dest='private_key', required=False, default=None, help='Path of RSA private key (PEM format)')
+    parser.add_argument('-p', '--public-key', dest='public_key', required=False, default=None, help='Path of RSA public key (PEM format)')
     parser.add_argument('-n', '--private-keynum', dest='private_keynum', required=False, default=0, type=int, help='ROM key index for RPi signing stage')
+    parser.add_argument('-H', '--hsm-wrapper', default=None, required=False, help='Filename of HSM wrapper script which generates a PKCSv1.1 signature as hex')
     parser.add_argument('-d', '--debug', action='store_true')
-    parser.add_argument('-v', '--private-version', dest='private_version', required=True, type=int, help='Version of firmware, stops firmware rollback, only valid 0-31')
+    parser.add_argument('-v', '--private-version', dest='private_version', required=False, default=0, type=int, help='Version of firmware, stops firmware rollback, only valid 0-31')
 
     args = parser.parse_args()
     _CONFIG['DEBUG'] = args.debug
     if args.chip == 2711:
         if args.hmac is None:
             raise Exception("HMAC key requried for 2711")
-        create_2711_image(args.output, args.input, args.private_key, args.private_keynum, args.hmac)
+        create_2711_image(args.output, args.input, private_key=args.private_key, private_keynum=args.private_keynum, hmac=args.hmac, hsm_wrapper=args.hsm_wrapper)
     elif args.chip == 2712:
-        create_2712_image(args.output, args.input, args.private_key, args.private_keynum, args.private_version)
+        create_2712_image(args.output, args.input, private_version=args.private_version, public_key=args.public_key, private_key=args.private_key, private_keynum=args.private_keynum, hsm_wrapper=args.hsm_wrapper)
 
 if __name__ == '__main__':
     main()
