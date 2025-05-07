@@ -1,3 +1,16 @@
+rpi-eeprom (27.7-1) bookworm; urgency=medium
+
+  * pieeprom-2025-03-27: 2712: os_check: cm5: Check for CM5 specific DTBs
+    (latest)
+  * rpi-sign-bootcode: Add optional callout to HSM wrapper script from
+    PKCS#1 v1.5 signature
+  * pieeprom-2025-04-07: 2712: Revert to using the max fan speed (latest)
+  * test: Add github workflow for test-rpi-eeprom-config
+  * test: Add a README
+  * Update maintainer
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Wed, 07 May 2025 18:31:29 +0100
+
 rpi-eeprom (27.6-1) bookworm; urgency=medium
 
   [ Tim Gover ]
