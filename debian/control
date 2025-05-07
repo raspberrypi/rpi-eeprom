@@ -1,7 +1,7 @@
 Source: rpi-eeprom
 Section: misc
 Priority: optional
-Maintainer: Serge Schneider <serge@raspberrypi.com>
+Maintainer: Tim Gover <tim.gover@raspberrypi.com>
 Build-Depends: debhelper-compat (= 12), help2man, python3-minimal
 Standards-Version: 4.6.2
 Homepage: https://github.com/raspberrypi/rpi-eeprom/
