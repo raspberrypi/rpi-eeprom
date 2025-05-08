@@ -1,5 +1,48 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-05-08: Implement TCP window for net boot (latest)
+
+* arm_loader: Correct some mailbox response lengths
+  The GET_GENCMD_RESULT mailbox handler was setting the wrong response
+  length, and GET_FIRMWARE_COMMIT_HASH and GET_FIRMWARE_VARIANT were not
+  setting any length.
+  See: https://github.com/raspberrypi/firmware/issues/1968
+* Signed boot and HTTP boot mode
+  HTTP boot mode is supposed to be disabled if signed boot is enabled and
+  a host is not specified. The code is checking the http_secure flag to
+  enforce this. But this is valid now we support custom CA certs.
+  Only disable HTTP mode if we're using the default HOST.
+* Implement TCP window for net boot
+  The minimal IP stack used for https booting lacks the ability to cache
+  packets received out of order, which can lead to severe slowdown when
+  it happens. The problem seems to affect some ISPs more than others.
+  The receive window implemented here copes with packet losses of 10%.
+* netboot: Correct the TCP MSS
+* rp1_net: Overwrite the length field
+  Although concise, ORing in the packet length runs the risk of leaving
+  some unwanted bits set. Ensure the length field is cleared before
+  ORing in the required value.
+* Correct msecs in debug timestamps
+  The fractional part of timestamps in UART debug output was showing the
+  100ths and 1000ths of a second, rather than 10ths and 100ths, causing
+  strange sequences that appear to jump backwards.
+* Implement GET_BOARD_MAC_ADDRESS on Pi5
+  The Pi 5 EEPROM implements a subset of the original mailbox properties.
+  Add GET_BOARD_MAC_ADDRESS to the subset.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/698
+* Ensure the initramfs matches the kernel
+  As far as is possible, both the kernel and initramfs are matched to the
+  device. However, where multiple kernel variants can run on a device, the
+  initramfs must be matched to the chosen kernel. Make that the sole rule
+  for initramfs selection, rather than duplicating the device matching
+  logic.
+  See: https://github.com/raspberrypi/firmware/issues/1965
+* Enable logging messages from OS loader
+  Pi 5 EEPROM builds were missing the output from the main OS loading
+  function, including some important diagnostics. Enabling the logging
+  output from this loader code results in some near-duplicates, but is
+  more user friendly and is available via "sudo vclog -m".
+
 ## 2025-04-07: arm_dt: Revert to using the max fan speed (latest)
 
 * arm_dt: Revert to using the max fan speed
