@@ -1,3 +1,11 @@
+rpi-eeprom (27.8-1) bookworm; urgency=medium
+
+  * pieeprom-2025-05-08: 2712: Implement TCP window for net boot (latest)
+  * pieeprom-2025-02-24: 2711: Implement TCP window for net boot (latest)
+  * pieeprom-2025-05-08: 2711: Implement TCP window for net boot (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Thu, 08 May 2025 17:47:26 +0100
+
 rpi-eeprom (27.7-1) bookworm; urgency=medium
 
   * pieeprom-2025-03-27: 2712: os_check: cm5: Check for CM5 specific DTBs
