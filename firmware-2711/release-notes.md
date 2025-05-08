@@ -1,5 +1,22 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-05-08: Implement TCP window for net boot (latest)
+* Signed boot and HTTP boot mode
+  HTTP boot mode is supposed to be disabled if signed boot is enabled and
+  a host is not specified. The code is checking the http_secure flag to
+  enforce this. But this is valid now we support custom CA certs.
+  Only disable HTTP mode if we're using the default HOST.
+* Implement TCP window for net boot
+  The minimal IP stack used for https booting lacks the ability to cache
+  packets received out of order, which can lead to severe slowdown when
+  it happens. The problem seems to affect some ISPs more than others.
+  The receive window implemented here copes with packet losses of 10%.
+* netboot: Correct the TCP MSS
+* Correct msecs in debug timestamps
+  The fractional part of timestamps in UART debug output was showing the
+  100ths and 1000ths of a second, rather than 10ths and 100ths, causing
+  strange sequences that appear to jump backwards.
+
 ## 2025-02-17: Promote 2025-02-11 to default release (default)
 
 ## 2025-02-11: recovery: Walk partitions to delete recovery.bin (latest)
