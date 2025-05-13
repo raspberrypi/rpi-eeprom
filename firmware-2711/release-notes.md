@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-05-13: Promote 2025-05-08 to the default release (default)
+
 ## 2025-05-08: Implement TCP window for net boot (latest)
 * Signed boot and HTTP boot mode
   HTTP boot mode is supposed to be disabled if signed boot is enabled and
