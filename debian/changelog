@@ -1,3 +1,10 @@
+rpi-eeprom (27.9-1) bookworm; urgency=medium
+
+  * pieeprom-2025-05-08: 2712: Promote to the default release
+  * pieeprom-2025-05-08: 2711: Promote to the default release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Wed, 14 May 2025 18:44:11 +0100
+
 rpi-eeprom (27.8-1) bookworm; urgency=medium
 
   * pieeprom-2025-05-08: 2712: Implement TCP window for net boot (latest)
