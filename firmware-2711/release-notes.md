@@ -1,5 +1,20 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-05-16: 2711: Automatically set revoke_devkey if program_pubkey=1 (latest)
+
+* 2711: (recovery) Automatically set revoke_devkey if program_pubkey=1
+  Previously, on BCM2711 products it was possible to program the key
+  hash without revoking the development key. This can be useful for
+  testing but should never be used in production because it is possible
+  to an install an older version of the bootloader which doesn't
+  support secure-boot.  Since the secure-boot tools are stable and
+  have improved usability (RPi secure-boot provisioner) this test
+  feature not necessary and is just a security risk so the behaviour
+  is changed to always revoke the development key if program_pubkey=1.
+  This change is not relevant on BCM2712 because secure-boot requires
+  that the second stage bootloader is counter-signed with the customer's
+  private key.
+
 ## 2025-05-13: Promote 2025-05-08 to the default release (default)
 
 ## 2025-05-08: Implement TCP window for net boot (latest)
