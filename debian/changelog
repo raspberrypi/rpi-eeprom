@@ -1,3 +1,9 @@
+rpi-eeprom (28.0-1) bookworm; urgency=medium
+
+  * 2712: Change the automatic update minimum version to 2025-05-08
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 19 May 2025 17:20:27 +0100
+
 rpi-eeprom (27.10-1) bookworm; urgency=medium
 
   * imager: 2712: 2711: Update to the 2025-05-08 firmware
