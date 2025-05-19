@@ -1,3 +1,11 @@
+rpi-eeprom (27.10-1) bookworm; urgency=medium
+
+  * imager: 2712: 2711: Update to the 2025-05-08 firmware
+  * pieeprom-2025-05-16: 2711: Automatically set revoke_devkey if
+    program_pubkey=1 (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 19 May 2025 11:28:41 +0100
+
 rpi-eeprom (27.9-1) bookworm; urgency=medium
 
   * pieeprom-2025-05-08: 2712: Promote to the default release
