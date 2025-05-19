@@ -5,7 +5,7 @@ set -e
 script_dir=$(cd "$(dirname "$0")" && pwd)
 
 # Pi4, Pi400, CM4, CM4-S
-${script_dir}/make-release critical 2025-02-11 000138c0 "${script_dir}/2711-config" release-2711 rpi-boot-eeprom-recovery 2711
+${script_dir}/make-release critical 2025-05-08 000138c0 "${script_dir}/2711-config" release-2711 rpi-boot-eeprom-recovery 2711
 
 # Pi5
-${script_dir}/make-release critical 2025-02-12 "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
+${script_dir}/make-release critical 2025-05-08 "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
