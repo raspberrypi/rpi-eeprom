@@ -15,7 +15,7 @@
   that the second stage bootloader is counter-signed with the customer's
   private key.
 
-## 2025-05-13: Promote 2025-05-08 to the default release (default)
+## 2025-05-13: Promote 2025-05-08 to the default release (default) (automatic)
 
 ## 2025-05-08: Implement TCP window for net boot (latest)
 * Signed boot and HTTP boot mode
