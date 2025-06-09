@@ -1,3 +1,9 @@
+rpi-eeprom (28.2-1) bookworm; urgency=medium
+
+  * pieeprom-2025-06-09: 2712: NVMe: Fix loading of files > 32MB (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 09 Jun 2025 14:05:03 +0100
+
 rpi-eeprom (28.1-1) bookworm; urgency=medium
 
   * tools: Add the network install public key
