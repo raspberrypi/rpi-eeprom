@@ -1,5 +1,24 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-06-09: NVMe: Fix loading of files > 32MB (latest)
+
+* NVMe: Fix loading of files > 32MB
+  Fix an NVMe boot bug which caused large contiguous reads >= 32MB to fail.
+* Update setting alpha for 2712D0
+  D0 moved the alpha blend mode from CTL2 to CTL0.
+  Update the bootloader code to follow suit for those using
+  the simple framebuffer
+* dtoverlay: Fix node_is_enabled for implicit status
+  The absence of a status property implies that a node is enabled. Update
+  dtoverlay_node_is_enabled to match that behaviour.
+  See: https://github.com/raspberrypi/firmware/issues/1970
+* arm_loader: GET_CLOCKS: Set useful response length
+  The kernel's firmware mailbox API does not make the actual length of the
+  response available to clients, but other implementations may care.
+  Continue to pad the GET_CLOCKS buffer with zeroes, but set the response
+  length to minimally contain the useful content.
+  See: https://github.com/raspberrypi/firmware/issues/1969
+
 ## 2025-05-13: Promote 2025-05-08 to the default release (default)
 
 ## 2025-05-08: Implement TCP window for net boot (latest)
