@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-06-13: Update to include production test changes (latest)
+* Update to include production test changes.
+
 ## 2025-06-09: NVMe: Fix loading of files > 32MB (latest)
 
 * NVMe: Fix loading of files > 32MB
