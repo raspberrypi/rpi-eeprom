@@ -1,5 +1,35 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-06-20: Add support for a bootloader watchdog (latest)
+
+* Add support for a bootloader watchdog
+  Add support for a boot watchdog (using PM_RSTC hw wdog) which will
+  trigger if the OS is not started within the specified amount of time. The
+  watchdog is enabled by setting the BOOT_WATCHDOG_TIMEOUT=N (seconds)
+  property in the bootlaoder config.
+  The BOOT_WATCHDOG_PARTITION=P property can be set to pass a different
+  partition number to the bootloader on reset if the watchdog
+  is triggered.
+  The boot watchdog is automatically cleared just before starting
+  the OS and (optionally) enabling the kernel watchdog.
+* pi5: Add a temperature monitor
+  In early releases of the bootloader the fan would always be on
+  during boot which can be distracting. Later releases switch off the
+  fan until the OS has booted.
+  This change adds some basic fan control from the bootloader to
+  enable the fan if the temperature is above 85C.
+  This may be useful if the Pi was shutdown by the OS because the
+  temperature limit was exceeded.
+  Since the Linux hwmon is not active at this stage the bootloader
+  now implements the same logic to power off the Pi if the chips
+  is more than 110C.
+  The PMIC hardware automatically cuts power if the temperature
+  is more than 125C.
+* Skip first SD boot if no card detected
+  On platforms with an SD Card detect signal, skip the first attempt to
+  boot from SD if the card appears to be absent. This can save over a
+  second on a cold boot, and a little under a second for a reboot.
+
 ## 2025-06-13: Update to include production test changes (latest)
 * Update to include production test changes.
 
