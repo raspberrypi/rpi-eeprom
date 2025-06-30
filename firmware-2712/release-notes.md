@@ -1,5 +1,35 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-06-29: Check for SD card overcurrent on Pi5 and Pi500 (latest)
+
+* board_info: Use the Ethernet PHY address probed by the bootloader
+  Use the Ethernet PHY address supplied by the bootloader in
+  preference to the static configurations defined in start4.elf
+* pi5: Fix overwrite of cache EEPROM config in secure-boot mode
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/719
+* Check for SD card overcurrent on Pi5, Pi500 and Pi4
+  Before booting, the bootloader now checks the SD power switch
+  overcurrent signal. The overcurrent signal occurs if the SD
+  card is damaged and has a short circuit which will cause it to
+  get hot.
+  If an over-current condition is detected the bootloader 
+  switches off power to the SD card and waits five seconds before
+  probing the SD card again. This error is displayed on the
+  diagnostic screen, the UART and the activity LED (1 long, 2 short)
+  flashes.
+  The check can be switched to a non-blocking warning  by setting
+  SD_OVERCURRENT_CHECK=0 in the bootloader config.
+* Add a new error code pattern for SD overcurrent
+  Add a new error pattern (1 long, 2 short) to signal SD card
+  overcurrent.
+* Enable RTC wakeup from POWER_OFF_ON_HALT=0
+* Improve HAT+ current handling
+  In shipping firmware, the current_supply value is only being used in the
+  case of a normal (non-stacked) HAT+, but that is unnecessarily
+  restrictive. Also, the presence of MODE0 and MODE1 power HATs is not
+  reflected in the value of max_current.
+  See: https://github.com/raspberrypi/linux/pull/6678
+
 ## 2025-06-20: Add support for a bootloader watchdog (latest)
 
 * Add support for a bootloader watchdog
