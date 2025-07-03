@@ -1,5 +1,11 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-07-03: Enable firmware UART output on the 40-pin header (latest)
+
+* rp1_uart: Allow rp1_uart to be started earlier
+  If enabled (with enable_rp1_uart) then the existing boot uart
+  messages are redirected to the rp1 uart.
+
 ## 2025-06-29: Check for SD card overcurrent on Pi5 and Pi500 (latest)
 
 * board_info: Use the Ethernet PHY address probed by the bootloader
