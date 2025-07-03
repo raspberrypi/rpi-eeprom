@@ -1,5 +1,40 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-07-03: Check for SD card overcurrent (latest)
+
+* board_info: Use the Ethernet PHY address probed by the bootloader
+  Use the Ethernet PHY address supplied by the bootloader in
+  preference to the static configurations defined in start4.elf
+* Check for SD card overcurrent on Pi5, Pi500 and Pi4
+  Before booting, the bootloader now checks the SD power switch
+  overcurrent signal. The overcurrent signal occurs if the SD
+  card is damaged and has a short circuit which will cause it to
+  get hot.
+  If an over-current condition is detected the bootloader switches
+  switches off power to the SD card and waits five seconds before
+  probing the SD card again. This error is displayed on the
+  diagnostic screen, the UART and the activity LED (1 long, 2 short)
+  flashes.
+  The check can be switched to a non-blocking warning  by setting
+  SD_OVERCURRENT_CHECK=0 in the bootloader config.
+* Add a new error code pattern for SD overcurrent
+  Add a new error pattern (1 long, 2 short) to signal SD card
+  overcurrent.
+* Add support for a bootloader watchdog
+  Add support for a boot watchdog (using PM_RSTC hw wdog) which will
+  trigger if the OS is not started within the specified amount of time. The
+  watchdog is enabled by setting the BOOT_WATCHDOG_TIMEOUT=N (seconds)
+  property in the bootlaoder config.
+  The BOOT_WATCHDOG_PARTITION=P property can be set to pass a different
+  partition number to the bootloader on reset if the watchdog
+  is triggered.
+  The boot watchdog is automatically cleared just before starting
+  the OS and (optionally) enabling the kernel watchdog.
+* Skip first SD boot if no card detected
+  On platforms with an SD Card detect signal, skip the first attempt to
+  boot from SD if the card appears to be absent. This can save over a
+  second on a cold boot, and a little under a second for a reboot.
+
 ## 2025-05-16: 2711: Automatically set revoke_devkey if program_pubkey=1 (latest)
 
 * 2711: (recovery) Automatically set revoke_devkey if program_pubkey=1
