@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-07-17: Fix config key search which could cause camera_autodetect to fail (latest)
+
+* Fix config key search which could cause camera_autodetect to fail
+  The bootvar0 config property was added in the wrong section which
+  could cause the config property search for some other properties
+  to fail.
+
 ## 2025-07-17: arm_loader: Also require the early-watchdog property (latest)
 
 * arm_loader: Also require the early-watchdog property
