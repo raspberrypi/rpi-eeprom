@@ -1,5 +1,23 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-07-17: arm_loader: Also require the early-watchdog property (latest)
+
+* arm_loader: Also require the early-watchdog property
+  The change correcting the implementation of dtoverlay_is_enabled had the
+  unintended consequence of causing the firmware to enable the watchdog
+  even though the user had not explicitly requested it. This is harmless
+  on Linux because the watchdog driver takes over and disarms it, but on
+  other operating systems this can lead to a reboot. Avoid this problem
+  by also requiring the presence of a new property, "early-watchdog".
+  See: https://github.com/raspberrypi/firmware/issues/1980
+* helpers/config_loader: Add bootvar0 eeprom config that can be used in config.txt section expressions
+  This allows an eeprom config setting (e.g. BOOTARG0=0x10) to be set on a board
+  which config.txt can use as a conditional expression (e.g. [bootarg0&0x10]).
+* arm_loader: Fix boot-watchdog stop on Pi4
+  Fix a problem where the boot_watchdog heartbeat timer was not
+  stopped correctly which could cause it to clash with the kernel
+  watchdog driver.
+
 ## 2025-07-03: Enable firmware UART output on the 40-pin header (latest)
 
 * rp1_uart: Allow rp1_uart to be started earlier
