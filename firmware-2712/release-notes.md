@@ -11,8 +11,8 @@
   by also requiring the presence of a new property, "early-watchdog".
   See: https://github.com/raspberrypi/firmware/issues/1980
 * helpers/config_loader: Add bootvar0 eeprom config that can be used in config.txt section expressions
-  This allows an eeprom config setting (e.g. BOOTARG0=0x10) to be set on a board
-  which config.txt can use as a conditional expression (e.g. [bootarg0&0x10]).
+  This allows an eeprom config setting (e.g. BOOTVAR0=0x10) to be set on a board
+  which config.txt can use as a conditional expression (e.g. [bootvar0&0x10]).
 * arm_loader: Fix boot-watchdog stop on Pi4
   Fix a problem where the boot_watchdog heartbeat timer was not
   stopped correctly which could cause it to clash with the kernel
