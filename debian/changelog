@@ -1,3 +1,26 @@
+rpi-eeprom (28.3-1) bookworm; urgency=medium
+
+  * pieeprom-2025-06-13: 2712: Update to include production test changes
+    (latest)
+  * pieeprom-2025-06-20: 2712: Add support for a bootloader watchdog
+    (latest)
+  * pieeprom-2025-06-29: 2712: Check for SD card overcurrent on Pi5 and
+    Pi500 (latest)
+  * pieeprom-2025-07-03: 2712: Enable firmware UART output on the 40-pin
+    header (latest)
+  * 2712: Archive releases older than 2025-05-08
+  * pieeprom-2025-07-03: 2711: Check for SD card overcurrent (latest)
+  * 2711: Archive releases older than 2025-05-08
+  * pieeprom-2025-07-17: 2712: arm_loader: Also require the early-watchdog
+    property (latest)
+  * pieeprom-2025-07-17: 2711: Also require the early-watchdog property
+    (latest)
+  * release-notes: s/bootarg0/bootvar0/
+  * pieeprom-2025-07-17: 2712: Fix config key search which could cause
+    camera_autodetect to fail (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 22 Jul 2025 14:28:08 +0100
+
 rpi-eeprom (28.2-1) bookworm; urgency=medium
 
   * pieeprom-2025-06-09: 2712: NVMe: Fix loading of files > 32MB (latest)
