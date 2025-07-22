@@ -1,5 +1,99 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-07-17: Fix config key search which could cause camera_autodetect to fail (latest)
+
+* Fix config key search which could cause camera_autodetect to fail
+  The bootvar0 config property was added in the wrong section which
+  could cause the config property search for some other properties
+  to fail.
+
+## 2025-07-17: arm_loader: Also require the early-watchdog property (latest)
+
+* arm_loader: Also require the early-watchdog property
+  The change correcting the implementation of dtoverlay_is_enabled had the
+  unintended consequence of causing the firmware to enable the watchdog
+  even though the user had not explicitly requested it. This is harmless
+  on Linux because the watchdog driver takes over and disarms it, but on
+  other operating systems this can lead to a reboot. Avoid this problem
+  by also requiring the presence of a new property, "early-watchdog".
+  See: https://github.com/raspberrypi/firmware/issues/1980
+* helpers/config_loader: Add bootvar0 eeprom config that can be used in config.txt section expressions
+  This allows an eeprom config setting (e.g. BOOTVAR0=0x10) to be set on a board
+  which config.txt can use as a conditional expression (e.g. [bootvar0&0x10]).
+* arm_loader: Fix boot-watchdog stop on Pi4
+  Fix a problem where the boot_watchdog heartbeat timer was not
+  stopped correctly which could cause it to clash with the kernel
+  watchdog driver.
+
+## 2025-07-03: Enable firmware UART output on the 40-pin header (latest)
+
+* rp1_uart: Allow rp1_uart to be started earlier
+  If enabled (with enable_rp1_uart) then the existing boot uart
+  messages are redirected to the rp1 uart.
+
+## 2025-06-29: Check for SD card overcurrent on Pi5 and Pi500 (latest)
+
+* board_info: Use the Ethernet PHY address probed by the bootloader
+  Use the Ethernet PHY address supplied by the bootloader in
+  preference to the static configurations defined in start4.elf
+* pi5: Fix overwrite of cache EEPROM config in secure-boot mode
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/719
+* Check for SD card overcurrent on Pi5, Pi500 and Pi4
+  Before booting, the bootloader now checks the SD power switch
+  overcurrent signal. The overcurrent signal occurs if the SD
+  card is damaged and has a short circuit which will cause it to
+  get hot.
+  If an over-current condition is detected the bootloader 
+  switches off power to the SD card and waits five seconds before
+  probing the SD card again. This error is displayed on the
+  diagnostic screen, the UART and the activity LED (1 long, 2 short)
+  flashes.
+  The check can be switched to a non-blocking warning  by setting
+  SD_OVERCURRENT_CHECK=0 in the bootloader config.
+* Add a new error code pattern for SD overcurrent
+  Add a new error pattern (1 long, 2 short) to signal SD card
+  overcurrent.
+* Enable RTC wakeup from POWER_OFF_ON_HALT=0
+* Improve HAT+ current handling
+  In shipping firmware, the current_supply value is only being used in the
+  case of a normal (non-stacked) HAT+, but that is unnecessarily
+  restrictive. Also, the presence of MODE0 and MODE1 power HATs is not
+  reflected in the value of max_current.
+  See: https://github.com/raspberrypi/linux/pull/6678
+
+## 2025-06-20: Add support for a bootloader watchdog (latest)
+
+* Add support for a bootloader watchdog
+  Add support for a boot watchdog (using PM_RSTC hw wdog) which will
+  trigger if the OS is not started within the specified amount of time. The
+  watchdog is enabled by setting the BOOT_WATCHDOG_TIMEOUT=N (seconds)
+  property in the bootlaoder config.
+  The BOOT_WATCHDOG_PARTITION=P property can be set to pass a different
+  partition number to the bootloader on reset if the watchdog
+  is triggered.
+  The boot watchdog is automatically cleared just before starting
+  the OS and (optionally) enabling the kernel watchdog.
+* pi5: Add a temperature monitor
+  In early releases of the bootloader the fan would always be on
+  during boot which can be distracting. Later releases switch off the
+  fan until the OS has booted.
+  This change adds some basic fan control from the bootloader to
+  enable the fan if the temperature is above 85C.
+  This may be useful if the Pi was shutdown by the OS because the
+  temperature limit was exceeded.
+  Since the Linux hwmon is not active at this stage the bootloader
+  now implements the same logic to power off the Pi if the chips
+  is more than 110C.
+  The PMIC hardware automatically cuts power if the temperature
+  is more than 125C.
+* Skip first SD boot if no card detected
+  On platforms with an SD Card detect signal, skip the first attempt to
+  boot from SD if the card appears to be absent. This can save over a
+  second on a cold boot, and a little under a second for a reboot.
+
+## 2025-06-13: Update to include production test changes (latest)
+* Update to include production test changes.
+
 ## 2025-06-09: NVMe: Fix loading of files > 32MB (latest)
 
 * NVMe: Fix loading of files > 32MB
