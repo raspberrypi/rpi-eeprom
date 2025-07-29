@@ -2,7 +2,10 @@ Source: rpi-eeprom
 Section: misc
 Priority: optional
 Maintainer: Tim Gover <tim.gover@raspberrypi.com>
-Build-Depends: debhelper-compat (= 12), help2man, python3-minimal
+Build-Depends: debhelper-compat (= 12),
+ help2man,
+ python3-minimal,
+ libpython3-stdlib,
 Standards-Version: 4.6.2
 Homepage: https://github.com/raspberrypi/rpi-eeprom/
 Vcs-Browser: https://github.com/raspberrypi/rpi-eeprom/
