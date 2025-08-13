@@ -1,5 +1,15 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-08-13: Enable the PARTITION_WALK property by default (latest)
+
+* Enable the PARTITION_WALK property by default
+  Previously, the new PARTITION_WALK which searches for bootable
+  partitions after a failure had to be explicitly enabled. Change
+  the default to be enabled by default. It can be switched off by
+  setting PARTITION_WALK=0 in the EEPROM config.
+* pi5: Fix read for cached copy of PMIC sequencer status
+  Previously, this was overwritten by the RTC event status.
+
 ## 2025-07-17: Fix config key search which could cause camera_autodetect to fail (latest)
 
 * Fix config key search which could cause camera_autodetect to fail
