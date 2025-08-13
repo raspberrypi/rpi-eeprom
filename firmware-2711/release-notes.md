@@ -1,5 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-08-13: Enable PARTITION_WALK property by default (latest)
+
+* Enable the PARTITION_WALK property by default
+  Previously, the new PARTITION_WALK which searches for bootable
+  partitions after a failure had to be explicitly enabled. Change
+  the default to be enabled by default. It can be switched off by
+  setting PARTITION_WALK=0 in the EEPROM config.
+* Optimise bootmain for size on Pi4
+  Pi4 only has a 512KB SPI flash EEPROM and the addition of features
+  plus fixes is now causing contention for space between the code and
+  the EEPROM config. Since bootmain is only responsible for loading
+  start.elf revert to the original configuration which is optimised
+  for size rather than speed. Pi5 continues to be optimised for speed.
+
 ## 2025-07-17: arm_loader: Also require the early-watchdog property (latest)
 
 * arm_loader: Also require the early-watchdog property
