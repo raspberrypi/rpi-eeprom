@@ -346,7 +346,7 @@ class BootloaderImage(object):
             update_len = len(src_bytes) + FILE_HDR_LEN
 
             if hdr_offset + update_len > self._image_size - ERASE_ALIGN_SIZE:
-                raise Exception('No space available - image past EOF.')
+                raise Exception('No space available. %s size %d available space %d' % (dst_filename, update_len, self._image_size - ERASE_ALIGN_SIZE - hdr_offset))
 
             if hdr_offset < 0:
                 raise Exception('Update target %s not found' % dst_filename)
