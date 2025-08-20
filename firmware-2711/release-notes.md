@@ -1,5 +1,28 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-08-20: Fix PARTITION_WALK for missing start.elf files (latest)
+
+* Fix PARTITION_WALK for missing start.elf files
+  Fix a missing call to bootloader_reset_state so that PARTITION_WALK
+  will work if the boot-partition is FAT, contains config.txt etc
+  but does not have valid firmware.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/738
+* force_eeprom_read=0 disables HAT I2C
+  Although setting force_eeprom_read=0 has always prevented the HAT EEPROM
+  from being read, with the recent changes to support Power HAT+s it does
+  not prevent an early scan to see if such an EEPROM exists. This can be
+  problematic for applications where the I2C0 pins have been repurposed.
+  Change the inhibit logic to cut all HAT I2C probing off at the knees,
+  including any automatic settings of usb_max_current_enable, as it should
+  always have done.
+  See: https://github.com/raspberrypi/firmware/issues/1985
+* bootcode.bin: Add support for boot.img ramdisk on Pi3 and earlier
+  Add support for boot.img ramdisk support, enable by adding boot_ramdisk=1
+  in config.txt
+* rpifwcrypto: Preliminary firmware support for rpifwcrypto API
+* Add config.txt to block GET_CUSTOMER_PRIVATE_KEY mailbox API
+  lock_device_private_key=1
+
 ## 2025-08-13: Enable PARTITION_WALK property by default (latest)
 
 * Enable the PARTITION_WALK property by default
