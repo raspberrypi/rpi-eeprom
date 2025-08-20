@@ -1,5 +1,19 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-08-20: force_eeprom_read=0 disables HAT I2C (latest)
+
+* force_eeprom_read=0 disables HAT I2C
+  Although setting force_eeprom_read=0 has always prevented the HAT EEPROM
+  from being read, with the recent changes to support Power HAT+s it does
+  not prevent an early scan to see if such an EEPROM exists. This can be
+  problematic for applications where the I2C0 pins have been repurposed.
+  Change the inhibit logic to cut all HAT I2C probing off at the knees,
+  including any automatic settings of usb_max_current_enable, as it should
+  always have done.
+  See: https://github.com/raspberrypi/firmware/issues/1985
+* rpifwcrypto: Preliminary firmware support for rpifwcrypto API
+* Add config.txt to block GET_CUSTOMER_PRIVATE_KEY mailbox API lock_device_private_key=1
+
 ## 2025-08-13: Enable the PARTITION_WALK property by default (latest)
 
 * Enable the PARTITION_WALK property by default
