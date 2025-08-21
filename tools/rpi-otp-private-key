@@ -18,7 +18,8 @@ usage() {
     cat <<EOF
    $(basename "$0") [-cfwy] <key>
 
-   No args - reads the current private key from OTP. These values are NOT visible via 'vcgencmd otp_dump'.
+   No args - reads the current device unique private key from OTP.
+   *These values are NOT visible via 'vcgencmd otp_dump'*
 
    -b Output the key in binary format.
    -c Reads key and exits with 1 if it is all zeros i.e. not set.
@@ -30,11 +31,31 @@ usage() {
    -l Specify key length in words. Defaults to 8 words (32 bytes). Pi 5 supports up to 16 words (64 bytes).
    -o word Offset into the keystore to use, e.g. 0-7 for Pi 4, 0-15 for Pi 5. Defaults to zero.
 
-   <key> is usually a 64 digit hex number (256 bit) e.g. to generate a 256 random number run 'openssl rand -hex 32'
+   <key> is usually a 64 digit hex number (256 bit)
 
-   IMPORTANT: Raspberry Pi 5 and earlier revisions do not have a hardware secure key store. These OTP rows are visible
-   to any user in the 'video' group via vcmailbox. Therefore this functionality is only suitable for key
-   storage if the OS has already been restricted using the signed boot functionality.
+   Key generation:
+   The Raspberry Pi firmware cryptography services requires that the device unique private key is
+   a valid ECDSA with P-256 curve key. Due to limited OTP space only the raw private key component (d)
+   is stored in OTP.
+
+   Example key generation and provisioning:
+
+   # Generate the new private-key - remember to save this to a secure, off-device location!
+   openssl ecparam -name prime256v1 -genkey -noout -out private_key.pem
+
+   # Extract raw the private key component
+   openssl ec -in private_key.pem -text -noout | awk '/priv:/{flag=1; next} /pub:/{flag=0} flag' | tr -d ' \n:' | head -n1 > d.hex
+
+   # Write the key to OTP
+   rpi-otp-private-key -w $(cat d.hex)
+
+   IMPORTANT: Raspberry Pi 5 and earlier revisions do not have a hardware secure key store
+   so the raw OTP values are potentially readable by processes with root-privileges.
+
+   In newer firmware releases, the mailbox APIs used by this script to read the OTP can
+   be disabled by setting lock_device_private_key=1 in config.txt.
+   On Pi4 or newer, if secure-boot is enabled, then this parameter cannot be
+   tampered with because config.txt is stored within the signed boot.img.
 
    WARNING: Changes to OTP memory are permanent and cannot be undone.
 EOF
@@ -134,7 +155,8 @@ if [ $(((0x$BOARD_INFO >> 12) & 15)) = 3 ]; then
 elif [ $(((0x$BOARD_INFO >> 12) & 15)) = 4 ]; then
     MAX_ROW_COUNT=16
 else
-    die "Chip not supported"
+    echo "WARNING: Secure-boot is only supported on Pi4 and newer models"
+    MAX_ROW_COUNT=8
 fi
 if [ -z "$ROW_COUNT" ] || [ "$ROW_COUNT" -ne "$ROW_COUNT" ] 2>/dev/null; then
     die "Key length not a number"
