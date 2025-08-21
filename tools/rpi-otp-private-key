@@ -47,7 +47,7 @@ usage() {
    openssl ec -in private_key.pem -text -noout | awk '/priv:/{flag=1; next} /pub:/{flag=0} flag' | tr -d ' \n:' | head -n1 > d.hex
 
    # Write the key to OTP
-   rpi-otp-private-key -w $(cat d.hex)
+   rpi-otp-private-key -w \$(cat d.hex)
 
    IMPORTANT: Raspberry Pi 5 and earlier revisions do not have a hardware secure key store
    so the raw OTP values are potentially readable by processes with root-privileges.
