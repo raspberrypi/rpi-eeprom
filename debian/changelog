@@ -1,3 +1,18 @@
+rpi-eeprom (28.4-1) trixie; urgency=medium
+
+  * pieeprom-2025-08-13: 2711: Enable PARTITION_WALK property by default
+    (latest)
+  * pieeprom-2025-08-13: 2712: Enable the PARTITION_WALK property by
+    default (latest)
+  * rpi-eeprom-config: Improve No space available error message
+  * pieeprom-2025-08-20: 2711: Fix PARTITION_WALK for missing start.elf
+    files (latest)
+  * pieeprom-2025-08-20: 2712: force_eeprom_read=0 disables HAT I2C
+    (latest)
+  * rpi-otp-private-key: Describe how to store an ECDSA P-256 private key
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Thu, 21 Aug 2025 14:31:12 +0100
+
 rpi-eeprom (28.3-2) trixie; urgency=medium
 
   * Switch gbp.conf debian branch to pios/trixie
