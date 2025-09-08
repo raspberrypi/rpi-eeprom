@@ -14,5 +14,6 @@ For support or hardware interoperability discussions please use the Raspberry Pi
 ## Old EEPROM images
 Old bootloader images are periodically removed from the APT package to reduce the disk space but are still available via Github 
 * Old [BCM2711 releases](https://github.com/raspberrypi/rpi-eeprom/tree/master/firmware-2711/old).
+* Old [BCM2712 releases](https://github.com/raspberrypi/rpi-eeprom/tree/master/firmware-2712/old).
 
 **Old releases may fail to boot on newer hardware revisions.**

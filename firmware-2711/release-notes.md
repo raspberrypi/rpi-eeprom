@@ -1,5 +1,25 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-08-27: Fix PARTITION property to allow default (0) partition to be overridden (latest)
+
+* Fix PARTITION property to allow default (0) partition to be overridden
+  Fix the partition selection to allow the bootloader PARTITION
+  property to override the reboot partition number if the reboot
+  argument is 0 or > 31. Previously, it was only allowing
+  partition numbers > 31 to be overridden.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/743
+* Enable RPIBOOT in BOOT_ORDER / set-reboot-order
+  Previously, rpiboot required the bootrom to have initialised
+  rpiboot before running the firmware. Update the rpiboot
+  initialisation so that rpiboot to be enabled after booting from
+  SPI flash.
+  This could be selectively enabled by setting BOOT_ORDER property
+  (0x3) behind a GPIO conditional in the EEPROM config. On Pi5, the
+  set_reboot_order config.txt option or mailbox property can be
+  used to set a one-time boot-order on
+  N.B. There is no timeout for RPIBOOT so this should only be set
+  as the last boot mode OR used with a boot_watchdog.
+
 ## 2025-08-20: Fix PARTITION_WALK for missing start.elf files (latest)
 
 * Fix PARTITION_WALK for missing start.elf files
