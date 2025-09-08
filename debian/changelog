@@ -1,3 +1,17 @@
+rpi-eeprom (28.5-1~bookworm) bookworm; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-otp-private-key: Fix missing escape character in usage text
+  * pieeprom-2025-08-27: 2711: Fix PARTITION property to allow default (0)
+    partition property to be overridden (latest)
+  * pieeprom-2025-08-27: 2712:  Fix PARTITION property to allow default
+    (0) partition to be overridden (latest)
+
+  [ Andrew Scheller ]
+  * Add link to old 2712 EEPROM images to releases.md page
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 08 Sep 2025 17:02:30 +0100
+
 rpi-eeprom (28.4-1~bookworm) bookworm; urgency=medium
 
   * pieeprom-2025-08-13: 2711: Enable PARTITION_WALK property by default
