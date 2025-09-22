@@ -1,5 +1,20 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-09-22: Add LZ4 decompressor (latest)
+
+* Add LZ4 decompressor
+  LZ4 gives a better compression ratio than the previously used CK compress. The bootloader can now decompress both LZ4 compressed files and CK compressed files.
+* rpifwcrypto: Add GET_CRYPTO_PRIVATE_KEY mailbox API
+  For provisioning, add a new mailbox API which returns the private key
+  in DER format. The API will return an error if the key-status for
+  the specified key is LOCKED.
+* config: Add support for board_attributes in conditional expressions
+  Add support for the board-attributes row in config.txt conditional
+  expressions. This can be used to change boot behavior for
+  Compute Module Lite / No-WiFi etc.
+* board_info: Log the OTP board revision at startup
+  Log the board revision plus the raw OTP value at startup.
+
 ## 2025-08-27: Fix PARTITION property to allow default (0) partition to be overridden (latest)
 
 * Fix PARTITION property to allow default (0) partition to be overridden
