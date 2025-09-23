@@ -1,5 +1,11 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-09-23: Fix TFTP to allow larger files (latest)
+
+* Fix TFTP to allow larger files
+  Allow TFTP block counter to rollover to 0.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/720
+
 ## 2025-09-22: Add LZ4 decompressor (latest)
 
 * Add LZ4 decompressor
