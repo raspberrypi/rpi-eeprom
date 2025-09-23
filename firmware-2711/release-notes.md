@@ -1,5 +1,14 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-09-23: Fix network install regression on Pi4 (latest)
+
+* Fix network install regression on Pi4
+  Fix an issue with the ECDSA signature code which caused network
+  install to fail to load on Pi4.
+* Fix TFTP to allow larger files
+  Allow TFTP block counter to rollover to 0.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/720
+
 ## 2025-09-22: Add LZ4 decompressor (latest)
 
 * Add LZ4 decompressor
