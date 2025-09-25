@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-09-25: Apply UART_BAUD in early bootsys UART init (latest)
+
+* Apply UART_BAUD in early bootsys UART init
+  Update bootsys and fatal error handlers to use the user
+  defined UART_BAUD rate.
+* rpifwcrypto: Add support for ECDSA P-256 key generation
+
 ## 2025-09-23: Fix TFTP to allow larger files (latest)
 
 * Fix TFTP to allow larger files
