@@ -1,5 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-10-03: arm_dt: Report OTP SDRAM size via device-tree (latest)
+
+* arm_dt: Report OTP SDRAM size via device-tree
+  Report the SDRAM in gigabits via device-tree as
+  /proc/device-tree/chosen/rpi-sdram-size-gbit. Scripts reporting the
+  device-capabilities should use this value (if defined) instead of the
+  memory-size field in the boardrev row.
+* Apply UART_BAUD in early bootsys UART init
+  Update bootsys and fatal error handlers to use the user
+  defined UART_BAUD rate.
+* rpifwcrypto: Add support for ECDSA P-256 key generation
+  Also, slightly improve the entropy by passing the system
+  timer value as the personality string.
+
 ## 2025-09-23: Fix network install regression on Pi4 (latest)
 
 * Fix network install regression on Pi4
