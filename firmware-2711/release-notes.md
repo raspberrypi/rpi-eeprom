@@ -1,5 +1,14 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-10-08: Fix accidental set of PM_RSTS bit 5 when stopping watchdog (latest)
+
+* Fix accidental set of PM_RSTS bit 5 when stopping watchdog
+  Fix an issue in the watchdog code where the raw PM_RSTS value
+  was used as partition number. If HADWRF (bit 5) was set (on reboot)
+  this could cause bit 10 to be set. If an OS didn't clear the partition
+  flags on reboot then this could end up being treated as request to
+  boot from partition 32.
+
 ## 2025-10-03: arm_dt: Report OTP SDRAM size via device-tree (latest)
 
 * arm_dt: Report OTP SDRAM size via device-tree
