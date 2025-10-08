@@ -1,5 +1,27 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-10-08: Fix accidental set of PM_RSTS bit 5 when stopping watchdog (latest)
+
+* Fix accidental set of PM_RSTS bit 5 when stopping watchdog
+  Fix an issue in the watchdog code where the raw PM_RSTS value
+  was used as partition number. If HADWRF (bit 5) was set (on reboot)
+  this could cause bit 10 to be set. If an OS didn't clear the partition
+  flags on reboot then this could end up being treated as request to
+  boot from partition 32.
+* pi5: Preliminary support for 4K native sectors with NVMe drives
+  Pi5 now supports 4K native sector NVMe drives. 
+  This allows booting from drives with logical block size 4096, 
+  while 512B drives remain compatible. With 4K sectors, storage density 
+  increases along with improved reliability and efficiency.
+  N.B. USB boot still requires a 512 byte sector size and there are
+  no RPi OS disk images with a 4K sector format.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/577
+* arm_dt: Report OTP SDRAM size via device-tree
+  Report the SDRAM in gigabits via device-tree as
+  /proc/device-tree/chosen/rpi-sdram-size-gbit. Scripts reporting the
+  device-capabilities should use this value (if defined) instead of the
+  memory-size field in the boardrev row.
+
 ## 2025-09-25: Apply UART_BAUD in early bootsys UART init (latest)
 
 * Apply UART_BAUD in early bootsys UART init
