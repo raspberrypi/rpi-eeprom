@@ -1,5 +1,13 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-10-14: recovery: Use ROM boot-mode to detect rpiboot (latest)
+
+* recovery: Use ROM boot-mode flag to detect rpiboot mode
+  In recovery-mode use the bootrom register flag to detect the
+  original boot-mode rather than looking at whether the rpiboot
+  usb-device boot driver is initialised.
+* Manufacturing test updates.
+
 ## 2025-10-08: Fix accidental set of PM_RSTS bit 5 when stopping watchdog (latest)
 
 * Fix accidental set of PM_RSTS bit 5 when stopping watchdog
