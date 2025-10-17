@@ -1,5 +1,66 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-10-17: Enable background refresh on 2712d0 for all SDRAM sizes (latest)
+
+* 2712d0: Enable background refresh on 2712d0 for all SDRAM sizes
+  This provides a minor performance benefit.
+* Update GPT to support 4K native sectors
+  Bootloader logic updated to correctly interpret the GPT layout format specific to 4K native sector drives.
+* recovery: Use ROM boot-mode flag to detect rpiboot mode
+  In recovery-mode use the bootrom register flag to detect the
+  original boot-mode rather than looking at whether the rpiboot
+  usb-device boot driver is initialised.
+
+## 2025-10-08: Fix accidental set of PM_RSTS bit 5 when stopping watchdog (latest)
+
+* Fix accidental set of PM_RSTS bit 5 when stopping watchdog
+  Fix an issue in the watchdog code where the raw PM_RSTS value
+  was used as partition number. If HADWRF (bit 5) was set (on reboot)
+  this could cause bit 10 to be set. If an OS didn't clear the partition
+  flags on reboot then this could end up being treated as request to
+  boot from partition 32.
+* pi5: Preliminary support for 4K native sectors with NVMe drives
+  Pi5 now supports 4K native sector NVMe drives. 
+  This allows booting from drives with logical block size 4096, 
+  while 512B drives remain compatible. With 4K sectors, storage density 
+  increases along with improved reliability and efficiency.
+  N.B. USB boot still requires a 512 byte sector size and there are
+  no RPi OS disk images with a 4K sector format.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/577
+* arm_dt: Report OTP SDRAM size via device-tree
+  Report the SDRAM in gigabits via device-tree as
+  /proc/device-tree/chosen/rpi-sdram-size-gbit. Scripts reporting the
+  device-capabilities should use this value (if defined) instead of the
+  memory-size field in the boardrev row.
+
+## 2025-09-25: Apply UART_BAUD in early bootsys UART init (latest)
+
+* Apply UART_BAUD in early bootsys UART init
+  Update bootsys and fatal error handlers to use the user
+  defined UART_BAUD rate.
+* rpifwcrypto: Add support for ECDSA P-256 key generation
+
+## 2025-09-23: Fix TFTP to allow larger files (latest)
+
+* Fix TFTP to allow larger files
+  Allow TFTP block counter to rollover to 0.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/720
+
+## 2025-09-22: Add LZ4 decompressor (latest)
+
+* Add LZ4 decompressor
+  LZ4 gives a better compression ratio than the previously used CK compress. The bootloader can now decompress both LZ4 compressed files and CK compressed files.
+* rpifwcrypto: Add GET_CRYPTO_PRIVATE_KEY mailbox API
+  For provisioning, add a new mailbox API which returns the private key
+  in DER format. The API will return an error if the key-status for
+  the specified key is LOCKED.
+* config: Add support for board_attributes in conditional expressions
+  Add support for the board-attributes row in config.txt conditional
+  expressions. This can be used to change boot behavior for
+  Compute Module Lite / No-WiFi etc.
+* board_info: Log the OTP board revision at startup
+  Log the board revision plus the raw OTP value at startup.
+
 ## 2025-08-27: Fix PARTITION property to allow default (0) partition to be overridden (latest)
 
 * Fix PARTITION property to allow default (0) partition to be overridden

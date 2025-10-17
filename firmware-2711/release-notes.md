@@ -1,5 +1,60 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-10-14: recovery: Use ROM boot-mode to detect rpiboot (latest)
+
+* recovery: Use ROM boot-mode flag to detect rpiboot mode
+  In recovery-mode use the bootrom register flag to detect the
+  original boot-mode rather than looking at whether the rpiboot
+  usb-device boot driver is initialised.
+* Manufacturing test updates.
+
+## 2025-10-08: Fix accidental set of PM_RSTS bit 5 when stopping watchdog (latest)
+
+* Fix accidental set of PM_RSTS bit 5 when stopping watchdog
+  Fix an issue in the watchdog code where the raw PM_RSTS value
+  was used as partition number. If HADWRF (bit 5) was set (on reboot)
+  this could cause bit 10 to be set. If an OS didn't clear the partition
+  flags on reboot then this could end up being treated as request to
+  boot from partition 32.
+
+## 2025-10-03: arm_dt: Report OTP SDRAM size via device-tree (latest)
+
+* arm_dt: Report OTP SDRAM size via device-tree
+  Report the SDRAM in gigabits via device-tree as
+  /proc/device-tree/chosen/rpi-sdram-size-gbit. Scripts reporting the
+  device-capabilities should use this value (if defined) instead of the
+  memory-size field in the boardrev row.
+* Apply UART_BAUD in early bootsys UART init
+  Update bootsys and fatal error handlers to use the user
+  defined UART_BAUD rate.
+* rpifwcrypto: Add support for ECDSA P-256 key generation
+  Also, slightly improve the entropy by passing the system
+  timer value as the personality string.
+
+## 2025-09-23: Fix network install regression on Pi4 (latest)
+
+* Fix network install regression on Pi4
+  Fix an issue with the ECDSA signature code which caused network
+  install to fail to load on Pi4.
+* Fix TFTP to allow larger files
+  Allow TFTP block counter to rollover to 0.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/720
+
+## 2025-09-22: Add LZ4 decompressor (latest)
+
+* Add LZ4 decompressor
+  LZ4 gives a better compression ratio than the previously used CK compress. The bootloader can now decompress both LZ4 compressed files and CK compressed files.
+* rpifwcrypto: Add GET_CRYPTO_PRIVATE_KEY mailbox API
+  For provisioning, add a new mailbox API which returns the private key
+  in DER format. The API will return an error if the key-status for
+  the specified key is LOCKED.
+* config: Add support for board_attributes in conditional expressions
+  Add support for the board-attributes row in config.txt conditional
+  expressions. This can be used to change boot behavior for
+  Compute Module Lite / No-WiFi etc.
+* board_info: Log the OTP board revision at startup
+  Log the board revision plus the raw OTP value at startup.
+
 ## 2025-08-27: Fix PARTITION property to allow default (0) partition to be overridden (latest)
 
 * Fix PARTITION property to allow default (0) partition to be overridden
