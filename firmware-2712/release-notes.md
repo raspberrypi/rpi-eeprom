@@ -1,5 +1,16 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-10-17: Enable background refresh on 2712d0 for all SDRAM sizes (latest)
+
+* 2712d0: Enable background refresh on 2712d0 for all SDRAM sizes
+  This provides a minor performance benefit.
+* Update GPT to support 4K native sectors
+  Bootloader logic updated to correctly interpret the GPT layout format specific to 4K native sector drives.
+* recovery: Use ROM boot-mode flag to detect rpiboot mode
+  In recovery-mode use the bootrom register flag to detect the
+  original boot-mode rather than looking at whether the rpiboot
+  usb-device boot driver is initialised.
+
 ## 2025-10-08: Fix accidental set of PM_RSTS bit 5 when stopping watchdog (latest)
 
 * Fix accidental set of PM_RSTS bit 5 when stopping watchdog
