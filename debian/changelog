@@ -1,3 +1,25 @@
+rpi-eeprom (28.6-1) trixie; urgency=medium
+
+  * pieeprom-2025-09-22: 2712: Add LZ4 decompressor (latest)
+  * pieeprom-2025-09-22: 2711: Add LZ4 decompressor (latest)
+  * pieeprom-2025-09-23: 2711: Fix network install regression on Pi4
+    (latest)
+  * pieeprom-2025-09-23: 2712: Fix TFTP to allow larger files (latest)
+  * pieeprom-2025-09-25: 2712: Apply UART_BAUD in early bootsys UART init
+    (latest)
+  * pieeprom-2025-10-03: 2711: arm_dt: Report OTP SDRAM size via device-
+    tree (latest)
+  * pieeprom-2025-10-08: 2711: Fix accidental set of PM_RSTS bit 5 when
+    stopping watchdog (latest)
+  * pieeprom-2025-10-08: 2712: Fix accidental set of PM_RSTS bit 5 when
+    stopping watchdog (latest)
+  * pieeprom-2025-10-14: 2711: Use ROM boot-mode flag to detect rpiboot
+    mode (latest)
+  * pieeprom-2025-10-17: Enable background refresh on 2712d0 for all SDRAM
+    sizes (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 17 Oct 2025 15:32:24 +0100
+
 rpi-eeprom (28.5-1) trixie; urgency=medium
 
   [ Tim Gover ]
