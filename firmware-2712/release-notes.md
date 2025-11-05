@@ -1,5 +1,13 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-11-05: arm_loader: Add iommu_dma_numa_policy=interleave when needed (latest)
+
+* arm_loader: Add iommu_dma_numa_policy=interleave when needed
+  This applies a similar numa interleave for iommu dma kernel allocations.
+  This includes buffers allocated for hevc and v3d.
+  See: https://forums.raspberrypi.com/viewtopic.php?t=392666
+* Rebuild RP1 firmware to reduce size.
+
 ## 2025-10-17: Enable background refresh on 2712d0 for all SDRAM sizes (latest)
 
 * 2712d0: Enable background refresh on 2712d0 for all SDRAM sizes
