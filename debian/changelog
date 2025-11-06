@@ -1,3 +1,12 @@
+rpi-eeprom (28.7-1) trixie; urgency=medium
+
+  * pieeprom-2025-11-05: 2711: arm_loader: Add
+    iommu_dma_numa_policy=interleave when needed (latest)
+  * pieeprom-2025-11-05: 2712: arm_loader: Add
+    iommu_dma_numa_policy=interleave when needed (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Thu, 06 Nov 2025 12:30:21 +0000
+
 rpi-eeprom (28.6-1) trixie; urgency=medium
 
   * pieeprom-2025-09-22: 2712: Add LZ4 decompressor (latest)
