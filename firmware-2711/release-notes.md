@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-11-09: Promote 2025-11-05 to the default release (default)
+
 ## 2025-11-05: Add iommu_dma_numa_policy=interleave when needed (latest)
 
 * arm_loader: Add iommu_dma_numa_policy=interleave when needed
