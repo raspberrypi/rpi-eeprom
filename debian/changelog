@@ -1,3 +1,10 @@
+rpi-eeprom (28.8-1) trixie; urgency=medium
+
+  * 2025-11-09: Promote 2025-11-05 to the default release (default)
+  * imager: Move the imager release to 2025-11-05
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 10 Nov 2025 09:30:12 +0000
+
 rpi-eeprom (28.7-1) trixie; urgency=medium
 
   * pieeprom-2025-11-05: 2711: arm_loader: Add
