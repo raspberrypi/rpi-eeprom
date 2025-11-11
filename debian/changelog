@@ -1,3 +1,14 @@
+rpi-eeprom (28.7-1~bookworm) bookworm; urgency=medium
+
+  * pieeprom-2025-11-05: 2711: arm_loader: Add
+    iommu_dma_numa_policy=interleave when needed (latest)
+  * pieeprom-2025-11-05: 2712: arm_loader: Add
+    iommu_dma_numa_policy=interleave when needed (latest)
+  * 2025-11-09: Promote 2025-11-05 to the default release (default)
+  * imager: Move the imager release to 2025-11-05
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 11 Nov 2025 09:57:23 +0000
+
 rpi-eeprom (28.6-1~bookworm) bookworm; urgency=medium
 
   * pieeprom-2025-09-22: 2712: Add LZ4 decompressor (latest)
