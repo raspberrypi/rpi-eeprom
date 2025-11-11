@@ -9,3 +9,10 @@ ${script_dir}/make-release critical 2025-11-05 000138c0 "${script_dir}/2711-conf
 
 # Pi5
 ${script_dir}/make-release critical 2025-11-05 "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
+
+# Convert to disk image for RPi Imager downloads
+sudo ${script_dir}/make-recovery-images
+
+# Delete the plain .zip files. These should not be uploaded as releases.
+rm -rf release-2711
+rm -rf release-2712
