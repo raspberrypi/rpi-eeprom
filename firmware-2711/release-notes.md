@@ -1,5 +1,18 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-11-21: recovery: Restore recovery_wait option (latest)
+
+* recovery: Restore recovery_wait option
+  Restore the recovery_wait config.txt option. If this option is set
+  then recovery.bin will not rename itself or reboot. Instead flash
+  the activity LED on completion.
+  This option can be useful when creating an SD card to erase the
+  EEPROM or program the RPIBOOT gpio on multiple devices.
+  If recovery_wait=1 and recovery.bin is run from the SD card then
+  indicate success of erase_eeprom=1 or program_rpiboot_gpio=N was
+  set instead of requiring the EEPROM to be updated.
+* Manufacture test updates for SDRAM.
+
 ## 2025-11-09: Promote 2025-11-05 to the default release (default)
 
 ## 2025-11-05: Add iommu_dma_numa_policy=interleave when needed (latest)
