@@ -21,18 +21,19 @@ cat <<EOF
 Usage:
 sudo $(basename $0): <gpio_num>
 
-	Creates and SD card image which programs the OTP on a Pi 4B or Pi 400
+	Creates an SD card image which programs the OTP on a Pi 4B or Pi 400
 	to select a GPIO on the 40-pin header for use as the rpiboot GPIO.
-	Once programmed, if this GPIO is pulled to ground at power on the SoC
-	bootrom will boot into rpiboot provisioning mode.
+	Once programmed, if this GPIO is pulled to ground at power on, the
+	SoC bootrom will boot into rpiboot provisioning mode.
 
-	This setting permenantely modifies the device confiuration and cannot
-	be undone or changed.
+	This setting _permanently_ modifies the device confiugration - it cannot
+	be undone or changed, ever.
 
-        The SD image will be written to images-2711/pi4-program-rpiboot-gpioN.zip
-        and can be flashed using Raspberry Pi Imager to a spare SD card.
-        As with programming the bootloader EEPROM insert the card in the
-        Raspberry Pi, power on and wait for the green LED to flash.
+	The SD image will be written to images-2711/pi4-program-rpiboot-gpioN.zip,
+	where N is the number of the chosen GPIO, and can be flashed using
+	Raspberry Pi Imager to a spare SD card. As with programming the bootloader
+	EEPROM, insert the card in the Raspberry Pi, power on and wait for the
+	green LED to flash.
 	
 	gpio_num: Select the rpiboot GPIO number from 2,4,5,6,7 or 8.
 EOF
