@@ -26,7 +26,7 @@ sudo $(basename $0): <gpio_num>
 	Once programmed, if this GPIO is pulled to ground at power on, the
 	SoC bootrom will boot into rpiboot provisioning mode.
 
-	This setting _permanently_ modifies the device confiugration - it cannot
+	This setting _permanently_ modifies the device configuration - it cannot
 	be undone or changed, ever.
 
 	The SD image will be written to images-2711/pi4-program-rpiboot-gpioN.zip,
@@ -34,7 +34,7 @@ sudo $(basename $0): <gpio_num>
 	Raspberry Pi Imager to a spare SD card. As with programming the bootloader
 	EEPROM, insert the card in the Raspberry Pi, power on and wait for the
 	green LED to flash.
-	
+
 	gpio_num: Select the rpiboot GPIO number from 2,4,5,6,7 or 8.
 EOF
     exit 1
