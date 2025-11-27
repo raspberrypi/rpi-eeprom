@@ -1,5 +1,17 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-11-27: Stop partition-walk after boot-mode timeout/retries limit (latest)
+
+* pi5: Write over-voltage config to the UART log
+  Write the high level over-voltage configuration to the UART log for
+  diagnostic purposes.
+* Stop partition-walk after boot-mode timeout/retries limit
+  Fix a fatal assert with USB boot where the partition walk could be
+  retried after the USB timeout/retry limit had been reached.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/776
+* rpiboot: Extend metadata to report status of operations
+  Report success/fail status of recovery operations based on config.txt settings
+
 ## 2025-11-21: Allow longer overlay file paths (latest)
 
 * recovery: Restore recovery_wait option
