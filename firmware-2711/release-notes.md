@@ -1,5 +1,20 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-11-27: helpers/config_loader: Also support bootvar0 eeprom config on Pi4 (latest)
+
+* helpers/config_loader: Also support bootvar0 eeprom config on Pi4
+  This allows an eeprom config setting (e.g. BOOTARG0=0x10) to be set on a board
+  which config.txt can use as a conditional expression (e.g. [bootarg0&0x10]).
+* pi5: Write over-voltage config to the UART log
+  Write the high level over-voltage configuration to the UART log for
+  diagnostic purposes.
+* Stop partition-walk after boot-mode timeout/retries limit
+  Fix a fatal assert with USB boot where the partition walk could be
+  retried after the USB timeout/retry limit had been reached.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/776
+* rpiboot: Extend metadata to report status of operations
+  Report success/fail status of recovery operations based on config.txt settings
+
 ## 2025-11-21: recovery: Restore recovery_wait option (latest)
 
 * recovery: Restore recovery_wait option
