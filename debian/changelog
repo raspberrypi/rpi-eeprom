@@ -1,3 +1,27 @@
+rpi-eeprom (28.9-1) trixie; urgency=medium
+
+  [ Lincoln Thurlow ]
+  * Fix the error message for config signing
+
+  [ Tim Gover ]
+  * imager: Delete temporary release-2711, release-2712 directories
+  * pieeprom-2025-11-21: 2712: Allow longer overlay file paths (latest)
+  * pieeprom-2025-11-21: 2711: recovery: Restore recovery_wait option
+    (latest)
+  * tools: imager: Add make-pi4-rpiboot-gpio-sd
+  * pieeprom-2025-11-27: 2712: Stop partition-walk after boot-mode
+    timeout/retries limit (latest)
+  * pieeprom-2025-11-27: 2711: helpers/config_loader: Also support
+    bootvar0 eeprom config on Pi4 (latest)
+
+  [ Phil Elwell ]
+  * tools: imager: make-pi4-rpiboot-gpio-sd: Minor typos
+
+  [ Andrew Scheller ]
+  * Fix remaining typo
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 01 Dec 2025 12:07:17 +0000
+
 rpi-eeprom (28.8-1) trixie; urgency=medium
 
   * 2025-11-09: Promote 2025-11-05 to the default release (default)
