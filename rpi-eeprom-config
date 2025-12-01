@@ -260,8 +260,8 @@ class BootloaderImage(object):
 
         self._image_size = len(self._bytes)
         if self._image_size not in VALID_IMAGE_SIZES:
-            exit_error("%s: Expected size %d bytes actual size %d bytes" %
-                       (filename, self._image_size, len(self._bytes)))
+            exit_error("%s: Expected sizes %s bytes, got actual size %d bytes" %
+                       (filename, VALID_IMAGE_SIZES, self._image_size))
         self.parse()
 
     def parse(self):

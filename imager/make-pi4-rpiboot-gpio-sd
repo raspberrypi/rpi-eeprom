@@ -1,0 +1,134 @@
+#!/bin/sh
+
+set -e
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+TMP_DIR=""
+
+die() {
+   echo "$@" >&2
+   exit 1
+}
+
+cleanup() {
+   if [ -d "${TMP_DIR}" ]; then
+      rm -rf "${TMP_DIR}"
+   fi
+}
+
+usage() {
+cat <<EOF
+Usage:
+sudo $(basename $0): <gpio_num>
+
+	Creates an SD card image which programs the OTP on a Pi 4B or Pi 400
+	to select a GPIO on the 40-pin header for use as the rpiboot GPIO.
+	Once programmed, if this GPIO is pulled to ground at power on, the
+	SoC bootrom will boot into rpiboot provisioning mode.
+
+	This setting _permanently_ modifies the device configuration - it cannot
+	be undone or changed, ever.
+
+	The SD image will be written to images-2711/pi4-program-rpiboot-gpioN.zip,
+	where N is the number of the chosen GPIO, and can be flashed using
+	Raspberry Pi Imager to a spare SD card. As with programming the bootloader
+	EEPROM, insert the card in the Raspberry Pi, power on and wait for the
+	green LED to flash.
+
+	gpio_num: Select the rpiboot GPIO number from 2,4,5,6,7 or 8.
+EOF
+    exit 1
+}
+
+trap cleanup EXIT
+
+[ "$(id -u)" = "0" ] || die "$(basename $0) must be run as root"
+[ -n "${SUDO_UID}" ] || die "SUDO_UID not defined"
+[ -n "${SUDO_GID}" ] || die "SUDO_GID not defined"
+
+build_image()
+{
+   chip="${1}"
+   gpio="${2}"
+   img="pi4-program-rpiboot-gpio${gpio}"
+   zip="${img}.zip"
+   img="${img}.img"
+
+   TMP_DIR="$(mktemp -d)"
+   (
+      mkdir "${TMP_DIR}/files"
+      cd "${TMP_DIR}/files"
+      cp "${script_dir}/../firmware-${chip}/latest/recovery.bin" .
+   cat <<EOF > config.txt
+uart_2ndstage=1
+recovery_wait=1
+program_rpiboot_gpio=${gpio}
+EOF
+      echo "Generated config.txt file"
+      cat config.txt
+      cd "${TMP_DIR}"
+      dd if=/dev/zero bs=1M count=258 of=temp.img > /dev/null 2>&1
+      /sbin/sfdisk temp.img <<EOF
+label: dos
+label-id: 0x0a7b5ac5
+device: temp.img
+unit: sectors
+
+./test.img1 : start=        2048, size=       524288, type=c
+EOF
+      file temp.img
+      LOOP="/dev/mapper/$(kpartx -lv temp.img | head -n1 | awk '{print $1}')"
+      kpartx -a temp.img
+      /sbin/mkfs.fat -F 32 -s 1 "${LOOP}" > /dev/null
+      mkdir fs
+      mount "${LOOP}" fs
+      cp -v files/* fs
+      sync
+      sleep 5
+      umount fs
+      # Delay before calling kpartx otherwise it's sometimes possible to get orphaned loopback devices
+      sleep 5
+      kpartx -d temp.img
+   )
+   image_dir="images-${chip}"
+   mkdir -p "${image_dir}"
+   chown "${SUDO_UID}:${SUDO_GID}" "${image_dir}"
+   mv "${TMP_DIR}/temp.img" "${image_dir}/${img}"
+   file "${image_dir}/${img}"
+   cd "${image_dir}"
+   zip "${zip}" "${img}"
+   cd ..
+   rm "${image_dir}/${img}"
+   chown "${SUDO_UID}:${SUDO_GID}" "${image_dir}/${zip}"
+   echo "Wrote $(pwd)/${image_dir}/${zip}"
+}
+
+
+if ! command -v kpartx > /dev/null; then
+   die "kpartx not found: Try installing the kpartx package"
+fi
+
+[ -n "${1}" ] || usage
+gpio_num="$1"
+
+case "${gpio_num}" in
+   	2)
+		;;
+	4)
+		;;
+	5)
+		;;
+	6)
+		;;
+	7)
+		;;
+	8)
+		;;
+        *)
+		echo "GPIO ${gpio_num} is not supported"
+		echo
+  	  usage
+	  	;;
+esac
+
+build_image 2711 "${gpio_num}"
