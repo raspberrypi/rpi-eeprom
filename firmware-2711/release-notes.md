@@ -1,5 +1,18 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2025-12-08: arm_loader: Add machine ID derived from OTP values (latest)
+
+* arm_loader: Add machine ID derived from OTP values
+  Machine ID is generated and exposed in device tree as rpi-machine-id
+* arm_ldconfig: Avoid double os_prefix on initramfs
+  When using auto_initramfs we were picking up prefix from the kernel,
+  but also adding os_prefix later:
+  fname = prefixed_path(initramfs_file, os_prefix, temp_path, sizeof(temp_path));
+  See: https://forums.raspberrypi.com/viewtopic.php?t=394238
+* recovery: Use OTP rpiboot GPIO if non-zero
+  If an rpiboot GPIO has already been written to OTP then default to
+  that value if C(program_rpiboot_gpio) is not specified on config.txt.
+
 ## 2025-11-27: helpers/config_loader: Also support bootvar0 eeprom config on Pi4 (latest)
 
 * helpers/config_loader: Also support bootvar0 eeprom config on Pi4
