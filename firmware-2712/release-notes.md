@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-12-09: Promote 2025-12-08 to the default release (default)
+
 ## 2025-12-08: arm_loader: Add machine ID derived from OTP values (latest)
 
 * arm_loader: Add machine ID derived from OTP values
