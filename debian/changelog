@@ -1,3 +1,13 @@
+rpi-eeprom (28.10-1) trixie; urgency=medium
+
+  * pieeprom-2025-12-08: 2711: Add machine ID derived from OTP values
+    (latest)
+  * pieeprom-2025-12-08: 2712: arm_loader: Add machine ID derived from OTP
+    values (latest)
+  * pieeprom-2025-12-08: 2712: 2711: Promote to the default release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 09 Dec 2025 09:41:27 +0000
+
 rpi-eeprom (28.9-1) trixie; urgency=medium
 
   [ Lincoln Thurlow ]
