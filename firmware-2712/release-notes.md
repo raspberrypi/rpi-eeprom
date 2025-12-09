@@ -1,5 +1,17 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2025-12-09: Promote 2025-12-08 to the default release (default)
+
+## 2025-12-08: arm_loader: Add machine ID derived from OTP values (latest)
+
+* arm_loader: Add machine ID derived from OTP values
+  Machine ID is generated and exposed in device tree as rpi-machine-id
+* arm_ldconfig: Avoid double os_prefix on initramfs
+  When using auto_initramfs we were picking up prefix from the kernel,
+  but also adding os_prefix later:
+  fname = prefixed_path(initramfs_file, os_prefix, temp_path, sizeof(temp_path));
+  See: https://forums.raspberrypi.com/viewtopic.php?t=394238
+
 ## 2025-11-27: Stop partition-walk after boot-mode timeout/retries limit (latest)
 
 * pi5: Write over-voltage config to the UART log
