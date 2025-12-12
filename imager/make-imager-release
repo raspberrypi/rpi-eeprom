@@ -1,14 +1,18 @@
 #!/bin/sh
 
 set -e
+set -x
 
 script_dir=$(cd "$(dirname "$0")" && pwd)
+base_dir="${script_dir}/.."
 
 # Pi4, Pi400, CM4, CM4-S
-${script_dir}/make-release critical 2025-11-05 000138c0 "${script_dir}/2711-config" release-2711 rpi-boot-eeprom-recovery 2711
+image_date=$(ls -lr $base_dir/firmware-2711/default/ | grep pieeprom | sed 's/.*pieeprom-//g' | sed 's/.bin//g' | head -n1)
+${script_dir}/make-release critical ${image_date} 000138c0 "${script_dir}/2711-config" release-2711 rpi-boot-eeprom-recovery 2711
 
 # Pi5
-${script_dir}/make-release critical 2025-11-05 "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
+image_date=$(ls -lr $base_dir/firmware-2712/default/ | grep pieeprom | sed 's/.*pieeprom-//g' | sed 's/.bin//g' | head -n1)
+${script_dir}/make-release critical ${image_date} "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
 
 # Convert to disk image for RPi Imager downloads
 sudo ${script_dir}/make-recovery-images
