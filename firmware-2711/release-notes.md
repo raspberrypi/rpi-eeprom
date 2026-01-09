@@ -1,5 +1,20 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-01-09: arm_loader: Apply rpifwcrypto lock permissions GET/SET USER OTP (latest)
+
+* arm_loader: Apply rpifwcrypto lock permissions GET/SET USER OTP
+  Previously, the GET/SET user OTP mailboxes would provide access to the
+  device unique private key. Update the mailbox API to fail if the
+  key has been locked via lock_device_private_key=1 in config.txt or
+  the associated mailbox call.
+  GET/SET user OTP fails by setting the result tag to the standard
+  error code (0x80000000). The dedicate GET/SET private key continue
+  to fail the entire mailbox operation to force vcmailbox to exit
+  with a non-zero error code.
+* cm5: Add support for 8-bit bus width eMMC
+* Query all sdram devices for temperature when adjusting refresh
+* Add support for more SDRAM die configurations.
+
 ## 2025-12-09: Promote 2025-12-08 to the default release (default)
 
 ## 2025-12-08: arm_loader: Add machine ID derived from OTP values (latest)
