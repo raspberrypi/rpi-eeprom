@@ -1,3 +1,14 @@
+rpi-eeprom (28.11-1) trixie; urgency=medium
+
+  * imager: make-imager-release: Automatically select latest default
+    EEPROM date
+  * rpi-eeprom-config: Use time.monotonic for timeouts instead of wall
+    clock
+  * pieeprom-2026-01-09: 2711: arm_loader: Apply rpifwcrypto lock
+    permissions GET/SET USER OTP (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 12 Jan 2026 11:58:03 +0000
+
 rpi-eeprom (28.10-1) trixie; urgency=medium
 
   * pieeprom-2025-12-08: 2711: Add machine ID derived from OTP values
