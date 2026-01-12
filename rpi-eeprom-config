@@ -117,12 +117,12 @@ def shell_cmd(args, timeout=10, echo=False):
     error occurs then exit and output the subprocess stdout, stderr messages
     for debug.
     """
-    start = time.time()
+    start = time.monotonic()
     arg_str = ' '.join(args)
     bufsize = 0 if echo else -1
     result = subprocess.Popen(args, bufsize=bufsize, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    while time.time() - start < timeout:
+    while time.monotonic() - start < timeout:
         if echo:
             s = result.stdout.read(80).decode('utf-8')
             if s != "":
