@@ -1,3 +1,9 @@
+rpi-eeprom (28.12-1) trixie; urgency=medium
+
+  * pieeprom-2026-01-09: 2711: Promote to the default release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 13 Jan 2026 22:20:35 +0000
+
 rpi-eeprom (28.11-1) trixie; urgency=medium
 
   * imager: make-imager-release: Automatically select latest default
