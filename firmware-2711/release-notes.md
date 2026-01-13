@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-01-13: Promote 2026-01-09 to the default release (default)
+
 ## 2026-01-09: arm_loader: Apply rpifwcrypto lock permissions GET/SET USER OTP (latest)
 
 * arm_loader: Apply rpifwcrypto lock permissions GET/SET USER OTP
