@@ -1,5 +1,11 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-01-21: rpi-fw-crypto: Fix bad hmac arguments lock-up (latest)
+
+* rpi-fw-crypto: Fix bad hmac arguments lock-up
+  Improve argument validation so that a bad key-id or invalid private key
+  can no longer cause a lock-up during HMAC operations.
+
 ## 2026-01-16: Assume eMMC for CM4/CM5 non-lite (latest)
 
 * Assume eMMC for CM4/CM5 non-lite
