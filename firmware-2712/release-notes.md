@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-02-06: config: Add support for customer OTP rows in conditional expressions (latest)
+
+* config: Add support for customer OTP rows in conditional expressions
+  Support conditional filter for eight customer OTP rows to be used by config.txt from Pi 1 onwards.
+* pi5: Copy early bootloader UART logs into vcos logging
+  Early bootloader loggings in bootmain are now available via 'sudo vclog -m'
+
 ## 2026-01-21: rpi-fw-crypto: Fix bad hmac arguments lock-up (latest)
 
 * rpi-fw-crypto: Fix bad hmac arguments lock-up
