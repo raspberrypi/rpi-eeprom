@@ -1,5 +1,15 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-02-06: config: Add support for customer OTP rows in conditional expressions (latest)
+
+* config: Add support for customer OTP rows in conditional expressions
+  Support conditional filter for eight customer OTP rows to be used by config.txt from Pi 1 onwards.
+* rpi-fw-crypto: Fix bad hmac arguments lock-up
+  Improve argument validation so that a bad key-id or invalid private key
+  can no longer cause a lock-up during HMAC operations.
+* Assume eMMC for CM4/CM5 non-lite
+  Attempt the fast path by skipping the SD interface condition command timeout on CM4/CM5 (non-lite) modules and enable eMMC mode directly. This saves ~250ms of the boot time.
+
 ## 2026-01-13: Promote 2026-01-09 to the default release (default)
 
 ## 2026-01-09: arm_loader: Apply rpifwcrypto lock permissions GET/SET USER OTP (latest)
