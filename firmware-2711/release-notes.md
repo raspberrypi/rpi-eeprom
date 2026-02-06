@@ -4,6 +4,7 @@
 
 * config: Add support for customer OTP rows in conditional expressions
   Support conditional filter for eight customer OTP rows to be used by config.txt from Pi 1 onwards.
+  (Requires updated start4.elf)
 * rpi-fw-crypto: Fix bad hmac arguments lock-up
   Improve argument validation so that a bad key-id or invalid private key
   can no longer cause a lock-up during HMAC operations.
