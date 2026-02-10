@@ -1,5 +1,37 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-02-06: config: Add support for customer OTP rows in conditional expressions (latest)
+
+* config: Add support for customer OTP rows in conditional expressions
+  Support conditional filter for eight customer OTP rows to be used by config.txt from Pi 1 onwards.
+* pi5: Copy early bootloader UART logs into vcos logging
+  Early bootloader loggings in bootmain are now available via 'sudo vclog -m'
+
+## 2026-01-21: rpi-fw-crypto: Fix bad hmac arguments lock-up (latest)
+
+* rpi-fw-crypto: Fix bad hmac arguments lock-up
+  Improve argument validation so that a bad key-id or invalid private key
+  can no longer cause a lock-up during HMAC operations.
+
+## 2026-01-16: Assume eMMC for CM4/CM5 non-lite (latest)
+
+* Assume eMMC for CM4/CM5 non-lite
+  Attempt the fast path by skipping the SD interface condition command timeout on CM4/CM5 (non-lite) modules and enable eMMC mode directly. This saves ~250ms of the boot time.
+* Don't stomp on RTC alarm state
+  Preserve the RTC's alarm state so that it can be queried by the rpi-rtc
+  driver.
+  See: https://github.com/raspberrypi/firmware/issues/2011
+* arm_loader: Apply rpifwcrypto lock permissions GET/SET USER OTP
+  Previously, the GET/SET user OTP mailboxes would provide access to the
+  device unique private key. Update the mailbox API to fail if the
+  key has been locked via lock_device_private_key=1 in config.txt or
+  the associated mailbox call.
+  GET/SET user OTP fails by setting the result tag to the standard
+  error code (0x80000000). The dedicate GET/SET private key continue
+  to fail the entire mailbox operation to force vcmailbox to exit
+  with a non-zero error code.
+* cm5: Add support for 8-bit bus width eMMC
+
 ## 2025-12-09: Promote 2025-12-08 to the default release (default)
 
 ## 2025-12-08: arm_loader: Add machine ID derived from OTP values (latest)
