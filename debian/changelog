@@ -1,3 +1,15 @@
+rpi-eeprom (28.13-1) trixie; urgency=medium
+
+  * pieeprom-2026-01-16: 2712: Assume eMMC for CM4/CM5 (latest)
+  * pieeprom-2026-01-21: 2712: Fix bad HMAC arguments lockup (latest)
+  * firmware: Archive old 'latest' release binaries
+  * pieeprom-2026-02-06: 2711: Add support for customer OTP rows in
+    conditional expressions (latest)
+  * pieeprom-2026-02-06: 2712: config: Add support for customer OTP rows
+    in conditional expressions (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 10 Feb 2026 13:36:43 +0000
+
 rpi-eeprom (28.12-1) trixie; urgency=medium
 
   * pieeprom-2026-01-09: 2711: Promote to the default release
