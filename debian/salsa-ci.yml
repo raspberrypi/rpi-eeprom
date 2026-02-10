@@ -1,9 +1,2 @@
 include:
   - $CI_SERVER_URL/apt/salsa-ci/raw/pios/recipes/pios.yml
-
-extract-source:
-  variables:
-    GIT_DEPTH: 0
-    GIT_STRATEGY: clone
-  before_script:
-    - git fetch origin master:master
