@@ -7,5 +7,11 @@ EEPROM_CONFIG_HOOK=
 # BOOTFS can be set here to override auto-detection in rpi-eeprom-update
 #BOOTFS=/boot
 
-# Use flashrom if available to update the bootloader without rebooting - Raspberry Pi 5
-#RPI_EEPROM_USE_FLASHROM=1
+# Use immediate update if available to update the bootloader without rebooting - Raspberry Pi 5
+#RPI_EEPROM_IMMEDIATE_UPDATE=1
+
+# Force commit the update when using AB updates
+#AB_EEPROM_FORCE_COMMIT=1
+
+# AB_EEPROM can be set here to override auto-detection of AB EEPROM support
+#AB_EEPROM=
