@@ -1,5 +1,8 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-02-11: A/B firmware update support
+* Beta release for firmware A/B updates
+
 ## 2026-02-06: config: Add support for customer OTP rows in conditional expressions (latest)
 
 * config: Add support for customer OTP rows in conditional expressions
