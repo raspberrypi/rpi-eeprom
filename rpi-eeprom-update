@@ -92,8 +92,8 @@ cleanup() {
    if [ -f "${NEW_EEPROM_CONFIG}" ]; then
       rm -f "${NEW_EEPROM_CONFIG}"
    fi
-   if [ -f "${FLASHROM_LOG}" ]; then
-      rm -f "${FLASHROM_LOG}"
+   if [ -f "${IMMEDIATE_UPDATE_LOG}" ]; then
+      rm -f "${IMMEDIATE_UPDATE_LOG}"
    fi
    if [ -d "${TMP_BOOTFS_MNT}" ]; then
       umount "${TMP_BOOTFS_MNT}"
@@ -103,7 +103,7 @@ cleanup() {
    TMP_EEPROM_IMAGE=
    TMP_EEPROM_CONFIG=
    NEW_EEPROM_CONFIG=
-   FLASHROM_LOG=
+   IMMEDIATE_UPDATE_LOG=
 }
 trap cleanup EXIT
 
@@ -191,7 +191,50 @@ prepareImage()
    fi
 }
 
-runFlashrom()
+isABCapableImage() {
+   offset=0x10008
+   count=8
+   bootsys="bootsys"
+   filename=$(dd if="${TMP_EEPROM_IMAGE}" bs=1 skip=$((offset)) count=$((count)) status=none | strings)
+   if [ "${filename}" = "${bootsys}" ]; then
+      return 0
+   fi
+   return 1
+}
+
+runABUpdate()
+{
+   attempts=5
+   TMP_AB_EEPROM_IMAGE="$(mktemp)"
+   dd if="${TMP_EEPROM_IMAGE}"  of="${TMP_AB_EEPROM_IMAGE}"  bs=1 skip=65536 count=1011712 > /dev/null 2>&1
+   while [ ${attempts} -gt 0 ]; do
+      echo "rpi-eeprom-ab update ${TMP_AB_EEPROM_IMAGE}"
+      if rpi-eeprom-ab update "${TMP_AB_EEPROM_IMAGE}" >> "${IMMEDIATE_UPDATE_LOG}"; then
+         update_sha256=$(sha256sum "${TMP_AB_EEPROM_IMAGE}" | awk '{print $1}')
+         echo "Marking next partition as valid"
+         if rpi-eeprom-ab mark-partition-valid "${update_sha256}" >> "${IMMEDIATE_UPDATE_LOG}"; then
+            if [ "${AB_EEPROM_FORCE_COMMIT}" -eq 1 ]; then
+               echo "Force committing update"
+               if rpi-eeprom-ab force-commit-opposite >> "${IMMEDIATE_UPDATE_LOG}"; then
+                  echo "Force commit opposite: SUCCESS"
+                  return 0
+               fi
+            else
+               echo "Mark partition valid: SUCCESS"
+               return 0
+            fi
+         fi
+      fi
+      attempts=$((attempts - 1))
+      if [ ${attempts} -gt 0 ]; then
+         echo "Failed to update bootloader using AB update. Retrying."
+      fi
+   done
+   return 1
+}
+
+
+runFlashromUpdate()
 {
    attempts=5
    freq=16000
@@ -199,9 +242,9 @@ runFlashrom()
    # If flashrom fails then retry at a lower speed.
    while [ ${attempts} -gt 0 ]; do
       echo "flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -w ${BOOTFS}/pieeprom.upd"
-      if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -w "${BOOTFS}/pieeprom.upd" >> "${FLASHROM_LOG}"; then
+      if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -w "${BOOTFS}/pieeprom.upd" >> "${IMMEDIATE_UPDATE_LOG}"; then
          echo "Verifying update"
-         if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -v "${BOOTFS}/pieeprom.upd" >> "${FLASHROM_LOG}"; then
+         if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -v "${BOOTFS}/pieeprom.upd" >> "${IMMEDIATE_UPDATE_LOG}"; then
             echo "VERIFY: SUCCESS"
             return 0
          else
@@ -239,17 +282,24 @@ applyRecoveryUpdate()
 
         TMP_EEPROM_IMAGE="$(mktemp)"
         prepareImage
+        if [ "${AB_EEPROM}" -eq 1 ] && ! isABCapableImage; then
+           warn "WARNING: The eeprom update image is not AB capable. Setting RPI_EEPROM_IMMEDIATE_UPDATE to 0"
+           RPI_EEPROM_IMMEDIATE_UPDATE=0
+           AB_EEPROM=0
+        fi
 
-        # Generate a .sig file containing the sha256 hash of the EEPROM image
-        # and the current timestamp.
-        rpi-eeprom-digest -i "${TMP_EEPROM_IMAGE}" -o "${BOOTFS}/pieeprom.sig"
+        if [ "${AB_EEPROM}" -ne 1 ]; then
+           # Generate a .sig file containing the sha256 hash of the EEPROM image
+           # and the current timestamp.
+           rpi-eeprom-digest -i "${TMP_EEPROM_IMAGE}" -o "${BOOTFS}/pieeprom.sig"
 
-        cp -fv "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
-                || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
+           cp -fv "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
+                   || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"
 
-        # For NFS mounts ensure that the files are readable to the TFTP user
-        chmod -f go+r "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig" \
-                || die "Failed to set permissions on eeprom update files"
+           # For NFS mounts ensure that the files are readable to the TFTP user
+           chmod -f go+r "${BOOTFS}/pieeprom.upd" "${BOOTFS}/pieeprom.sig" \
+                   || die "Failed to set permissions on eeprom update files"
+        fi
    fi
 
    if [ -n "${VL805_UPDATE_IMAGE}" ]; then
@@ -281,27 +331,39 @@ applyRecoveryUpdate()
 
    [ "${BOOTLOADER_CURRENT_VERSION}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
 
-   # For immediate updates via flash the recovery.bin update is created and then discarded if the
+   # For immediate updates via flashrom the recovery.bin update is created and then discarded if the
    # flashrom update was successful. For SD boot (most common) this provides a rollback in the event
    # of power loss.
-   if [ "${RPI_EEPROM_USE_FLASHROM}" = 1 ]; then
+   if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" = 1 ]; then
       echo
       echo "UPDATING bootloader. This could take up to a minute. Please wait"
       echo
-      echo "*** Do not disconnect the power until the update is complete ***"
-      echo
-      echo "If a problem occurs then the Raspberry Pi Imager may be used to create"
-      echo "a bootloader rescue SD card image which restores the default bootloader image."
-      echo
-      FLASHROM_LOG="$(mktemp)"
-      if runFlashrom; then
-         # Success - remove update files from the boot partition
-         removePreviousUpdates
-         echo "UPDATE SUCCESSFUL"
+      IMMEDIATE_UPDATE_LOG="$(mktemp)"
+      if [ "${AB_EEPROM}" = 1 ]; then
+         if runABUpdate; then
+            # Success - remove update files from the boot partition
+            removePreviousUpdates
+            echo "UPDATE SUCCESSFUL"
+         else
+            # Leave the recovery files in case the EEPROM has been partially updated
+            cat "${IMMEDIATE_UPDATE_LOG}"
+            die "UPDATE FAILED"
+         fi
       else
-         # Leave the recovery files in case the EEPROM has been partially updated
-         cat "${FLASHROM_LOG}"
-         die "UPDATE FAILED"
+         echo "*** Do not disconnect the power until the update is complete ***"
+         echo
+         echo "If a problem occurs then the Raspberry Pi Imager may be used to create"
+         echo "a bootloader rescue SD card image which restores the default bootloader image."
+         echo
+         if runFlashromUpdate; then
+            # Success - remove update files from the boot partition
+            removePreviousUpdates
+            echo "UPDATE SUCCESSFUL"
+         else
+            # Leave the recovery files in case the EEPROM has been partially updated
+            cat "${IMMEDIATE_UPDATE_LOG}"
+            die "UPDATE FAILED"
+         fi
       fi
       return
    elif [ "${RPI_EEPROM_SELF_UPDATE}" = "1" ]; then
@@ -314,7 +376,7 @@ applyRecoveryUpdate()
    echo ""
    echo "EEPROM updates pending. Please reboot to apply the update."
 
-   if [ "${RPI_EEPROM_USE_FLASHROM}" = 0 ]; then
+   if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" = 0 ]; then
       echo "To cancel a pending update run \"sudo rpi-eeprom-update -r\"."
    fi
 }
@@ -342,10 +404,11 @@ applyUpdate() {
    fi
 
    # Disable flashrom if the SPI device is not found
-   if [ "${RPI_EEPROM_USE_FLASHROM}" = 1 ]; then
+   if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" = 1 ] && [ "${AB_EEPROM}" -ne 1 ]; then
+      echo "Checking flashrom probe"
       flashrom_probe_ok=0
       if ! [ -e "${SPIDEV}" ]; then
-         warn "WARNING: SPI device ${SPIDEV} not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
+         warn "WARNING: SPI device ${SPIDEV} not found. Setting RPI_EEPROM_IMMEDIATE_UPDATE to 0"
       fi
 
       if ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > /dev/null 2>&1; then
@@ -354,9 +417,9 @@ applyUpdate() {
          flashrom_probe_ok=1
       fi
       if [ "${flashrom_probe_ok}" != 1 ]; then
-         echo "Setting RPI_EEPROM_USE_FLASHROM to 0"
+         echo "Setting RPI_EEPROM_IMMEDIATE_UPDATE to 0"
          echo
-         export RPI_EEPROM_USE_FLASHROM=0
+         export RPI_EEPROM_IMMEDIATE_UPDATE=0
       fi
    fi
 
@@ -432,19 +495,36 @@ checkDependencies() {
       EEPROM_SIZE=2097152
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION="${BOOTLOADER_AUTO_UPDATE_MIN_VERSION:-1746713597}"
       SPIDEV=/dev/spidev10.0
-      # Default is to use flashrom if availableon BCM2712
-      RPI_EEPROM_USE_FLASHROM=${RPI_EEPROM_USE_FLASHROM:-1}
+      # Default is to use immediate update if available on BCM2712
+      RPI_EEPROM_IMMEDIATE_UPDATE=${RPI_EEPROM_IMMEDIATE_UPDATE:-1}
+      if command -v rpi-eeprom-ab > /dev/null && rpi-eeprom-ab spi-check > /dev/null 2>&1; then
+         # If AB commands are available and immediate update is enabled then default is to use AB EEPROM
+         if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" -eq 1 ]; then
+            AB_EEPROM=${AB_EEPROM:-1}
+         fi
+         # Default is to force commit the update when using AB updates
+         AB_EEPROM_FORCE_COMMIT=${AB_EEPROM_FORCE_COMMIT:-1}
+      else
+         if [ -n "${AB_EEPROM}" ] && [ "${AB_EEPROM}" -eq 1 ]; then
+            die "AB_EEPROM=1 is set but AB EEPROM updates are not supported"
+         fi
+      fi
    else
       chipNotSupported
+   fi
+   AB_EEPROM=${AB_EEPROM:-0}
+   if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" -eq 0 ]; then
+      # If immediate update is disabled then AB EEPROM is not used
+      AB_EEPROM=0
    fi
 
    # Default to off - in the future Raspberry Pi 5 may default to using flashrom if
    # flashrom is available.
    if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
-      [ -z "${RPI_EEPROM_USE_FLASHROM}" ] && RPI_EEPROM_USE_FLASHROM=0
-      if [ "${RPI_EEPROM_USE_FLASHROM}" -eq 1 ] && ! command -v flashrom > /dev/null; then
-         warn "WARNING: flashrom not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
-         RPI_EEPROM_USE_FLASHROM=0
+      [ -z "${RPI_EEPROM_IMMEDIATE_UPDATE}" ] && RPI_EEPROM_IMMEDIATE_UPDATE=0
+      if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" -eq 1 ] && [ "${AB_EEPROM}" -ne 1 ] && ! command -v flashrom > /dev/null; then
+         warn "WARNING: flashrom not found. Setting RPI_EEPROM_IMMEDIATE_UPDATE to 0"
+         RPI_EEPROM_IMMEDIATE_UPDATE=0
       fi
    fi
 
@@ -465,9 +545,9 @@ checkDependencies() {
       echo "See: https://github.com/raspberrypi/usbboot/blob/master/Readme.md"
       echo "Run with -h for more information."
       echo
-      echo "To enable flashrom programming of the EEPROM"
+      echo "To enable immediate update programming of the EEPROM"
       echo "Add these the following entries to /etc/default/rpi-eeprom-update"
-      echo "RPI_EEPROM_USE_FLASHROM=1"
+      echo "RPI_EEPROM_IMMEDIATE_UPDATE=1"
       echo "CM4_ENABLE_RPI_EEPROM_UPDATE=1"
       echo 
       echo "and these entries to config.txt and reboot"
@@ -663,12 +743,14 @@ N.B. If there is a power failure during SELF_UPDATE the EEPROM write may fail an
 usbboot must be used to flash the bootloader EEPROM. SELF_UPDATE is not recommended
 for updating the bootloader on remote systems.
 
-FLASHROM:
+IMMEDIATE UPDATE:
 
-If the RPI_EEPROM_USE_FLASHROM variable is set to 1 then flashrom is used to perform
-an immediate update to the SPI flash rather than installing the recovery.bin plus
-pieeprom.upd files. The power must not be disconnected during this update otherwise the
-EEPROM will need to be re-flashed using the Rasberry Pi Imager bootloader restore feature.
+If the RPI_EEPROM_IMMEDIATE_UPDATE variable is set to 1 then either flashrom or 
+rpi-eeprom-ab is used to perform an immediate update to the SPI flash rather
+than installing the recovery.bin plus pieeprom.upd files. rpi-eeprom-ab is
+used on BCM2712 boards with AB EEPROM already enabled. When using flashrom, the
+power must not be disconnected during this update otherwise the EEPROM will need to be
+re-flashed using the Rasberry Pi Imager bootloader restore feature.
 
 On Raspberry Pi 4, CM4, CM4-S and Pi400 flashrom updates are not enabled by default
 because the SPI GPIOs are shared with analog audio. To enable this add the following
