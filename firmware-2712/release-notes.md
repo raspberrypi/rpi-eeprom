@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-02-15: Rebase A/B firmware update support (beta)
+
 ## 2026-04-14: Update recovery.bin to support more SDRAM variants (latest)
 
 * Update the slow (non tuned) DDR init used by recovery.bin to support
@@ -22,6 +24,9 @@
   BOOT_WATCHDOG setting should be used instead.
   To disable this feature set REBOOT_ON_FATAL_ERROR=0 in
   the bootloader config.
+
+## 2026-02-11: A/B firmware update support (beta)
+* Beta release for firmware A/B updates
 
 ## 2026-02-23: Fix partition walk for boot_ramdisk / secure-boot (latest)
 
