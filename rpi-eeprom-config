@@ -21,6 +21,8 @@ BOOTCONF_SIG = 'bootconf.sig'
 PUBKEY_BIN = 'pubkey.bin'
 CACERT_DER = 'cacert.der'
 BOOTCODE_BIN = 'bootcode.bin'
+BOOTSYS_BIN = 'bootsys'
+UPDATE_TIME_FILENAME = 'updatetime'
 
 # Each section starts with a magic number followed by a 32 bit offset to the
 # next section (big-endian).
@@ -42,6 +44,11 @@ TEMP_DIR = None
 # The max content 4076 bytes because of the file header.
 ERASE_ALIGN_SIZE = 4096
 MAX_FILE_SIZE = ERASE_ALIGN_SIZE - FILE_HDR_LEN
+
+# An AB EEPROM image contains a populated read only section, a populated first partition,
+# an empty second partition and then two empty journal sections.
+READ_ONLY_SIZE = 64 * 1024
+PARTITION_SIZE = 988 * 1024
 
 DEBUG = False
 def debug(s):
@@ -263,6 +270,7 @@ class BootloaderImage(object):
             exit_error("%s: Expected sizes %s bytes, got actual size %d bytes" %
                        (filename, VALID_IMAGE_SIZES, self._image_size))
         self.parse()
+        self._is_ab_image = any(s.filename == "bootsys" for s in self._sections)
 
     def parse(self):
         """
@@ -287,7 +295,7 @@ class BootloaderImage(object):
             offset += 8 + length # length + type
             offset = (offset + 7) & ~7
 
-    def find_file(self, filename):
+    def find_file(self, filename, partition_start=None, partition_end=None):
         """
         Returns the offset, length and whether this is the last section in the
         EEPROM for a modifiable file within the image.
@@ -305,13 +313,16 @@ class BootloaderImage(object):
             length = s.length
         else:
             next_offset = self._image_size - ERASE_ALIGN_SIZE # Don't create padding inside the bootloader scratch page
+            if partition_end is not None:
+                next_offset = min(next_offset, partition_end)
             for i in range(0, len(self._sections)):
                 s = self._sections[i]
-                if s.magic == FILE_MAGIC and s.filename == filename:
-                    is_last = (i == len(self._sections) - 1)
-                    offset = s.offset
-                    length = s.length
-                    break
+                if (partition_start is None or s.offset >= partition_start) and (partition_end is None or s.offset < partition_end):
+                    if s.magic == FILE_MAGIC and s.filename == filename:
+                        is_last = (i == len(self._sections) - 1)
+                        offset = s.offset
+                        length = s.length
+                        break
 
         # Find the start of the next non padding section
         i += 1
@@ -330,19 +341,19 @@ class BootloaderImage(object):
         Replaces a modifiable file with specified byte array.
         """
         if bootcode:
-            hdr_offset, length, is_last, next_offset = self.find_file(dst_filename)
+            hdr_offset, length, is_last, next_offset = self.find_file(dst_filename, partition_start=0, partition_end=READ_ONLY_SIZE)
             struct.pack_into('>L', self._bytes, hdr_offset + 4, len(src_bytes))
             struct.pack_into(("%ds" % len(src_bytes)), self._bytes, hdr_offset + 8, src_bytes)
             pad_start = hdr_offset + len(src_bytes) + 8
             is_last = False
             debug("bootcode padded to %d" % next_offset);
-            if next_offset < 128 * 1024:
+            if not self._is_ab_image and next_offset < 128 * 1024:
                 raise Exception("update-bootcode: Can't update image - 128K must be reserved for bootcode")
             if next_offset < 0:
                 raise Exception("update-bootcode: Failed to find next section")
 
         else:
-            hdr_offset, length, is_last, next_offset = self.find_file(dst_filename)
+            hdr_offset, length, is_last, next_offset = self.find_file(dst_filename, partition_start=READ_ONLY_SIZE, partition_end=READ_ONLY_SIZE + PARTITION_SIZE)
             update_len = len(src_bytes) + FILE_HDR_LEN
 
             if hdr_offset + update_len > self._image_size - ERASE_ALIGN_SIZE:
@@ -374,7 +385,7 @@ class BootloaderImage(object):
         # pad to the end of the sector. This also ensures that the loopback
         # config read/write tests produce identical binaries.
         pad_bytes = next_offset - pad_start
-        if pad_bytes > 8 and not is_last:
+        if pad_bytes >= 8 and not is_last:
             pad_bytes -= 8
             struct.pack_into('>i', self._bytes, pad_start, PAD_MAGIC)
             pad_start += 4
@@ -401,7 +412,8 @@ class BootloaderImage(object):
         """
         src_bytes = open(src_filename, 'rb').read()
         bootcode = dst_filename == BOOTCODE_BIN
-        if not bootcode and len(src_bytes) > MAX_FILE_SIZE:
+        bootsys = dst_filename == BOOTSYS_BIN
+        if not bootcode and not bootsys and len(src_bytes) > MAX_FILE_SIZE:
             raise Exception("src file %s is too large (%d bytes). The maximum size is %d bytes."
                             % (src_filename, len(src_bytes), MAX_FILE_SIZE))
         self.update(src_bytes, dst_filename, bootcode)
@@ -412,8 +424,26 @@ class BootloaderImage(object):
         using flashrom to write to SPI flash instead of using the bootloader self-update mode.
         """
         ts = int(timestamp)
-        struct.pack_into('<L', self._bytes, len(self._bytes) - 4, ts)
-        struct.pack_into('<L', self._bytes, len(self._bytes) - 8, ~ts & 0xffffffff)
+        hdr_offset, _, _, _ = self.find_file(UPDATE_TIME_FILENAME, partition_start=0, partition_end=READ_ONLY_SIZE)
+        if hdr_offset < 0:
+            # No timestamp file found, so use the last 4 bytes of the image
+            struct.pack_into('<L', self._bytes, len(self._bytes) - 4, ts)
+            struct.pack_into('<L', self._bytes, len(self._bytes) - 8, ~ts & 0xffffffff)
+            return
+        
+        # Set the update timestamp in the read only section
+        contents_offset = hdr_offset + 4 + FILE_HDR_LEN
+        struct.pack_into('<L', self._bytes, contents_offset + 4, ts)
+        struct.pack_into('<L', self._bytes, contents_offset, ~ts & 0xffffffff)
+        
+        # Set the update timestamp in the partition
+        hdr_offset, _, _, _ = self.find_file(UPDATE_TIME_FILENAME, partition_start=READ_ONLY_SIZE, partition_end=READ_ONLY_SIZE + PARTITION_SIZE)
+        if hdr_offset < 0:
+            raise Exception("Failed to find update time file in partition")
+        contents_offset = hdr_offset + 4 + FILE_HDR_LEN
+        struct.pack_into('<L', self._bytes, contents_offset + 4, ts)
+        struct.pack_into('<L', self._bytes, contents_offset, ~ts & 0xffffffff)
+            
 
     def write(self):
         """
@@ -545,6 +575,7 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
     parser.add_argument('-p', '--pubkey', help='Signed boot only. The name of the RSA public key file to store in the EEPROM', required=False)
     parser.add_argument('-x', '--extract', action='store_true', default=False, help='Extract the modifiable files (boot.conf, pubkey, signature)', required=False)
     parser.add_argument('-b', '--bootcode', help='Signed boot 2712 only. The name of the customer signed bootcode.bin file to store in the EEPROM', required=False)
+    parser.add_argument('-s', '--bootsys', help='Signed boot 2712 only. The name of the customer signed bootsys.bin file to store in the EEPROM', required=False)
     parser.add_argument('-t', '--timestamp', help='Set the timestamp in the EEPROM image file', required=False)
     parser.add_argument('--cacertder', help='The name of a CA Certificate DER encoded file to store in the EEPROM', required=False)
     parser.add_argument('--debug', help='Debug logging for this tool', action='store_true', required=False)
@@ -574,6 +605,9 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
 
         if args.bootcode is not None:
             image.update_file(args.bootcode, BOOTCODE_BIN)
+        
+        if args.bootsys is not None:
+            image.update_file(args.bootsys, BOOTSYS_BIN)
 
         if args.cacertder is not None:
             image.update_file(args.cacertder, CACERT_DER)
