@@ -458,9 +458,9 @@ checkDependencies() {
    BOARD_TYPE=$(((0x$BOARD_INFO >> 4) & 0xff))
    BOARD_REVISION=$((0x$BOARD_INFO & 0xf))
 
-   if [ ${BOARD_TYPE} -eq 20 ] && [ "${CM4_ENABLE_RPI_EEPROM_UPDATE}" != '1' ]; then
-      # For CM4, USB device boot is the recommended method for EEPROM updates.
-      echo "rpi-eeprom-update is not enabled by default on CM4."
+   if ([ ${BOARD_TYPE} -eq 20 ] || [ ${BOARD_TYPE} -eq 21 ]) && [ "${CM4_ENABLE_RPI_EEPROM_UPDATE}" != '1' ]; then
+      # For CM4/CM4S, USB device boot is the recommended method for EEPROM updates.
+      echo "rpi-eeprom-update is not enabled by default on CM4(S)."
       echo "The recommended method for flashing the EEPROM is rpiboot."
       echo "See: https://github.com/raspberrypi/usbboot/blob/master/Readme.md"
       echo "Run with -h for more information."
@@ -469,12 +469,17 @@ checkDependencies() {
       echo "Add these the following entries to /etc/default/rpi-eeprom-update"
       echo "RPI_EEPROM_USE_FLASHROM=1"
       echo "CM4_ENABLE_RPI_EEPROM_UPDATE=1"
-      echo 
+      echo
       echo "and these entries to config.txt and reboot"
-      echo "[cm4]"
-      echo "dtparam=spi=on"
-      echo "dtoverlay=audremap"
-      echo "dtoverlay=spi-gpio40-45"
+      if [ ${BOARD_TYPE} -eq 21 ]; then
+         echo "[cm4s]"
+         echo "dtparam=enable_eeprom=on"
+      else
+         echo "[cm4]"
+      fi
+         echo "dtparam=spi=on"
+         echo "dtoverlay=audremap"
+         echo "dtoverlay=spi-gpio40-45"
       echo
       exit ${EXIT_SUCCESS}
    fi
