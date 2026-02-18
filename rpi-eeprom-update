@@ -466,7 +466,7 @@ checkDependencies() {
       echo "Run with -h for more information."
       echo
       echo "To enable flashrom programming of the EEPROM"
-      echo "Add these the following entries to /etc/default/rpi-eeprom-update"
+      echo "Add the following entries to /etc/default/rpi-eeprom-update"
       echo "RPI_EEPROM_USE_FLASHROM=1"
       echo "CM4_ENABLE_RPI_EEPROM_UPDATE=1"
       echo
