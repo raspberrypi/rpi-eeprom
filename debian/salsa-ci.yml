@@ -1,2 +1,13 @@
 include:
   - $CI_SERVER_URL/apt/salsa-ci/raw/pios/recipes/pios.yml
+
+.fetch-master: &fetch-master
+  - git fetch origin master:master
+
+.build-definition:
+  before_script:
+    - *fetch-master
+
+.build-source-only:
+  before_script:
+    - *fetch-master
