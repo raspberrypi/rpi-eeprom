@@ -1,5 +1,13 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-02-23: Fix partition walk for boot_ramdisk / secure-boot (latest)
+
+* Fix partition walk for boot_ramdisk / secure-boot
+  If secure-boot / boot_ramdisk was enabled and boot.img was not found
+  then the bootloader would immediately exit the boot mode instead
+  allowing the partition walk to run. Change the logic to allow
+  retries if partition walk was enabled.
+
 ## 2026-02-06: config: Add support for customer OTP rows in conditional expressions (latest)
 
 * config: Add support for customer OTP rows in conditional expressions
