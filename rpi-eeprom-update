@@ -513,15 +513,15 @@ checkDependencies() {
       chipNotSupported
    fi
    AB_EEPROM=${AB_EEPROM:-0}
-   if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" -eq 0 ]; then
-      # If immediate update is disabled then AB EEPROM is not used
-      AB_EEPROM=0
-   fi
 
    # Default to off - in the future Raspberry Pi 5 may default to using flashrom if
    # flashrom is available.
    if [ "${AUTO_UPDATE_BOOTLOADER}" = 1 ] || [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
       [ -z "${RPI_EEPROM_IMMEDIATE_UPDATE}" ] && RPI_EEPROM_IMMEDIATE_UPDATE=0
+      if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" -eq 0 ]; then
+         # If immediate update is disabled then AB EEPROM is not used
+         AB_EEPROM=0
+      fi
       if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" -eq 1 ] && [ "${AB_EEPROM}" -ne 1 ] && ! command -v flashrom > /dev/null; then
          warn "WARNING: flashrom not found. Setting RPI_EEPROM_IMMEDIATE_UPDATE to 0"
          RPI_EEPROM_IMMEDIATE_UPDATE=0
