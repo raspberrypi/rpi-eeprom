@@ -1,3 +1,21 @@
+rpi-eeprom (28.14-1) trixie; urgency=medium
+
+  [ Tim Gover ]
+  * salsa-ci: Remove extract-source section
+  * help: copy-edit
+  * pieeprom-2026-02-23: 2711: Fix partition walk for boot_ramdisk /
+    secure_boot (latest)
+  * pieeprom-2026-02-23: 2712: Fix partition walk for boot_ramdisk /
+    secure-boot (latest)
+
+  [ Nicolai Buchwitz ]
+  * rpi-eeprom-update: add CM4S (board_type 21) support
+
+  [ Serge Schneider ]
+  * d/salsa-ci.yml: Fetch master branch before building
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Thu, 26 Feb 2026 19:23:57 +0000
+
 rpi-eeprom (28.13-1) trixie; urgency=medium
 
   * pieeprom-2026-01-16: 2712: Assume eMMC for CM4/CM5 (latest)
