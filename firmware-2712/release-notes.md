@@ -25,6 +25,9 @@
   To disable this feature set REBOOT_ON_FATAL_ERROR=0 in
   the bootloader config.
 
+## 2026-03-02: A/B - stream updates to SPI flash (beta)
+* Stream the writes to SPI flash and avoid allocating the entire buffer on the VC heap.
+
 ## 2026-02-11: A/B firmware update support (beta)
 * Beta release for firmware A/B updates
 
