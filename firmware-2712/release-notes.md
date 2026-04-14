@@ -1,5 +1,28 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-04-14: Update recovery.bin to support more SDRAM variants (latest)
+
+* Update the slow (non tuned) DDR init used by recovery.bin to support
+  more SDRAM variants.
+* Add an error code for the bootloader memory test.
+  The bootloader contains simple memory test to validate
+  that the DDR init firmware has completed successfully.
+  If the DDR init firmware reports an error code then continue to
+  display 8 short flashes. However, if the DDR init firmware is
+  successful but the memory test fails then display 5 short flashes.
+  This is very unlikely to fail in practise but is useful debug
+  mechanism when stress testing boards e.g. different temperatures.
+* Automatically reboot after a displaying a fatal error
+  Change the fatal error handler to perform a hard reset after
+  displaying the fatal error three times in a row instead of waiting
+  forever. This change can mitigate intermittent hardware issues due
+  e.g. power supplies, HATs or board temperature.
+  Displaying the error pattern three times first rate
+  limits reboots. If a faster reboot is required then the
+  BOOT_WATCHDOG setting should be used instead.
+  To disable this feature set REBOOT_ON_FATAL_ERROR=0 in
+  the bootloader config.
+
 ## 2026-02-23: Fix partition walk for boot_ramdisk / secure-boot (latest)
 
 * Fix partition walk for boot_ramdisk / secure-boot
