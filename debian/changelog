@@ -1,3 +1,21 @@
+rpi-eeprom (28.15-1) trixie; urgency=medium
+
+  [ Nicolai Buchwitz ]
+  * rpi-eeprom-update: add CM4S (board_type 21) support
+
+  [ Tim Gover ]
+  * help: copy-edit
+  * pieeprom-2026-02-23: 2711: Fix partition walk for boot_ramdisk /
+    secure_boot (latest)
+  * pieeprom-2026-02-23: 2712: Fix partition walk for boot_ramdisk /
+    secure-boot (latest)
+  * pieeprom-2026-04-14: 2711: Update the Broadcom SDRAM firmware to v2.34
+    (latest)
+  * pieeprom-2026-04-14: 2712: Update recovery.bin to support more SDRAM
+    variants (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 20 Apr 2026 11:39:50 +0100
+
 rpi-eeprom (28.14-1) trixie; urgency=medium
 
   [ Tim Gover ]
