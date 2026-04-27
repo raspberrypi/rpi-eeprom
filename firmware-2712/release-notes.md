@@ -1,5 +1,11 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-04-27: Broadcom SDRAM firmware update to 4.72 (latest)
+
+Broadcom SDRAM firmware update to 4.72
+
+Update the Broadcom SDRAM firmware to 4.72 to support additional memory variants.
+
 ## 2026-04-14: Update recovery.bin to support more SDRAM variants (latest)
 
 * Update the slow (non tuned) DDR init used by recovery.bin to support
