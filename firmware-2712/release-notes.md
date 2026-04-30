@@ -1,5 +1,21 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-04-30: 2712: arm_boot: Enable turbo clocks before loading the kernel (latest)
+
+* arm_display: Correct logging message hdmi_pixel_freq_limit
+  Noticed in a raspinfo log file.
+* Increase default v3d frqeuency on 2712d0
+* pi5: arm_boot: Enable turbo clocks before loading the kernel
+  Originally, for the entire boot ran at the idle-operating
+  point. Subsequently, the default for intial_turbo was changed so
+  that the kernel is started with turbo-clocks unless disabled
+  via config.txt.
+  This change enables the turbo-clocks as soon as it is safe as soon
+  as the turbo voltage has been calibrated to speedup kernel loading
+  and device-tree processing.
+  This reduces boot time by approximately 1 second on a Pi5 booting
+  from NVMe.
+
 ## 2026-04-27: Broadcom SDRAM firmware update to 4.72 (latest)
 
 Broadcom SDRAM firmware update to 4.72
