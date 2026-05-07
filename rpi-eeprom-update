@@ -293,7 +293,6 @@ applyRecoveryUpdate()
       echo "If a problem occurs then the Raspberry Pi Imager may be used to create"
       echo "a bootloader rescue SD card image which restores the default bootloader image."
       echo
-      FLASHROM_LOG="$(mktemp)"
       if runFlashrom; then
          # Success - remove update files from the boot partition
          removePreviousUpdates
@@ -344,12 +343,14 @@ applyUpdate() {
    # Disable flashrom if the SPI device is not found
    if [ "${RPI_EEPROM_USE_FLASHROM}" = 1 ]; then
       flashrom_probe_ok=0
-      if ! [ -e "${SPIDEV}" ]; then
-         warn "WARNING: SPI device ${SPIDEV} not found. Setting RPI_EEPROM_USE_FLASHROM to 0"
-      fi
+      FLASHROM_LOG="$(mktemp)"
 
-      if ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > /dev/null 2>&1; then
+      if ! [ -e "${SPIDEV}" ]; then
+         warn "WARNING: SPI device ${SPIDEV} not found"
+      elif ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > "${FLASHROM_LOG}" 2>&1; then
          warn "WARNING: Flashrom probe of ${SPIDEV} failed"
+      elif grep -q "Unknown flash" "${FLASHROM_LOG}"; then
+         warn "WARNING: Flashrom probe of ${SPIDEV} reported Unknown flash chip"
       else
          flashrom_probe_ok=1
       fi
