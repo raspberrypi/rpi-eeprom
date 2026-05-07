@@ -1,3 +1,13 @@
+rpi-eeprom (28.16-1) trixie; urgency=medium
+
+  * pieeprom-2026-04-27: 2712: Broadcom SDRAM firmware update to 4.72
+    (latest)
+  * tools: Add versions table
+  * pieeprom-2026-04-30: 2712: arm_boot: Enable turbo clocks before
+    loading the kernel (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Thu, 07 May 2026 14:06:16 +0100
+
 rpi-eeprom (28.15-1) trixie; urgency=medium
 
   [ Nicolai Buchwitz ]
