@@ -42,7 +42,7 @@ release_priority() {
     esac
 }
 
-write_versions_md() {
+write_versions_txt() {
     family_dir="$1"
     out="${family_dir}/versions.txt"
     family=$(basename "${family_dir}")
@@ -102,5 +102,5 @@ write_versions_md() {
 for family in firmware-2711 firmware-2712; do
     dir="${REPO_ROOT}/${family}"
     [ -d "${dir}" ] || continue
-    write_versions_md "${dir}"
+    write_versions_txt "${dir}"
 done

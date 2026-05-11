@@ -1,5 +1,22 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-11: 2712: Promote 2026-05-11 to the default release (default)
+
+## 2026-05-11: 2712: Set bootloader mfg verison id to 1 (latest)
+
+* 2712: Set bootloader mfg verison id to 1
+  Advance the minimum version id to 1 to indicate support for new SDRAM
+  variants.
+* Add MFG_VER string for rpi-eeprom-update minver check
+  On new boards, the minimum recommended version will be written
+  to OTP. This will allow rpi-eeprom-update to check the minimum
+  recommended version required by the hardware against the version
+  field embedded in EEPROM image binary.
+  strings pieeeprom.bin | grep 'MFG_VER:'
+* pi5: Record hardware board information in OTP
+  On Pi5 report minimal bootloader version via device-tree under
+  /proc/device-tree/chosen/rpi-min-boot-ver.
+
 ## 2026-04-30: 2712: arm_boot: Enable turbo clocks before loading the kernel (latest)
 
 * arm_display: Correct logging message hdmi_pixel_freq_limit
