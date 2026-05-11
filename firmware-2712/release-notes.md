@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-11: 2712: Promote 2026-05-11 to the default release (default)
+
 ## 2026-05-11: 2712: Set bootloader mfg verison id to 1 (latest)
 
 * 2712: Set bootloader mfg verison id to 1
