@@ -1,3 +1,14 @@
+rpi-eeprom (28.17-1) trixie; urgency=medium
+
+  [ Mathew Blowers ]
+  * rpi-eeprom-update: Add flashrom check for unknown flash
+
+  [ Tim Gover ]
+  * pieeprom-2026-05-11: 2712: Set bootloader mfg version id to 1 (latest)
+  * pieeprom-2026-05-11: 2712: Promote to the default release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 11 May 2026 15:56:10 +0100
+
 rpi-eeprom (28.16-1) trixie; urgency=medium
 
   * pieeprom-2026-04-27: 2712: Broadcom SDRAM firmware update to 4.72
