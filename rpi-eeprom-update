@@ -44,6 +44,7 @@ RPI_EEPROM_SELF_UPDATE="${RPI_EEPROM_SELF_UPDATE:-0}"
 RPI_EEPROM_SELF_UPDATE_MIN_VER=1650968668
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
+DT_MIN_BOOT_VER=${DT_MIN_BOOT_VER:-/proc/device-tree/chosen/rpi-min-boot-ver}
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -56,6 +57,9 @@ OVERWRITE_CONFIG=0
 # Timestamp for first release which doesn't have a timestamp field
 BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
+BOOT_VER_2711=0
+BOOT_VER_2712=1
+MIN_BOOT_VER=0
 BOARD_INFO=
 BOARD_REVISION=
 BOARD_TYPE=
@@ -114,6 +118,10 @@ die() {
 
 warn() {
    echo "$@" >&2
+}
+
+readDtInt() {
+   printf "%d" "0x$(od "$1" -v -An -t x1 | tr -d ' ')"
 }
 
 getBootloaderConfig() {
@@ -368,7 +376,7 @@ BOOTLOADER_CURRENT_VERSION=
 getBootloaderCurrentVersion() {
    if [ -f "${DT_BOOTLOADER_TS}" ]; then
       # Prefer device-tree to vcgencmd
-      BOOTLOADER_CURRENT_VERSION=$(printf "%d" "0x$(od "${DT_BOOTLOADER_TS}" -v -An -t x1 | tr -d ' ' )")
+      BOOTLOADER_CURRENT_VERSION=$(readDtInt "${DT_BOOTLOADER_TS}")
    elif vcgencmd bootloader_version | grep -q timestamp; then
       BOOTLOADER_CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
       if [ "${BOOTLOADER_CURRENT_VERSION}" = "0" ]; then
@@ -437,6 +445,15 @@ checkDependencies() {
       RPI_EEPROM_USE_FLASHROM=${RPI_EEPROM_USE_FLASHROM:-1}
    else
       chipNotSupported
+   fi
+
+   if [ -f "${DT_MIN_BOOT_VER}" ]; then
+      MIN_BOOT_VER=$(readDtInt "${DT_MIN_BOOT_VER}")
+   fi
+
+   [ "${BCM_CHIP}" = "2711" ] && pkg_boot_ver=${BOOT_VER_2711} || pkg_boot_ver=${BOOT_VER_2712}
+   if [ "${MIN_BOOT_VER}" != 0 ] && [ "${MIN_BOOT_VER}" -gt "${pkg_boot_ver}" ]; then
+      warn "WARNING: The rpi-eeprom package is out of date. Please run: apt upgrade rpi-eeprom"
    fi
 
    # Default to off - in the future Raspberry Pi 5 may default to using flashrom if
@@ -856,6 +873,13 @@ checkAndApply()
    if [ "${AUTO_UPDATE_BOOTLOADER}" != 1 ]; then
       ACTION_UPDATE_BOOTLOADER=0
       BOOTLOADER_UPDATE_IMAGE=""
+   fi
+
+   if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
+      image_boot_ver=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | sed -n 's/^MFG_VER: //p' | head -n 1)
+      if [ "${MIN_BOOT_VER}" != 0 ] && [ "${MIN_BOOT_VER}" -gt "${image_boot_ver:-0}" ]; then
+         die "EEPROM image version ${image_boot_ver:-0} does not meet the minimum bootloader version ${MIN_BOOT_VER} required by this board."
+      fi
    fi
 
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
