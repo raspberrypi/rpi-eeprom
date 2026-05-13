@@ -1,5 +1,11 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-13: 2712: Add support for A/B bootloader updates (latest)
+
+* Add support for A/B bootloader updates.
+* arm_loader_dvfs: Clock driver refactor support kernel FW clock driver improvements
+
+
 ## 2026-05-11: 2712: Promote 2026-05-11 to the default release (default)
 
 ## 2026-05-11: 2712: Set bootloader mfg verison id to 1 (latest)
