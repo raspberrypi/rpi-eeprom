@@ -1,5 +1,17 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-05-17: 2711: Update Broadcom DDR firware to 2.35 (latest)
+
+* 2711: Increase the manufacturing version to 1
+  Increase the manufacturing version to 1 to reflect the update
+  to the Broadcom SDRAM DDR init firmware.
+* 2711: Update SDRAM FW to 2.35
+* arm_loader_dvfs: Preliminary clock driver refactoring
+* pi4: Record hardware board information in OTP
+  On Pi4 report the minimal bootloader version (manufacturing release)
+  in OTP and make it available via device-tree as
+  /proc/device-tree/chosen/rpi-min-boot-ver
+
 ## 2026-04-14: Update Broadcom SDRAM firmware to v2.34 (latest)
 
 * Update the Broadcom SDRAM firmware to v2.34 to support
