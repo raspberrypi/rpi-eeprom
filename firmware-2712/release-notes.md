@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-17: rpi-fw-crypto can get and set key usage in otp (latest)
+
+* rpi-fw-crypto can get and set key usage in otp
+  A key usage descriptor can be stored and read from otp to identify
+  what the key in otp is used for. The rpi-fw-crypto CLI provides
+  the interface to do so.
+
 ## 2026-05-13: 2712: Add support for A/B bootloader updates (latest)
 
 * Add support for A/B bootloader updates.
