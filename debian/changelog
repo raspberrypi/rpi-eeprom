@@ -1,3 +1,22 @@
+rpi-eeprom (28.18-1) trixie; urgency=medium
+
+  [ Serge Schneider ]
+  * salsa-ci: Remove custom definitions (fixed in salsa-ci)
+
+  [ Tim Gover ]
+  * pieeprom-2026-05-13: 2712: Add support for A/B bootloader updates
+    (latest)
+  * pieeprom-2026-05-17: 2712: rpi-fw-crypto can get and set key usage in
+    otp (latest)
+  * pieeprom-2026-05-17: 2711: Update Broadcom SDRAM firmware to 2.35
+    (latest)
+  * versions.txt: Add MFG ver and align columns
+
+  [ martamomotko ]
+  * rpi-eeprom-update: Add bootloader minimum version checks
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 19 May 2026 15:36:20 +0100
+
 rpi-eeprom (28.17-1) trixie; urgency=medium
 
   [ Mathew Blowers ]
