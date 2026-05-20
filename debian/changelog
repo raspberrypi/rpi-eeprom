@@ -1,3 +1,10 @@
+rpi-eeprom (28.19-1) trixie; urgency=medium
+
+  * pieeprom-2026-05-20: recovery: 2712: reboot order and reboot arg
+    option (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Wed, 20 May 2026 17:07:48 +0100
+
 rpi-eeprom (28.18-1) trixie; urgency=medium
 
   [ Serge Schneider ]
