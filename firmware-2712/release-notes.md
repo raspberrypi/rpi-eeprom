@@ -1,5 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-20: recovery: 2712: reboot order and reboot arg option (latest)
+
+* recovery: 2712: reboot order and reboot arg option
+  Add support for set_reboot_order and set_reboot_arg1 in
+  recovery config.txt, so that recovery.bin can set them when
+  it has been loaded over rpiboot.
+
 ## 2026-05-17: rpi-fw-crypto can get and set key usage in otp (latest)
 
 * rpi-fw-crypto can get and set key usage in otp
