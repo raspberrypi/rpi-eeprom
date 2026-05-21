@@ -1,3 +1,11 @@
+rpi-eeprom (28.20-1) trixie; urgency=medium
+
+  [ Mathew Blowers ]
+  * Support AB updates
+  * rpi-eeprom-update: Check RPI_EEPROM_IMMEDIATE_UPDATE after initialised
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Thu, 21 May 2026 15:15:41 +0100
+
 rpi-eeprom (28.19-1) trixie; urgency=medium
 
   * pieeprom-2026-05-20: recovery: 2712: reboot order and reboot arg
