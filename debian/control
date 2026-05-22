@@ -17,7 +17,7 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, raspi-utils, python3,
  binutils, pciutils, python3-pycryptodome
 Breaks: rpi-eeprom-images (<<7.2)
 Replaces: rpi-eeprom-images (<<7.2)
-Recommends: flashrom
+Recommends: flashrom, rpieepromab (>=20260304+1)
 Provides: rpi-eeprom-images
 Description: Raspberry Pi 4/5 boot EEPROM updater
  Checks whether the Raspberry Pi bootloader EEPROM is up-to-date and updates
