@@ -1,5 +1,15 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-22: Allow string values to enable fragments (latest)
+
+* Allow string values to enable fragments
+  It can be convenient to write a string value to a property and enable
+  the fragment containing the property with a single parameter. This
+  commit makes it possible, even when the string doesn't have an obvious
+  boolean value. If conditional (=,!) operators are used, a non-empty
+  string is true and an empty string is false.
+  See: https://github.com/raspberrypi/utils/pull/183
+
 ## 2026-05-20: recovery: 2712: reboot order and reboot arg option (latest)
 
 * recovery: 2712: reboot order and reboot arg option
