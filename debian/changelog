@@ -1,3 +1,12 @@
+rpi-eeprom (28.21-1) trixie; urgency=medium
+
+  * debian: Make rpieepromab a recommended package
+  * pieeprom-2026-05-22: 2712: Allow string values to enable fragments
+    (latest)
+  * pieeprom-2026-05-17: 2711: Promote to the (default) release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 26 May 2026 10:58:23 +0100
+
 rpi-eeprom (28.20-1) trixie; urgency=medium
 
   [ Mathew Blowers ]
