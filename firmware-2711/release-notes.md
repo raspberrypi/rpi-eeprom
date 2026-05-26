@@ -1,6 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
-## 2026-05-17: 2711: Update Broadcom DDR firware to 2.35 (latest)
+## 2026-05-26: Promote 2026-05-17 to the default release (default)
+
+## 2026-05-17: Update Broadcom DDR firware to 2.35 (latest)
 
 * 2711: Increase the manufacturing version to 1
   Increase the manufacturing version to 1 to reflect the update
