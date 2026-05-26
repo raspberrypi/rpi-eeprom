@@ -831,7 +831,7 @@ findBootFS()
    # If ${BOOTFS} is not writable OR is not on /dev/mmcblk0 then error because the ROM
    # can only load recovery.bin from the on-board SD-CARD slot or the EEPROM.
 
-   if blkid | grep -qE "/dev/mmcblk0p1.*LABEL_FATBOOT.*RECOVERY.*TYPE.*vfat"; then
+   if blkid /dev/mmcblk0p1 | grep -qE "/dev/mmcblk0p1.*LABEL_FATBOOT.*RECOVERY.*TYPE.*vfat"; then
       TMP_BOOTFS_MNT="$(mktemp -d)"
       mount /dev/mmcblk0p1 "${TMP_BOOTFS_MNT}"
       BOOTFS="${TMP_BOOTFS_MNT}"
