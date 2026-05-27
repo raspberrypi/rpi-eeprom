@@ -45,6 +45,7 @@ RPI_EEPROM_SELF_UPDATE_MIN_VER=1650968668
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
 DT_MIN_BOOT_VER=${DT_MIN_BOOT_VER:-/proc/device-tree/chosen/rpi-min-boot-ver}
+STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-0}
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -286,6 +287,22 @@ applyRecoveryUpdate()
 
    findBootFS
    echo "    BOOTFS: ${BOOTFS}"
+
+   # Check the minimum version programmed during board manufacture
+   if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      image_boot_ver=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | sed -n 's/^MFG_VER: //p' | head -n 1)
+      if [ -z "${image_boot_ver}" ]; then
+          image_boot_ver=0
+      fi
+      if [ "${MIN_BOOT_VER}" != 0 ] && [ "${MIN_BOOT_VER}" -gt "${image_boot_ver}" ]; then
+         warn
+         warn "WARNING: Bootloader image version MFG_VER: ${image_boot_ver} is older than the board manufacture version (${MIN_BOOT_VER})."
+         warn
+         if [ "${STRICT_MIN_VER_CHECK}" = 1 ]; then
+            die "ERROR: Update image is not supported by this device. Exiting."
+         fi
+      fi
+   fi
 
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
         [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
@@ -958,13 +975,6 @@ checkAndApply()
    if [ "${AUTO_UPDATE_BOOTLOADER}" != 1 ]; then
       ACTION_UPDATE_BOOTLOADER=0
       BOOTLOADER_UPDATE_IMAGE=""
-   fi
-
-   if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ]; then
-      image_boot_ver=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | sed -n 's/^MFG_VER: //p' | head -n 1)
-      if [ "${MIN_BOOT_VER}" != 0 ] && [ "${MIN_BOOT_VER}" -gt "${image_boot_ver:-0}" ]; then
-         die "EEPROM image version ${image_boot_ver:-0} does not meet the minimum bootloader version ${MIN_BOOT_VER} required by this board."
-      fi
    fi
 
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
