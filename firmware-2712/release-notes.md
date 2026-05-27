@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-27: Promote pieeprom-2026-05-26 to the default release (default)
+
 ## 2026-05-26: Make Pi 5 use the correct entropy source for kaslr-seed and rng-seed (latest)
 
 * Make Pi 5 use the correct entropy source
