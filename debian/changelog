@@ -1,3 +1,15 @@
+rpi-eeprom (28.22-1) trixie; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2026-05-26: 2712: Make Pi 5 use the correct entropy source
+    for kaslr-seed and rng-seed (latest)
+  * pieeprom-2026-05-26: 2712: Promote to the (default) release
+
+  [ Jan Čermák ]
+  * rpi-eeprom-update: scan only /dev/mmcblk0p1 in findBootFS
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Wed, 27 May 2026 09:01:32 +0100
+
 rpi-eeprom (28.21-1) trixie; urgency=medium
 
   * debian: Make rpieepromab a recommended package
