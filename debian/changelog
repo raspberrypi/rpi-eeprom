@@ -1,3 +1,9 @@
+rpi-eeprom (28.24-1) trixie; urgency=medium
+
+  * fixup: Add pieeprom-2026-05-26.bin to 2712 default release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Wed, 27 May 2026 15:13:12 +0100
+
 rpi-eeprom (28.23-1) trixie; urgency=medium
 
   * rpi-eeprom-update: Increase BOOT_VER to 1 for 2711
