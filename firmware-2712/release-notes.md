@@ -1,5 +1,15 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-05-27: Promote pieeprom-2026-05-26 to the default release (default)
+
+## 2026-05-26: Make Pi 5 use the correct entropy source for kaslr-seed and rng-seed (latest)
+
+* Make Pi 5 use the correct entropy source
+  The kernel looks to Device Tree for the rng-seed and kaslr-seed values
+  as sources of entropy. On Pi 5 the bootsys code enables the HWRNG, but
+  for historical reasons these two DT properties were not using the
+  resulting random data. Fix that.
+
 ## 2026-05-22: Allow string values to enable fragments (latest)
 
 * Allow string values to enable fragments
