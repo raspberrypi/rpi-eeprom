@@ -57,7 +57,9 @@ OVERWRITE_CONFIG=0
 # Timestamp for first release which doesn't have a timestamp field
 BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
-BOOT_VER_2711=0
+# BOOT_VER is checked against the manufacturing version in OTP to verify
+# that this script is new enough to correctly update the bootloader on this board.
+BOOT_VER_2711=1
 BOOT_VER_2712=1
 MIN_BOOT_VER=0
 BOARD_INFO=
