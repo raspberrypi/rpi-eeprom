@@ -37,5 +37,5 @@ rm -f /usr/bin/vl805
 cp -fv "${script_dir}/../rpi-eeprom-update-default" /etc/default/rpi-eeprom-update
 
 if [ "$1" = "-b" ]; then
-   sed -i -e 's/^FIRMWARE_RELEASE_STATUS=.*/FIRMWARE_RELEASE_STATUS=beta/' "${CONFIG}"
+   sed -i -e 's/^FIRMWARE_RELEASE_STATUS=.*/FIRMWARE_RELEASE_STATUS=latest/' "${CONFIG}"
 fi
