@@ -1,3 +1,14 @@
+rpi-eeprom (28.25-1) trixie; urgency=medium
+
+  * firmware-2711: Remove old releases
+  * firmware: 2712: Archive releases older than pieeprom-2026-05-26
+  * rpi-eeprom-update: Always warn about manufacture version
+    incompatibility
+  * test: Change the install script to select 'latest' instead of 'beta'
+  * rpi-sign-bootcode: debug: Extract signature block fields
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Sat, 06 Jun 2026 09:26:11 +0100
+
 rpi-eeprom (28.24-1) trixie; urgency=medium
 
   * fixup: Add pieeprom-2026-05-26.bin to 2712 default release
