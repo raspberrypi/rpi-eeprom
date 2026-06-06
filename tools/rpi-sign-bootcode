@@ -218,12 +218,94 @@ def create_2712_image(output, bootcode, private_version=0, public_key=None, priv
     image.write()
     image.close()
 
+def extract_2711_image(input_file):
+    """
+    Extract the components from a 2711 signed image and print as hex strings.
+    Format: file | length | keynum | rsa_sig (256 bytes) | hmac-sha1 (20 bytes)
+    """
+    data = bytearray(open(input_file, 'rb').read())
+    total_len = len(data)
+
+    hmac_offset = total_len - 20
+    rsa_offset = hmac_offset - 256
+    keynum_offset = rsa_offset - 4
+    length_offset = keynum_offset - 4
+
+    hmac_digest = data[hmac_offset:]
+    rsa_sig = data[rsa_offset:hmac_offset]
+    keynum = struct.unpack('<i', data[keynum_offset:rsa_offset])[0]
+    length = struct.unpack('<i', data[length_offset:keynum_offset])[0]
+
+    if length != length_offset:
+        debug(f"Warning: length field {length} does not match expected offset {length_offset}")
+
+    print(f"length: {length}")
+    print(f"keynum: {keynum}")
+    print(f"rsa_sig: {rsa_sig.hex()}")
+    print(f"hmac_sha1: {hmac_digest.hex()}")
+
+def pubkey_to_pem(pubkey_n, pubkey_e):
+    """
+    Converts the ROM format public key (N, e as little endian bytes) back
+    into an RSA public key in PEM format.
+    """
+    n = int.from_bytes(pubkey_n, byteorder='little')
+    e = int.from_bytes(pubkey_e, byteorder='little')
+    return RSA.construct((n, e)).export_key().decode()
+
+def extract_2712_image(input_file):
+    """
+    Extract the components from a 2712 signed image and print as hex strings.
+    Format: file | length | keynum | version | rsa_sig (256 bytes) | public_key (264 bytes)
+    """
+    data = bytearray(open(input_file, 'rb').read())
+    total_len = len(data)
+
+    sigblock_size = 4+4+4+256+256+8
+    for i in range(0, 2):
+        sigblock_offset = total_len - (sigblock_size * (i + 1))
+        length_offset = sigblock_offset
+        keynum_offset = length_offset + 4
+        version_offset = keynum_offset + 4
+        rsa_sig_offset = version_offset + 4
+        pubkey_offset = rsa_sig_offset + 256
+
+        pubkey_n = data[pubkey_offset:pubkey_offset + 256]
+        pubkey_e = data[pubkey_offset + 256:pubkey_offset + 256 + 8]
+        rsa_sig = data[rsa_sig_offset:pubkey_offset]
+        length = struct.unpack('<i', data[length_offset:keynum_offset])[0]
+        keynum = struct.unpack('<i', data[keynum_offset:version_offset])[0]
+        version = struct.unpack('<i', data[version_offset:rsa_sig_offset])[0]
+
+        if length != length_offset:
+            debug(f"Warning: length field {length} does not match expected offset {length_offset}")
+
+        if keynum in range(0, 4):
+            print("sig_type: rpi")
+        elif keynum == 16:
+            print("sig_type: customer")
+        else:
+            break
+        print(f"length: {length}")
+        print(f"keynum: {keynum}")
+        print(f"version: {version}")
+        print(f"rsa_sig: {rsa_sig.hex()}")
+        print(f"pubkey_n: {pubkey_n.hex()}")
+        print(f"pubkey_e: {pubkey_e.hex()}")
+        print(pubkey_to_pem(pubkey_n, pubkey_e))
+
+        if keynum in range(0, 4): # RPi is always the innermost key
+            break
+        else:
+            print()
+
+
 def main():
     help_text = """
     Signs a second stage bootloader image.
 
     Examples:
-    
+
         Customer counter-signed:
           * Exactly the same as Raspberry Pi signing but the input is the Raspberry Pi signed bootcode.bin
           * The key number will probably always be 16 to indicate a customer signing
@@ -239,10 +321,19 @@ def main():
           * The public key in PEM format MUST be specified with the -p option
 
         rpi-sign-bootcode --debug -c 2712 -i bootcode.bin.sign2 -o bootcode.bin -p public.pem -H hsm-wrapper
+
+        Parse the signature of bootcode.bin from a Raspberry Pi 5 EEPROM image:
+          * rpi-eeprom-config -x extracts bootcode.bin to the current directory
+          * -e parses the signature block(s) and prints the public key in PEM format
+
+        rpi-eeprom-config -x pieeprom.bin
+        rpi-sign-bootcode -c 2712 -e bootcode.bin
+
     """
     parser = argparse.ArgumentParser(help_text)
     parser.add_argument('-o', '--output', required=False, help='Output filename. If not specified, the signed image is written to stdout in base64 format')
     parser.add_argument('-c', '--chip', required=True, type=int, help='Chip number')
+    parser.add_argument('-e', '--extract', required=False, help='Extract image components as hex strings (use -c to specify the chip)')
     parser.add_argument('-i', '--input', required=False, help='Path of the unsigned bootcode.bin file OR RPi signed bootcode file to be signed with the customer key. If NULL, the binary is read from stdin in base64 format')
     parser.add_argument('-m', '--hmac', required=False, help='Path of the HMAC key file')
     parser.add_argument('-k', '--private-key', dest='private_key', required=False, default=None, help='Path of RSA private key (PEM format)')
@@ -254,6 +345,14 @@ def main():
 
     args = parser.parse_args()
     _CONFIG['DEBUG'] = args.debug
+
+    if args.extract:
+        if args.chip == 2712:
+            extract_2712_image(args.extract)
+        else:
+            extract_2711_image(args.extract)
+        return
+
     if args.chip == 2711:
         if args.hmac is None:
             raise Exception("HMAC key requried for 2711")
