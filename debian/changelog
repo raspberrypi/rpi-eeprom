@@ -1,3 +1,11 @@
+rpi-eeprom (28.26-1) trixie; urgency=medium
+
+  * docs: Describe scripts in this repo plus new version compatibility
+    checks
+  * recovery: 2712: Restore 2026-05-26 version
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 09 Jun 2026 16:44:44 +0100
+
 rpi-eeprom (28.25-1) trixie; urgency=medium
 
   * firmware-2711: Remove old releases
