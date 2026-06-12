@@ -1,3 +1,11 @@
+rpi-eeprom (28.27-1) trixie; urgency=medium
+
+  * rpi-bootloader-version: vcgencmd bootloader_version replacement
+  * versions: Update the list of bootloader verions
+  * rpi-eeprom.install: Add rpi-bootloader-version and versions.txt
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 12 Jun 2026 16:08:26 +0100
+
 rpi-eeprom (28.26-1) trixie; urgency=medium
 
   * docs: Describe scripts in this repo plus new version compatibility
