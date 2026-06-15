@@ -31,8 +31,8 @@ build_ts_file="${DT_BOOTLOADER}/build-timestamp"
 [ -f "${build_ts_file}" ] || die "${build_ts_file} not found."
 build_ts=$(readDtInt "${build_ts_file}")
 
-# First line is the build date in local time.
-date -d "@${build_ts}" "+%Y/%m/%d %H:%M:%S"
+# First line is the build date in UTC.
+date -u -d "@${build_ts}" "+%Y/%m/%d %H:%M:%S"
 
 # The version property is the bootloader git hash. The build variant (e.g.
 # "release") is not exported via device-tree; released images are always
