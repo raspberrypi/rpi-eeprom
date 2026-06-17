@@ -1,5 +1,47 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-06-17: rpi-fw-crypto fine-grained locking (latest)
+
+* rpi-fw-crypto fine-grained locking
+  Crypto operations can be individually locked per key until after reboot
+  using rpi-fw-crypto set-key-status. Reading, signing, hmac, setting key usage
+  and generating a key can each individually be locked. Setting key usage and
+  generating a key can be locked with lock_device_key_write=1 in config.txt.
+* Use UTC for BUILD_DATE and BUILD_TIME
+  Expand BUILD_TIMESTAMP using (date -u) for the human readable
+  date / timestamp strings.
+  See: https://github.com/raspberrypi/rpi-eeprom/pull/850
+* fix wrap issue with platform_stc64
+  It is unsafe to read lo and hi registers separately
+  around the wrap point (every 71m)
+* gencmd: Disable pmicrd and pmicwr if secure-boot is enabled
+* arm_dt: Avoid incompatible overlay memory leak
+  Overlay loading is now aborted early if the overlay map says that it
+  isn't compatible. Unfortunately that error path leaked the memory used
+  to hold any parameters passed to the overlay. Plug the leak.
+* Stop the heartbeat with the watchdog
+  There is no reason to keep the watchdog heartbeat going when the
+  watchdog is stopped. Ensure the heartbeat is also stopped.
+  See: https://github.com/raspberrypi/firmware/issues/2023
+* arm_dt: Defer overlay_map loading until needed
+  There is no need to load the overlay map if overlays are not being used.
+  Defer the loading of overlay_map until it is actually needed, saving a
+  few tens of milliseconds.
+* arm_dt: Drop an overlay if remapping fails
+  If the process of overlay name remapping explicitly fails by returning
+  NULL, don't proceed to apply the overlay anyway - it has been rejected.
+* Avoid an unnecessary relocation
+  ARM64 kernels include a load address in the header, but others don't.
+  For those cases, treat an explicit kernel_address setting as gospel,
+  potentially avoiding an unnecessary relocation.
+* Set RP1 UART baud to the value configured in eeprom config
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/765
+* arm-loader: Restrict SET_VOLTAGE to core-voltage on Pi4 and newer.
+  With LPDDR4 the SDRAM is initialised by Broadcom's DPFE
+  firmware which does PHY training. Attempting to adjust the SDRAM
+  voltage independently of this will just make the system less stable
+  so switch off this legacy behavior on Pi4 and newer.
+
 ## 2026-05-27: Promote pieeprom-2026-05-26 to the default release (default)
 
 ## 2026-05-26: Make Pi 5 use the correct entropy source for kaslr-seed and rng-seed (latest)
