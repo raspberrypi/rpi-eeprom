@@ -1,3 +1,14 @@
+rpi-eeprom (28.28-1) trixie; urgency=medium
+
+  [ Tim Gover ]
+  * rpi-bootloader-version: Show dates as UTC
+  * pieeprom-2026-06-17: 2712: rpi-fw-crypto fine-grained locking (latest)
+
+  [ Mathew Blowers ]
+  * rpi-eeprom-update: Check flashrom version
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 22 Jun 2026 17:36:13 +0100
+
 rpi-eeprom (28.27-1) trixie; urgency=medium
 
   * rpi-bootloader-version: vcgencmd bootloader_version replacement
