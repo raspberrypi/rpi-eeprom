@@ -106,11 +106,15 @@ cleanup() {
       umount "${TMP_BOOTFS_MNT}"
       rmdir "${TMP_BOOTFS_MNT}"
    fi
+   if [ -f "${FLASHROM_LOG}" ]; then
+      rm -f "${FLASHROM_LOG}"
+   fi
    TMP_BOOTFS_MNT=
    TMP_EEPROM_IMAGE=
    TMP_EEPROM_CONFIG=
    NEW_EEPROM_CONFIG=
    IMMEDIATE_UPDATE_LOG=
+   FLASHROM_LOG=
 }
 trap cleanup EXIT
 
@@ -200,6 +204,29 @@ prepareImage()
          --timestamp "$(date -u +%s)" \
          "${BOOTLOADER_UPDATE_IMAGE}"
    fi
+}
+
+# upstream flashrom 1.4 - 1.6 may incorrectly erase chips when the probe
+# reports "Unknown flash chip"
+flashromUnknownFlashOk() {
+   local flashrom_line flashrom_version_str flashrom_ver flashrom_major flashrom_minor flashrom_ver_num
+
+   flashrom_line=$(head -n1 "$1")
+   flashrom_version_str=$(echo "${flashrom_line}" | sed -n 's/^flashrom \(.*\) on .*/\1/p')
+   [ -n "${flashrom_version_str}" ] || return 1
+
+   flashrom_ver=$(echo "${flashrom_version_str#v}" | sed -n 's/^\([0-9][0-9]*\)\.\([0-9][0-9]*\).*/\1 \2/p')
+   flashrom_major=${flashrom_ver%% *}
+   flashrom_minor=${flashrom_ver#* }
+   [ -n "${flashrom_major}" ] && [ -n "${flashrom_minor}" ] || return 1
+
+   flashrom_ver_num=$((flashrom_major * 100 + flashrom_minor))
+   if [ "${flashrom_ver_num}" -le 103 ] || [ "${flashrom_ver_num}" -ge 107 ]; then
+      return 0
+   fi
+
+   echo "${flashrom_version_str}" | grep -qE '^v?[0-9]+\.[0-9]+(\.[0-9]+)?-rpt'
+   return $?
 }
 
 isABCapableImage() {
@@ -441,7 +468,11 @@ applyUpdate() {
       elif ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > "${FLASHROM_LOG}" 2>&1; then
          warn "WARNING: Flashrom probe of ${SPIDEV} failed"
       elif grep -q "Unknown flash" "${FLASHROM_LOG}"; then
-         warn "WARNING: Flashrom probe of ${SPIDEV} reported Unknown flash chip"
+         if flashromUnknownFlashOk "${FLASHROM_LOG}"; then
+            flashrom_probe_ok=1
+         else
+            warn "WARNING: Flashrom probe of ${SPIDEV} reported Unknown flash chip"
+         fi
       else
          flashrom_probe_ok=1
       fi

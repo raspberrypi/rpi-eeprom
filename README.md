@@ -50,7 +50,7 @@ By default `rpi-eeprom-update` stages the new image to the boot partition and th
 
 ## flashrom SPI flash-chip support
 
-Before performing an immediate update, `rpi-eeprom-update` probes the SPI flash via `flashrom -p linux_spi:dev=<spidev>` and aborts back to a staged update if the probe fails or reports `Unknown flash chip`. This guards against a class of upstream bugs in `flashrom` 1.4 – 1.6 where erase operations were issued incorrectly for chips that are recognised only via SFDP, which can leave the EEPROM in a partially-erased state.
+Before performing an immediate update, `rpi-eeprom-update` probes the SPI flash via `flashrom -p linux_spi:dev=<spidev>` and aborts back to a staged update if the probe fails, or reports `Unknown flash chip` with an unpatched upstream `flashrom` 1.4 – 1.6. This guards against a class of upstream bugs in `flashrom` 1.4 – 1.6 where erase operations were issued incorrectly for chips that are recognised only via SFDP, which can leave the EEPROM in a partially-erased state.
 
 Raspberry Pi OS ships a patched downstream `flashrom` 1.4 with the SFDP erase bugs fixed. If you are running `rpi-eeprom-update` on another distribution, either use that patched build or a `flashrom` release new enough to contain the upstream fix; otherwise leave `RPI_EEPROM_IMMEDIATE_UPDATE` unset and rely on the staged update path.
 
