@@ -345,7 +345,7 @@ applyRecoveryUpdate()
         if [ "${AB_EEPROM}" -ne 1 ]; then
            # Generate a .sig file containing the sha256 hash of the EEPROM image
            # and the current timestamp.
-           rpi-eeprom-digest -i "${TMP_EEPROM_IMAGE}" -o "${BOOTFS}/pieeprom.sig"
+           rpi-eeprom-digest -c "${BCM_CHIP}" -i "${TMP_EEPROM_IMAGE}" -o "${BOOTFS}/pieeprom.sig"
 
            cp -fv "${TMP_EEPROM_IMAGE}" "${BOOTFS}/pieeprom.upd" \
                    || die "Failed to copy ${TMP_EEPROM_IMAGE} to ${BOOTFS}"

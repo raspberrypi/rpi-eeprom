@@ -58,6 +58,7 @@ https://github.com/raspberrypi/usbboot/tree/master/secure-boot-recovery/README.m
 
 
 Options:
+   -c Optional target SoC name for firmware updates (2711 or 2712).
    -i The source image, e.g., boot.img
    -o The name of the digest/signature file
    -k Optional RSA private key
@@ -112,6 +113,10 @@ writeSig() {
        echo "ts: $(date -u +%s)" >> "${OUTPUT}"
    fi
 
+   if [ -n "${TARGET_SOC}" ]; then
+       echo "target-soc: ${TARGET_SOC}" >> "${OUTPUT}"
+   fi
+
    if [ -n "${HSM_WRAPPER}" ]; then
       echo "rsa2048: $("${HSM_WRAPPER}" -a rsa2048-sha256 "${IMAGE}")" >> "${OUTPUT}"
    elif [ -n "${KEY}" ]; then
@@ -131,10 +136,13 @@ verifySig() {
    "${OPENSSL}" dgst ${ENGINE_OPTS} -verify "${KEY}" -signature "${TMP_DIR}/sig.bin" "${IMAGE}" || die "${IMAGE} not verified"
 }
 
+TARGET_SOC=""
 OUTPUT=""
 VERIFY=0
-while getopts i:H:k:ho:v: option; do
+while getopts c:i:H:k:ho:v: option; do
    case "${option}" in
+   c) TARGET_SOC="${OPTARG}"
+      ;;
    i) IMAGE="${OPTARG}"
       ;;
    k) KEY="${OPTARG}"
