@@ -1,5 +1,26 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-06-29: Fix auto_initramfs take 3 (latest)
+
+* Fix auto_initramfs take 3
+  The previous fix to avoid a double os_prefix in the initramfs path was
+  wrong in three ways:
+  1. It ignored the os_prefix when checking for the existence of the
+  matching initramfs file.
+  2. It didn't use any absolute path in kernel_file= when looking for the
+  initramfs.
+  3. It created a whole new path when one already existed.
+  See: https://forums.raspberrypi.com/viewtopic.php?t=399185
+* Revert "arm_ldconfig: Avoid double os_prefix on initramfs"
+  This reverts commit 3992d6660028925ddde17479ddd949a857ef6cd7.
+  See: https://forums.raspberrypi.com/viewtopic.php?t=399185
+* dtoverlay: Permit writing dtb phandles
+  Overwriting a phandle in a base DTB is usual a bad idea, but there are
+  cases where doing so (or writing one into a target node that doesn't
+  yet have one) can be useful. Rather than trying to do something clever
+  and/or time-consuming, invent a magic property that enables such
+  overwriting on a per-fragment basis.
+
 ## 2026-06-17: rpi-fw-crypto fine-grained locking (latest)
 
 * rpi-fw-crypto fine-grained locking
