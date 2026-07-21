@@ -53,6 +53,8 @@ build_image()
    img="${img}.img"
    partition_start=2048
    partition_size=524288
+   temp_disk_img="temp.img"
+   temp_partition_img="fat.img"
 
    TMP_DIR="$(mktemp -d)"
    (
@@ -67,27 +69,27 @@ EOF
       echo "Generated config.txt file"
       cat config.txt
       cd "${TMP_DIR}"
-      dd if=/dev/zero bs=1M count=258 of=temp.img > /dev/null 2>&1
-      "${SFDISK}" temp.img <<EOF
+      dd if=/dev/zero bs=1M count=258 of="${temp_disk_img}" > /dev/null 2>&1
+      "${SFDISK}" "${temp_disk_img}" <<EOF
 label: dos
 label-id: 0x0a7b5ac5
-device: temp.img
+device: ${temp_disk_img}
 unit: sectors
 
 ./test.img1 : start=        ${partition_start}, size=       ${partition_size}, type=c
 EOF
-      file temp.img
-      dd if=/dev/zero bs=512 count="${partition_size}" of=fat.img > /dev/null 2>&1
-      "${MKFS_FAT}" -F 32 -s 1 fat.img > /dev/null
-      mcopy -i fat.img -v files/* ::
-      dd if=fat.img of=temp.img bs=512 seek="${partition_start}" conv=notrunc > /dev/null 2>&1
+      file "${temp_disk_img}"
+      dd if=/dev/zero bs=512 count="${partition_size}" of="${temp_partition_img}" > /dev/null 2>&1
+      "${MKFS_FAT}" -F 32 -s 1 "${temp_partition_img}" > /dev/null
+      "${MCOPY}" -i "${temp_partition_img}" -v files/* ::
+      dd if="${temp_partition_img}" of="${temp_disk_img}" bs=512 seek="${partition_start}" conv=notrunc > /dev/null 2>&1
    )
    image_dir="images-${chip}"
    mkdir -p "${image_dir}"
-   mv "${TMP_DIR}/temp.img" "${image_dir}/${img}"
+   mv "${TMP_DIR}/${temp_disk_img}" "${image_dir}/${img}"
    file "${image_dir}/${img}"
    cd "${image_dir}"
-   zip "${zip}" "${img}"
+   "${ZIP}" "${zip}" "${img}"
    cd ..
    rm "${image_dir}/${img}"
    echo "Wrote $(pwd)/${image_dir}/${zip}"
@@ -125,11 +127,11 @@ if ! MKFS_FAT=$(command -v mkfs.fat); then
    die "mkfs.fat not found: Try installing the dosfstools package"
 fi
 
-if ! command -v mcopy > /dev/null; then
+if ! MCOPY=$(command -v mcopy); then
    die "mcopy not found: Try installing the mtools package"
 fi
 
-if ! command -v zip > /dev/null; then
+if ! ZIP=$(command -v zip); then
    die "zip not found: Try installing the zip package"
 fi
 
