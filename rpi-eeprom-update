@@ -1054,6 +1054,32 @@ removePreviousUpdates()
    fi
 }
 
+# Offer to install an available update. Only prompt if it's safe to do so
+# i.e. running as root with stdin/stdout attached to a terminal and the
+# output is not being captured by another script via the -m option.
+offerUpdatePrompt()
+{
+   [ -t 0 ] && [ -t 1 ] || return 1
+   [ -z "${MACHINE_OUTPUT}" ] || return 1
+   [ "$(id -u)" = "0" ] || return 1
+   if getBootloaderConfig | grep -q FREEZE_VERSION=1; then
+      return 1
+   fi
+
+   echo ""
+   if [ "${RPI_EEPROM_IMMEDIATE_UPDATE:-0}" = 1 ]; then
+      echo "The EEPROM will be updated immediately. Do not disconnect the power until the update is complete."
+   else
+      echo "The update will be installed at the next reboot."
+   fi
+   printf "Install the update now? [y/N] "
+   read -r answer || return 1
+   case "${answer}" in
+      [yY]|[yY][eE][sS]) return 0 ;;
+      *) return 1 ;;
+   esac
+}
+
 checkVersion()
 {
    lookupVersionInfo
@@ -1061,11 +1087,20 @@ checkVersion()
    if [ "${ACTION_UPDATE_BOOTLOADER}" = 1 ] || [ "${ACTION_UPDATE_VL805}" = 1 ]; then
       echo "*** UPDATE AVAILABLE ***"
       echo ""
-      echo "Run \"sudo rpi-eeprom-update -a\" to install this update now."
+      echo "Run \"sudo rpi-eeprom-update -a\" to install this update without a prompt."
       echo
       echo "To configure the bootloader update policy run \"sudo ${RPI_EEPROM_UPDATE_CONFIG_TOOL}\""
       echo ""
       printVersions
+      if offerUpdatePrompt; then
+         echo ""
+         AUTO_UPDATE_BOOTLOADER=1
+         AUTO_UPDATE_VL805=1
+         # Match the defaulting normally done by checkDependencies when -a is passed
+         [ -z "${RPI_EEPROM_IMMEDIATE_UPDATE}" ] && RPI_EEPROM_IMMEDIATE_UPDATE=0
+         checkAndApply
+         exit ${EXIT_SUCCESS}
+      fi
       write_status_info "EXIT_UPDATE_REQUIRED"
       exit ${EXIT_UPDATE_REQUIRED}
    else
