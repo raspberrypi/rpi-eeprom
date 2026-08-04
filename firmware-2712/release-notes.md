@@ -1,5 +1,32 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-08-04: arm_mbox: Avoid slow calls every mbox message (latest)
+
+* arm_mbox: Avoid slow calls every mbox message
+  They are only meant to be called every 100ms (arm_loader_update_throttled_status)
+  or 20ms (power_monitor_execute) but are called once per mbox message.
+* arm_2712: Avoid waiting for an already consumed latch
+  rtos_latch_try() acquires the latch if a message is already waiting
+  (the IRQ handler released it).
+* arm_dt: Store detected but unknown display ID in device tree
+  For DSI displays where the ID provided by the MCU is unknown,
+  store the value read in device tree so that userspace can do
+  something.
+* arm_loader_dvfs: Make enable request on unset clock quieter
+  The current kernel does trigger this path during initialisation.
+  Pull in RP1 firmware at d6df137696bdb672690a9f5117b332d2dc5bae47
+* camera_subsystem: Account for CSS_CMD_DELAY with the read cache
+  Store the elapsed time of the I2C read in the cache so that we correctly
+  account for any CSS_CMD_DELAY commands in the read sequence and ensure
+  they are correcly handled if cached.
+* camera_subsystem: Cache the I2C transactions for efficiency where possible
+  Some sensors share the same I2C address and id register locations, so
+  we might save a few ms by caching i2c transactions in such cases.
+* camera_subsystem: Cull unused cameras from the table
+  These are never used and make the table noisy
+  Pull in RP1 firmware at 1facd6e6fc3a1caaa3e3a225e5b5d9eb63471e16
+* camera: Add autodetect for imx355 and imx662
+
 ## 2026-06-29: Fix auto_initramfs take 3 (latest)
 
 * Fix auto_initramfs take 3
