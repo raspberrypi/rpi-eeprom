@@ -118,10 +118,12 @@ writeSig() {
    fi
 
    if [ -n "${HSM_WRAPPER}" ]; then
-      echo "rsa2048: $("${HSM_WRAPPER}" -a rsa2048-sha256 "${IMAGE}")" >> "${OUTPUT}"
+      sig_hex="$("${HSM_WRAPPER}" -a rsa2048-sha256 "${IMAGE}")"
+      echo "rsa2048: ${sig_hex}" >> "${OUTPUT}"
    elif [ -n "${KEY}" ]; then
       "${OPENSSL}" dgst ${ENGINE_OPTS} -sign "${KEY}" -sha256 -out "${SIG_TMP}" "${IMAGE}"
-      echo "rsa2048: $(xxd -c 4096 -p < "${SIG_TMP}")" >> "${OUTPUT}"
+      sig_hex="$(xxd -c 4096 -p < "${SIG_TMP}")"
+      echo "rsa2048: ${sig_hex}" >> "${OUTPUT}"
    fi
 }
 
