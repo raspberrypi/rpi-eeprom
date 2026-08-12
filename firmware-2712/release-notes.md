@@ -1,5 +1,22 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-08-12: Clear UV / OV PMIC power-on reset event for non-USB power supplies (latest)
+
+* Fix USB-C cable orientation detection
+  Fix a typo which caused the wrong register to be read when reporting
+  the USB-C cable orientation in the bootloader HDMI diagnostics screen.
+  Previously, this would only ever report CC1 instead of CC1 or CC2.
+* Clear UV / OV PMIC power-on reset event for non-USB power supplies
+  If the Pi is powered through the 40-pin header then it's possible for
+  the under-voltage or under-voltage PMIC reset events to be set even
+  if the PMIC didn't actually reset. Mask out these bits in the
+  device-tree node to avoid suprious under-voltage warnings in the
+  desktop.
+* config: Switch more config string lookups to use the more effient macros
+* plat_conf: Cache absent clock and pll overrides
+* arm_loader_dvfs: Only update low voltage state when required
+* power_2712: Cache last turbo state to avoid unneeded I2C accesses
+
 ## 2026-08-04: arm_mbox: Avoid slow calls every mbox message (latest)
 
 * arm_mbox: Avoid slow calls every mbox message
