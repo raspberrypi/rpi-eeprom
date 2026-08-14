@@ -1,3 +1,10 @@
+rpi-eeprom (28.30-1) trixie; urgency=medium
+
+  [ Serge Schneider ]
+  * gbp.conf: declare upstream-branch so CI can recreate it
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 14 Aug 2026 16:30:32 +0100
+
 rpi-eeprom (28.29-1) trixie; urgency=medium
 
   [ Tim Gover ]
