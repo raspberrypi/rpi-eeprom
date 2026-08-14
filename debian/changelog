@@ -1,3 +1,25 @@
+rpi-eeprom (28.29-1) trixie; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2026-06-29: 2712: Fix auto_initramfs take 3 (latest)
+  * rpi-eeprom-digest: Add metadata label for the target-soc
+  * rpi-eeprom-update: Offer an update in interactive mode
+  * pieeprom-2026-08-04: 2711: Use UTC for BUILD_DATE and BUILD_TIME
+    (latest)
+  * pieeprom-2026-08-04: 2712: Avoid slow calls every mbox message
+    (latest)
+  * pieeprom-2026-08-12: 2712: Clear UV / OV PMIC power-on reset event for
+    non-USB power supplies (latest)
+
+  [ fabius ]
+  * imager: build rpiboot GPIO image without sudo
+  * imager: address review feedback on rpiboot GPIO script
+
+  [ Willem Garnier ]
+  * rpi-eeprom-digest: Bubble errors from HSM_WRAPPER invocation
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 14 Aug 2026 13:37:06 +0100
+
 rpi-eeprom (28.28-1) trixie; urgency=medium
 
   [ Tim Gover ]
