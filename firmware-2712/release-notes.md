@@ -1,5 +1,70 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-08-12: Clear UV / OV PMIC power-on reset event for non-USB power supplies (latest)
+
+* Fix USB-C cable orientation detection
+  Fix a typo which caused the wrong register to be read when reporting
+  the USB-C cable orientation in the bootloader HDMI diagnostics screen.
+  Previously, this would only ever report CC1 instead of CC1 or CC2.
+* Clear UV / OV PMIC power-on reset event for non-USB power supplies
+  If the Pi is powered through the 40-pin header then it's possible for
+  the under-voltage or under-voltage PMIC reset events to be set even
+  if the PMIC didn't actually reset. Mask out these bits in the
+  device-tree node to avoid suprious under-voltage warnings in the
+  desktop.
+* config: Switch more config string lookups to use the more effient macros
+* plat_conf: Cache absent clock and pll overrides
+* arm_loader_dvfs: Only update low voltage state when required
+* power_2712: Cache last turbo state to avoid unneeded I2C accesses
+
+## 2026-08-04: arm_mbox: Avoid slow calls every mbox message (latest)
+
+* arm_mbox: Avoid slow calls every mbox message
+  They are only meant to be called every 100ms (arm_loader_update_throttled_status)
+  or 20ms (power_monitor_execute) but are called once per mbox message.
+* arm_2712: Avoid waiting for an already consumed latch
+  rtos_latch_try() acquires the latch if a message is already waiting
+  (the IRQ handler released it).
+* arm_dt: Store detected but unknown display ID in device tree
+  For DSI displays where the ID provided by the MCU is unknown,
+  store the value read in device tree so that userspace can do
+  something.
+* arm_loader_dvfs: Make enable request on unset clock quieter
+  The current kernel does trigger this path during initialisation.
+  Pull in RP1 firmware at d6df137696bdb672690a9f5117b332d2dc5bae47
+* camera_subsystem: Account for CSS_CMD_DELAY with the read cache
+  Store the elapsed time of the I2C read in the cache so that we correctly
+  account for any CSS_CMD_DELAY commands in the read sequence and ensure
+  they are correcly handled if cached.
+* camera_subsystem: Cache the I2C transactions for efficiency where possible
+  Some sensors share the same I2C address and id register locations, so
+  we might save a few ms by caching i2c transactions in such cases.
+* camera_subsystem: Cull unused cameras from the table
+  These are never used and make the table noisy
+  Pull in RP1 firmware at 1facd6e6fc3a1caaa3e3a225e5b5d9eb63471e16
+* camera: Add autodetect for imx355 and imx662
+
+## 2026-06-29: Fix auto_initramfs take 3 (latest)
+
+* Fix auto_initramfs take 3
+  The previous fix to avoid a double os_prefix in the initramfs path was
+  wrong in three ways:
+  1. It ignored the os_prefix when checking for the existence of the
+  matching initramfs file.
+  2. It didn't use any absolute path in kernel_file= when looking for the
+  initramfs.
+  3. It created a whole new path when one already existed.
+  See: https://forums.raspberrypi.com/viewtopic.php?t=399185
+* Revert "arm_ldconfig: Avoid double os_prefix on initramfs"
+  This reverts commit 3992d6660028925ddde17479ddd949a857ef6cd7.
+  See: https://forums.raspberrypi.com/viewtopic.php?t=399185
+* dtoverlay: Permit writing dtb phandles
+  Overwriting a phandle in a base DTB is usual a bad idea, but there are
+  cases where doing so (or writing one into a target node that doesn't
+  yet have one) can be useful. Rather than trying to do something clever
+  and/or time-consuming, invent a magic property that enables such
+  overwriting on a per-fragment basis.
+
 ## 2026-06-17: rpi-fw-crypto fine-grained locking (latest)
 
 * rpi-fw-crypto fine-grained locking

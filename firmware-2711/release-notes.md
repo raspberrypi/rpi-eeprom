@@ -1,5 +1,12 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-08-04: arm_mbox: Avoid slow calls every mbox message (latest)
+
+* Use UTC for BUILD_DATE and BUILD_TIME
+  Expand BUILD_TIMESTAMP using (date -u) for the human readable
+  date / timestamp strings.
+  See: https://github.com/raspberrypi/rpi-eeprom/pull/850
+
 ## 2026-05-26: Promote 2026-05-17 to the default release (default)
 
 ## 2026-05-17: Update Broadcom DDR firware to 2.35 (latest)
