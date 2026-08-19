@@ -412,6 +412,28 @@ applyRecoveryUpdate()
    fi
 }
 
+printFlashromChipDetails() {
+   # Parse the verbose flashrom probe for the chip name and capacity
+   # If unknown chip, then print the JEDEC ID and capacity
+   flashrom_log="$1"
+
+   flashrom_chip_line=$(grep -m1 -E '^(Found|Assuming) .+ flash chip "' "${flashrom_log}") || return 0
+   flashrom_vendor=$(echo "${flashrom_chip_line}" | sed -n 's/^\(Found\|Assuming\) \(.*\) flash chip ".*/\2/p')
+   flashrom_capacity=$(echo "${flashrom_chip_line}" | sed -n 's/.*(\([0-9][0-9]*\) kB,.*/\1/p')
+
+   if [ "${flashrom_vendor}" = "Unknown" ]; then
+      flashrom_jedec_id=$(grep -m1 -E 'id1 0x[0-9a-fA-F]+, id2 0x[0-9a-fA-F]+' "${flashrom_log}" | sed -n 's/.*\(id1 0x[0-9a-fA-F]*, id2 0x[0-9a-fA-F]*\).*/\1/p')
+      if [ -n "${flashrom_jedec_id}" ]; then
+         echo "Unrecognised flash chip: JEDEC ${flashrom_jedec_id}, capacity ${flashrom_capacity:-unknown} kB"
+      else
+         echo "Unrecognised flash chip: capacity ${flashrom_capacity:-unknown} kB"
+      fi
+   else
+      flashrom_name=$(echo "${flashrom_chip_line}" | sed -n 's/.*flash chip "\(.*\)" (.*/\1/p')
+      echo "Detected flash chip: ${flashrom_vendor} ${flashrom_name}, capacity ${flashrom_capacity} kB"
+   fi
+}
+
 applyUpdate() {
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
@@ -442,13 +464,15 @@ applyUpdate() {
 
       if ! [ -e "${SPIDEV}" ]; then
          warn "WARNING: SPI device ${SPIDEV} not found"
-      elif ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > "${FLASHROM_LOG}" 2>&1; then
+      elif ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 -V > "${FLASHROM_LOG}" 2>&1; then
          warn "WARNING: Flashrom probe of ${SPIDEV} failed"
       elif grep -q "Unknown flash" "${FLASHROM_LOG}"; then
          # Generic SFDP handling is not supported because some chips have
          # been known to have incorrect SFDP data
+         printFlashromChipDetails "${FLASHROM_LOG}"
          warn "WARNING: Flashrom probe of ${SPIDEV} reported Unknown flash chip"
       else
+         printFlashromChipDetails "${FLASHROM_LOG}"
          flashrom_probe_ok=1
       fi
       if [ "${flashrom_probe_ok}" != 1 ]; then
