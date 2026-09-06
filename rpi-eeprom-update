@@ -54,8 +54,6 @@ EXIT_EEPROM_FROZEN=3
 # EXIT_PREVIOUS_UPDATE_FAILED=4
 
 OVERWRITE_CONFIG=0
-# Timestamp for first release which doesn't have a timestamp field
-BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
 # BOOT_VER is checked against the manufacturing version in OTP to verify
 # that this script is new enough to correctly update the bootloader on this board.
@@ -123,7 +121,8 @@ warn() {
 }
 
 readDtInt() {
-   printf "%d" "0x$(od "$1" -v -An -t x1 | tr -d ' ')"
+   hex="$(od "$1" -v -An -t x1 | tr -d ' ')"
+   [ -n "${hex}" ] && printf "%d" "0x${hex}"
 }
 
 getBootloaderConfig() {
@@ -276,12 +275,12 @@ applyRecoveryUpdate()
 
    getBootloaderCurrentVersion
    BOOTLOADER_UPDATE_VERSION=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
-   if [ "${BOOTLOADER_CURRENT_VERSION}" -gt "${BOOTLOADER_UPDATE_VERSION}" ]; then
+   if [ "${BOOTLOADER_CURRENT_VERSION:-0}" -gt "${BOOTLOADER_UPDATE_VERSION}" ]; then
       warn "   WARNING: Installing an older bootloader version."
       warn "            Update the rpi-eeprom package to fetch the latest bootloader images."
       warn
    fi
-   echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   printBootloaderCurrentVersion
    echo "    UPDATE: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
 
    findBootFS
@@ -339,7 +338,7 @@ applyRecoveryUpdate()
       fi
    fi
 
-   [ "${BOOTLOADER_CURRENT_VERSION}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
+   [ "${BOOTLOADER_CURRENT_VERSION:-0}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
 
    # For immediate updates via flashrom the recovery.bin update is created and then discarded if the
    # flashrom update was successful. For SD boot (most common) this provides a rollback in the event
@@ -438,26 +437,30 @@ applyUpdate() {
    applyRecoveryUpdate
 }
 
+# Empty if the running bootloader version could not be determined.
 BOOTLOADER_CURRENT_VERSION=
 getBootloaderCurrentVersion() {
+   BOOTLOADER_CURRENT_VERSION=
    if [ -f "${DT_BOOTLOADER_TS}" ]; then
       # Prefer device-tree to vcgencmd
       BOOTLOADER_CURRENT_VERSION=$(readDtInt "${DT_BOOTLOADER_TS}")
    elif vcgencmd bootloader_version | grep -q timestamp; then
       BOOTLOADER_CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
-      if [ "${BOOTLOADER_CURRENT_VERSION}" = "0" ]; then
-         # If a timestamp of zero is returned then it's new firmware but an
-         # old bootloader. Assume bootloader v0
-         BOOTLOADER_CURRENT_VERSION="${BOOTLOADER_FIRST_VERSION}"
-      fi
    else
       # New bootloader / old firmware ? Try to parse the date
-      BOOTLOADER_CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)" 2>/dev/null || true)
+      # N.B. date treats an empty string as today so check for no output first.
+      first_line="$(vcgencmd bootloader_version | head -n1)"
+      if [ -n "${first_line}" ]; then
+         BOOTLOADER_CURRENT_VERSION=$(date -u +%s --date "${first_line}" 2>/dev/null || true)
+      fi
    fi
+}
 
-   # Failed to parse the version. Default to the initial production release.
-   if [ -z "${BOOTLOADER_CURRENT_VERSION}" ]; then
-      BOOTLOADER_CURRENT_VERSION="${BOOTLOADER_FIRST_VERSION}"
+printBootloaderCurrentVersion() {
+   if [ -n "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   else
+      echo "   CURRENT: unknown"
    fi
 }
 
@@ -528,6 +531,7 @@ checkDependencies() {
 
    if [ -f "${DT_MIN_BOOT_VER}" ]; then
       MIN_BOOT_VER=$(readDtInt "${DT_MIN_BOOT_VER}")
+      MIN_BOOT_VER=${MIN_BOOT_VER:-0}
    fi
 
    [ "${BCM_CHIP}" = "2711" ] && pkg_boot_ver=${BOOT_VER_2711} || pkg_boot_ver=${BOOT_VER_2712}
@@ -799,7 +803,7 @@ printVersions()
       echo "BOOTLOADER: up to date"
    fi
 
-   echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   printBootloaderCurrentVersion
    echo "    LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
    echo "   RELEASE: ${FIRMWARE_RELEASE_STATUS} (${FIRMWARE_IMAGE_DIR})"
    echo "            Use ${RPI_EEPROM_UPDATE_CONFIG_TOOL} to change the release."
@@ -909,7 +913,15 @@ lookupVersionInfo()
    ACTION_UPDATE_BOOTLOADER=0
    ACTION_UPDATE_VL805=0
 
-   if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
+   # Never offer an update if the running version is unknown. Anything else
+   # risks downgrading the bootloader e.g. if device-tree and vcgencmd are
+   # unavailable in a chroot.
+   if [ -z "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      warn "Unable to determine the current bootloader version. Skipping bootloader update."
+      warn "Use rpi-eeprom-update -f to install a specific image."
+      warn
+      BOOTLOADER_UPDATE_IMAGE=""
+   elif [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       ACTION_UPDATE_BOOTLOADER=1
    else
       BOOTLOADER_UPDATE_IMAGE=""
