@@ -98,7 +98,7 @@ To prevent this, the board manufacture process programs a minimum bootloader ver
 WARNING: Bootloader image version MFG_VER: <image> is older than the board manufacture version (<min>).
 ```
 
-The warning is advisory by default — the update still proceeds. Set `STRICT_MIN_VER_CHECK=1` in `/etc/default/rpi-eeprom-update` to turn this into a hard error so a downgrade onto unsupported hardware is refused rather than merely flagged. A similar check is also applied against the installed `rpi-eeprom` package version: if the package is too old for the board, `rpi-eeprom-update` prompts the user to `apt upgrade rpi-eeprom`.
+By default the update is refused. Set `STRICT_MIN_VER_CHECK=0` in `/etc/default/rpi-eeprom-update` to downgrade the error to a warning and proceed anyway. A similar check is also applied against the installed `rpi-eeprom` package version: if the package is too old for the board, `rpi-eeprom-update` prompts the user to `apt upgrade rpi-eeprom`.
 
 # Support
 Please check the Raspberry Pi [general discussion forum](https://forums.raspberrypi.com/viewforum.php?f=63) if you have a support question.
