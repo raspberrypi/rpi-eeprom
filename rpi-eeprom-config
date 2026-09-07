@@ -643,4 +643,8 @@ See 'rpi-eeprom-update -h' for more information about the available EEPROM image
 
 if __name__ == '__main__':
     atexit.register(exit_handler)
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.stderr.write("\nInterrupted\n")
+        sys.exit(130)
