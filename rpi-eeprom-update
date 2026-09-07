@@ -47,7 +47,7 @@ RPI_EEPROM_SELF_UPDATE_MIN_VER=1650968668
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
 DT_MIN_BOOT_VER=${DT_MIN_BOOT_VER:-/proc/device-tree/chosen/rpi-min-boot-ver}
-STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-0}
+STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-1}
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -296,7 +296,7 @@ applyRecoveryUpdate()
          warn "WARNING: Bootloader image version MFG_VER: ${image_boot_ver} is older than the board manufacture version (${MIN_BOOT_VER})."
          warn
          if [ "${STRICT_MIN_VER_CHECK}" = 1 ]; then
-            die "ERROR: Update image is not supported by this device. Exiting."
+            die "ERROR: Update image is not supported by this device. Set STRICT_MIN_VER_CHECK=0 to force the install."
          fi
       fi
    fi
@@ -792,6 +792,13 @@ RPI_EEPROM_ALLOW_DOWNGRADE
 Installing a bootloader older than the current version (or of unknown
 relative age) prompts for confirmation and fails without a terminal.
 Set to 1 (or pass -y) to skip the prompt.
+
+STRICT_MIN_VER_CHECK
+
+Images with an MFG_VER older than the board manufacture version are
+rejected. Set to 0 to warn and install anyway. The -y option does not
+override this check e.g. to force the install run:
+   sudo STRICT_MIN_VER_CHECK=0 rpi-eeprom-update -d -f pieeprom.bin -y
 
 Before selecting a firmware release directory this script checks whether there
 is a board revision specific variant e.g. default-c03111. If present then the
