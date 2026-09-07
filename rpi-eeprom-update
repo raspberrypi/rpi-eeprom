@@ -28,6 +28,8 @@ fi
 # Selects the release sub-directory
 FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-default}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
+# Install an older bootloader without confirmation (-y)
+RPI_EEPROM_ALLOW_DOWNGRADE=${RPI_EEPROM_ALLOW_DOWNGRADE:-0}
 ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
@@ -280,16 +282,8 @@ applyRecoveryUpdate()
 
    getBootloaderCurrentVersion
    BOOTLOADER_UPDATE_VERSION=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
-   if [ "${BOOTLOADER_CURRENT_VERSION:-0}" -gt "${BOOTLOADER_UPDATE_VERSION}" ]; then
-      warn "   WARNING: Installing an older bootloader version."
-      warn "            Update the rpi-eeprom package to fetch the latest bootloader images."
-      warn
-   fi
    printBootloaderCurrentVersion
    echo "    UPDATE: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-
-   findBootFS
-   echo "    BOOTFS: ${BOOTFS}"
 
    # Check the minimum version programmed during board manufacture
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
@@ -306,6 +300,11 @@ applyRecoveryUpdate()
          fi
       fi
    fi
+
+   confirmDowngrade
+
+   findBootFS
+   echo "    BOOTFS: ${BOOTFS}"
 
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
         [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
@@ -509,6 +508,37 @@ printBootloaderCurrentVersion() {
    else
       echo "   CURRENT: unknown"
    fi
+}
+
+# Prompt before installing an older (or unknown age) bootloader
+confirmDowngrade() {
+   [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || return 0
+   if [ -n "${BOOTLOADER_CURRENT_VERSION}" ] && [ "${BOOTLOADER_UPDATE_VERSION}" -ge "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      return 0
+   fi
+
+   if [ -n "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      warn "   WARNING: Installing an older bootloader version."
+      warn "            Update the rpi-eeprom package to fetch the latest bootloader images."
+   else
+      warn "   WARNING: The current bootloader version is unknown so this may be a downgrade."
+   fi
+   warn
+   [ "${RPI_EEPROM_ALLOW_DOWNGRADE}" = 1 ] && return 0
+
+   # Callers such as rpi-eeprom-config redirect stdout so use the tty
+   if ! ( : < /dev/tty ) 2> /dev/null; then
+      die "Bootloader downgrade refused. Use -y or set RPI_EEPROM_ALLOW_DOWNGRADE=1 in /etc/default/rpi-eeprom-update to allow this."
+   fi
+   current="unknown"
+   [ -z "${BOOTLOADER_CURRENT_VERSION}" ] || current="$(date -u "-d@${BOOTLOADER_CURRENT_VERSION}" +%F)"
+   printf "Install bootloader %s over the current version (%s)? [y/N] " \
+      "$(date -u "-d@${BOOTLOADER_UPDATE_VERSION}" +%F)" "${current}" > /dev/tty
+   read -r answer < /dev/tty || answer=
+   case "${answer}" in
+      [yY]|[yY][eE][sS]) ;;
+      *) die "Bootloader downgrade cancelled." ;;
+   esac
 }
 
 # Find latest applicable update version
@@ -740,6 +770,8 @@ Options:
       bootloader release is newer than the version specified by
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION ${BOOTLOADER_AUTO_UPDATE_MIN_VERSION}
    -u Install the specified VL805 (USB EEPROM) image file.
+   -y Install an older bootloader without confirmation
+      (RPI_EEPROM_ALLOW_DOWNGRADE=1). Does not bypass the MFG_VER check.
 
 Environment:
 Environment variables should be defined in /etc/default/rpi-eeprom-update
@@ -754,6 +786,12 @@ and POWER_OFF_ON_HALT settings.
 FIRMWARE_RELEASE_STATUS
 
 Specifies the release status of the firmware to apply.
+
+RPI_EEPROM_ALLOW_DOWNGRADE
+
+Installing a bootloader older than the current version (or of unknown
+relative age) prompts for confirmation and fails without a terminal.
+Set to 1 (or pass -y) to skip the prompt.
 
 Before selecting a firmware release directory this script checks whether there
 is a board revision specific variant e.g. default-c03111. If present then the
@@ -1173,7 +1211,7 @@ if [ ! -d "${PACKAGE_INFO_DIR}" ]; then
 fi
 
 
-while getopts A:abdhilf:m:ju:rs option; do
+while getopts A:abdhilf:m:ju:rsy option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -1221,6 +1259,8 @@ while getopts A:abdhilf:m:ju:rs option; do
    s) SILENT_UPDATE=1
       ;;
    u) VL805_UPDATE_IMAGE="${OPTARG}"
+      ;;
+   y) RPI_EEPROM_ALLOW_DOWNGRADE=1
       ;;
    *) echo "Unknown argument \"${option}\""
       usage

@@ -19,3 +19,6 @@ EEPROM_CONFIG_HOOK=
 # Set STRICT_MIN_VER_CHECK to 1 to treat bootloader manufacturing min-version checks as a fatal error
 # Default is currently 0
 #STRICT_MIN_VER_CHECK=1
+
+# Set to 1 to install an older bootloader without confirmation
+#RPI_EEPROM_ALLOW_DOWNGRADE=0
