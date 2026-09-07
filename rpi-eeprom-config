@@ -138,6 +138,8 @@ def shell_cmd(args, timeout=10, echo=False):
             break
 
     if result.poll() is None:
+        result.kill()
+        result.wait()
         exit_error("%s timeout" % arg_str)
 
     if result.returncode != 0:
