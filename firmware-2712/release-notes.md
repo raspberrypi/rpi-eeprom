@@ -1,5 +1,28 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-09-10: arm_loader: Reapply call to get_turbo_clocks when querying min clock (latest)
+
+* arm_loader: Reapply call to get_turbo_clocks when querying min clock
+  This is needed for pixel clock when running with force_turbo=1
+  When we report min=max to kernel, it will never set them,
+  so we don't know about its clock requirements
+  See: https://github.com/raspberrypi/linux/issues/7564
+* Move crypto functions to secure RAM
+  All the crypto functions on 2712 now reside in the protected RAM region.
+  There is no change to how they are used with rpi-fw-crypto.
+* Fix TFTP signed booting
+  When TFTP booting with signed boot, resolving the prefix should
+  be done using the existance of boot.img rather than config.txt.
+  See: #857
+* 2712: Add RP1 fw init fatal error handler
+  If the RP1 CHIP_ID is not recogized during the I2C init phase then
+  stop with fatal error code. Previously, the bootloader would
+  continue and fail with an assert intead.
+* Print SFDP EEPROM capacity
+  Print the capacity of the SPI flash chip from the SFDP table when available.
+  The firmware does not rely on any SFDP data, but it can be helpful to see it
+  when attempting to identify the SPI flash chip.
+
 ## 2026-08-12: Clear UV / OV PMIC power-on reset event for non-USB power supplies (latest)
 
 * Fix USB-C cable orientation detection
