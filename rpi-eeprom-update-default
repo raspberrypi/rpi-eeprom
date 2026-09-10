@@ -16,6 +16,8 @@ EEPROM_CONFIG_HOOK=
 # AB_EEPROM can be set here to override auto-detection of AB EEPROM support
 #AB_EEPROM=
 
-# Set STRICT_MIN_VER_CHECK to 1 to treat bootloader manufacturing min-version checks as a fatal error
-# Default is currently 0
-#STRICT_MIN_VER_CHECK=1
+# Set to 0 to only warn if the image MFG_VER is older than the board requires
+#STRICT_MIN_VER_CHECK=0
+
+# Set to 1 to install an older bootloader without confirmation
+#RPI_EEPROM_ALLOW_DOWNGRADE=1

@@ -28,6 +28,8 @@ fi
 # Selects the release sub-directory
 FIRMWARE_RELEASE_STATUS=${FIRMWARE_RELEASE_STATUS:-default}
 FIRMWARE_BACKUP_DIR=${FIRMWARE_BACKUP_DIR:-/var/lib/raspberrypi/bootloader/backup}
+# Install an older bootloader without confirmation (-y)
+RPI_EEPROM_ALLOW_DOWNGRADE=${RPI_EEPROM_ALLOW_DOWNGRADE:-0}
 ENABLE_VL805_UPDATES=${ENABLE_VL805_UPDATES:-1}
 CM4_ENABLE_RPI_EEPROM_UPDATE=${CM4_ENABLE_RPI_EEPROM_UPDATE:-0}
 RPI_EEPROM_UPDATE_CONFIG_TOOL="${RPI_EEPROM_UPDATE_CONFIG_TOOL:-raspi-config}"
@@ -45,7 +47,7 @@ RPI_EEPROM_SELF_UPDATE_MIN_VER=1650968668
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
 DT_MIN_BOOT_VER=${DT_MIN_BOOT_VER:-/proc/device-tree/chosen/rpi-min-boot-ver}
-STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-0}
+STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-1}
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -55,8 +57,6 @@ EXIT_EEPROM_FROZEN=3
 # EXIT_PREVIOUS_UPDATE_FAILED=4
 
 OVERWRITE_CONFIG=0
-# Timestamp for first release which doesn't have a timestamp field
-BOOTLOADER_FIRST_VERSION=1557513636
 EEPROM_SIZE=524288
 # BOOT_VER is checked against the manufacturing version in OTP to verify
 # that this script is new enough to correctly update the bootloader on this board.
@@ -128,7 +128,8 @@ warn() {
 }
 
 readDtInt() {
-   printf "%d" "0x$(od "$1" -v -An -t x1 | tr -d ' ')"
+   hex="$(od "$1" -v -An -t x1 | tr -d ' ')"
+   [ -z "${hex}" ] || printf "%d" "0x${hex}"
 }
 
 getBootloaderConfig() {
@@ -206,29 +207,6 @@ prepareImage()
    fi
 }
 
-# upstream flashrom 1.4 - 1.6 may incorrectly erase chips when the probe
-# reports "Unknown flash chip"
-flashromUnknownFlashOk() {
-   local flashrom_line flashrom_version_str flashrom_ver flashrom_major flashrom_minor flashrom_ver_num
-
-   flashrom_line=$(head -n1 "$1")
-   flashrom_version_str=$(echo "${flashrom_line}" | sed -n 's/^flashrom \(.*\) on .*/\1/p')
-   [ -n "${flashrom_version_str}" ] || return 1
-
-   flashrom_ver=$(echo "${flashrom_version_str#v}" | sed -n 's/^\([0-9][0-9]*\)\.\([0-9][0-9]*\).*/\1 \2/p')
-   flashrom_major=${flashrom_ver%% *}
-   flashrom_minor=${flashrom_ver#* }
-   [ -n "${flashrom_major}" ] && [ -n "${flashrom_minor}" ] || return 1
-
-   flashrom_ver_num=$((flashrom_major * 100 + flashrom_minor))
-   if [ "${flashrom_ver_num}" -le 103 ] || [ "${flashrom_ver_num}" -ge 107 ]; then
-      return 0
-   fi
-
-   echo "${flashrom_version_str}" | grep -qE '^v?[0-9]+\.[0-9]+(\.[0-9]+)?-rpt'
-   return $?
-}
-
 isABCapableImage() {
    offset=0x10008
    count=8
@@ -304,16 +282,8 @@ applyRecoveryUpdate()
 
    getBootloaderCurrentVersion
    BOOTLOADER_UPDATE_VERSION=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
-   if [ "${BOOTLOADER_CURRENT_VERSION}" -gt "${BOOTLOADER_UPDATE_VERSION}" ]; then
-      warn "   WARNING: Installing an older bootloader version."
-      warn "            Update the rpi-eeprom package to fetch the latest bootloader images."
-      warn
-   fi
-   echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   printBootloaderCurrentVersion
    echo "    UPDATE: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-
-   findBootFS
-   echo "    BOOTFS: ${BOOTFS}"
 
    # Check the minimum version programmed during board manufacture
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
@@ -326,10 +296,15 @@ applyRecoveryUpdate()
          warn "WARNING: Bootloader image version MFG_VER: ${image_boot_ver} is older than the board manufacture version (${MIN_BOOT_VER})."
          warn
          if [ "${STRICT_MIN_VER_CHECK}" = 1 ]; then
-            die "ERROR: Update image is not supported by this device. Exiting."
+            die "ERROR: Update image is not supported by this device. Set STRICT_MIN_VER_CHECK=0 to force the install."
          fi
       fi
    fi
+
+   confirmDowngrade
+
+   findBootFS
+   echo "    BOOTFS: ${BOOTFS}"
 
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
         [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] || die "${BOOTLOADER_UPDATE_IMAGE} not found"
@@ -383,7 +358,7 @@ applyRecoveryUpdate()
       fi
    fi
 
-   [ "${BOOTLOADER_CURRENT_VERSION}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
+   [ "${BOOTLOADER_CURRENT_VERSION:-0}" -ge "${RPI_EEPROM_SELF_UPDATE_MIN_VER}" ] || RPI_EEPROM_SELF_UPDATE=0
 
    # For immediate updates via flashrom the recovery.bin update is created and then discarded if the
    # flashrom update was successful. For SD boot (most common) this provides a rollback in the event
@@ -435,6 +410,28 @@ applyRecoveryUpdate()
    fi
 }
 
+printFlashromChipDetails() {
+   # Parse the verbose flashrom probe for the chip name and capacity
+   # If unknown chip, then print the JEDEC ID and capacity
+   flashrom_log="$1"
+
+   flashrom_chip_line=$(grep -m1 -E '^(Found|Assuming) .+ flash chip "' "${flashrom_log}") || return 0
+   flashrom_vendor=$(echo "${flashrom_chip_line}" | sed -n 's/^\(Found\|Assuming\) \(.*\) flash chip ".*/\2/p')
+   flashrom_capacity=$(echo "${flashrom_chip_line}" | sed -n 's/.*(\([0-9][0-9]*\) kB,.*/\1/p')
+
+   if [ "${flashrom_vendor}" = "Unknown" ]; then
+      flashrom_jedec_id=$(grep -m1 -E 'id1 0x[0-9a-fA-F]+, id2 0x[0-9a-fA-F]+' "${flashrom_log}" | sed -n 's/.*\(id1 0x[0-9a-fA-F]*, id2 0x[0-9a-fA-F]*\).*/\1/p')
+      if [ -n "${flashrom_jedec_id}" ]; then
+         echo "Unrecognised flash chip: JEDEC ${flashrom_jedec_id}, capacity ${flashrom_capacity:-unknown} kB"
+      else
+         echo "Unrecognised flash chip: capacity ${flashrom_capacity:-unknown} kB"
+      fi
+   else
+      flashrom_name=$(echo "${flashrom_chip_line}" | sed -n 's/.*flash chip "\(.*\)" (.*/\1/p')
+      echo "Detected flash chip: ${flashrom_vendor} ${flashrom_name}, capacity ${flashrom_capacity} kB"
+   fi
+}
+
 applyUpdate() {
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
@@ -465,15 +462,15 @@ applyUpdate() {
 
       if ! [ -e "${SPIDEV}" ]; then
          warn "WARNING: SPI device ${SPIDEV} not found"
-      elif ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 > "${FLASHROM_LOG}" 2>&1; then
+      elif ! flashrom -p linux_spi:dev=${SPIDEV},spispeed=16000 -V > "${FLASHROM_LOG}" 2>&1; then
          warn "WARNING: Flashrom probe of ${SPIDEV} failed"
       elif grep -q "Unknown flash" "${FLASHROM_LOG}"; then
-         if flashromUnknownFlashOk "${FLASHROM_LOG}"; then
-            flashrom_probe_ok=1
-         else
-            warn "WARNING: Flashrom probe of ${SPIDEV} reported Unknown flash chip"
-         fi
+         # Generic SFDP handling is not supported because some chips have
+         # been known to have incorrect SFDP data
+         printFlashromChipDetails "${FLASHROM_LOG}"
+         warn "WARNING: Flashrom probe of ${SPIDEV} reported Unknown flash chip"
       else
+         printFlashromChipDetails "${FLASHROM_LOG}"
          flashrom_probe_ok=1
       fi
       if [ "${flashrom_probe_ok}" != 1 ]; then
@@ -486,27 +483,62 @@ applyUpdate() {
    applyRecoveryUpdate
 }
 
+# Empty if the running bootloader version could not be determined.
 BOOTLOADER_CURRENT_VERSION=
 getBootloaderCurrentVersion() {
+   BOOTLOADER_CURRENT_VERSION=
    if [ -f "${DT_BOOTLOADER_TS}" ]; then
       # Prefer device-tree to vcgencmd
       BOOTLOADER_CURRENT_VERSION=$(readDtInt "${DT_BOOTLOADER_TS}")
    elif vcgencmd bootloader_version | grep -q timestamp; then
       BOOTLOADER_CURRENT_VERSION=$(vcgencmd bootloader_version | grep timestamp | awk '{print $2}')
-      if [ "${BOOTLOADER_CURRENT_VERSION}" = "0" ]; then
-         # If a timestamp of zero is returned then it's new firmware but an
-         # old bootloader. Assume bootloader v0
-         BOOTLOADER_CURRENT_VERSION="${BOOTLOADER_FIRST_VERSION}"
-      fi
    else
       # New bootloader / old firmware ? Try to parse the date
-      BOOTLOADER_CURRENT_VERSION=$(date -u +%s --date "$(vcgencmd bootloader_version | head -n1)" 2>/dev/null || true)
+      # N.B. date treats an empty string as today so check for no output first.
+      first_line="$(vcgencmd bootloader_version | head -n1)"
+      if [ -n "${first_line}" ]; then
+         BOOTLOADER_CURRENT_VERSION=$(date -u +%s --date "${first_line}" 2>/dev/null || true)
+      fi
+   fi
+}
+
+printBootloaderCurrentVersion() {
+   if [ -n "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   else
+      echo "   CURRENT: unknown"
+   fi
+}
+
+# Prompt before installing an older (or unknown age) bootloader
+confirmDowngrade() {
+   [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || return 0
+   if [ -n "${BOOTLOADER_CURRENT_VERSION}" ] && [ "${BOOTLOADER_UPDATE_VERSION}" -ge "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      return 0
    fi
 
-   # Failed to parse the version. Default to the initial production release.
-   if [ -z "${BOOTLOADER_CURRENT_VERSION}" ]; then
-      BOOTLOADER_CURRENT_VERSION="${BOOTLOADER_FIRST_VERSION}"
+   if [ -n "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      warn "   WARNING: Installing an older bootloader version."
+      warn "            Update the rpi-eeprom package to fetch the latest bootloader images."
+   else
+      warn "   WARNING: The current bootloader version is unknown so this may be a downgrade."
    fi
+   warn
+   [ "${RPI_EEPROM_ALLOW_DOWNGRADE}" = 1 ] && return 0
+
+   # Callers such as rpi-eeprom-config redirect stdout so use the tty
+   if ! ( : < /dev/tty ) 2> /dev/null; then
+      die "Bootloader downgrade refused. Use -y or set RPI_EEPROM_ALLOW_DOWNGRADE=1 in /etc/default/rpi-eeprom-update to allow this."
+   fi
+   current="unknown"
+   [ -z "${BOOTLOADER_CURRENT_VERSION}" ] || current="$(date -u "-d@${BOOTLOADER_CURRENT_VERSION}" +%F)"
+   printf "Install bootloader %s over the current version (%s)? [y/N] " \
+      "$(date -u "-d@${BOOTLOADER_UPDATE_VERSION}" +%F)" "${current}" > /dev/tty
+   read -r answer < /dev/tty || answer=
+   case "${answer}" in
+      [yY]|[yY][eE][sS]) ;;
+      *) die "Bootloader downgrade cancelled." ;;
+   esac
 }
 
 # Find latest applicable update version
@@ -523,7 +555,7 @@ getBootloaderUpdateVersion() {
 }
 
 chipNotSupported() {
-   echo "Device does not a have a Raspberry Pi bootloader EEPROM (e.g. Pi 4 or Pi 5). Skipping bootloader update."
+   echo "Device does not have a Raspberry Pi bootloader EEPROM (e.g. Pi 4 or Pi 5). Skipping bootloader update."
    exit ${EXIT_SUCCESS}
 }
 
@@ -576,6 +608,7 @@ checkDependencies() {
 
    if [ -f "${DT_MIN_BOOT_VER}" ]; then
       MIN_BOOT_VER=$(readDtInt "${DT_MIN_BOOT_VER}")
+      MIN_BOOT_VER=${MIN_BOOT_VER:-0}
    fi
 
    [ "${BCM_CHIP}" = "2711" ] && pkg_boot_ver=${BOOT_VER_2711} || pkg_boot_ver=${BOOT_VER_2712}
@@ -737,6 +770,8 @@ Options:
       bootloader release is newer than the version specified by
       BOOTLOADER_AUTO_UPDATE_MIN_VERSION ${BOOTLOADER_AUTO_UPDATE_MIN_VERSION}
    -u Install the specified VL805 (USB EEPROM) image file.
+   -y Install an older bootloader without confirmation
+      (RPI_EEPROM_ALLOW_DOWNGRADE=1). Does not bypass the MFG_VER check.
 
 Environment:
 Environment variables should be defined in /etc/default/rpi-eeprom-update
@@ -751,6 +786,19 @@ and POWER_OFF_ON_HALT settings.
 FIRMWARE_RELEASE_STATUS
 
 Specifies the release status of the firmware to apply.
+
+RPI_EEPROM_ALLOW_DOWNGRADE
+
+Installing a bootloader older than the current version (or of unknown
+relative age) prompts for confirmation and fails without a terminal.
+Set to 1 (or pass -y) to skip the prompt.
+
+STRICT_MIN_VER_CHECK
+
+Images with an MFG_VER older than the board manufacture version are
+rejected. Set to 0 to warn and install anyway. The -y option does not
+override this check e.g. to force the install run:
+   sudo STRICT_MIN_VER_CHECK=0 rpi-eeprom-update -d -f pieeprom.bin -y
 
 Before selecting a firmware release directory this script checks whether there
 is a board revision specific variant e.g. default-c03111. If present then the
@@ -847,7 +895,7 @@ printVersions()
       echo "BOOTLOADER: up to date"
    fi
 
-   echo "   CURRENT: $(date -u "-d@${BOOTLOADER_CURRENT_VERSION}") (${BOOTLOADER_CURRENT_VERSION})"
+   printBootloaderCurrentVersion
    echo "    LATEST: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
    echo "   RELEASE: ${FIRMWARE_RELEASE_STATUS} (${FIRMWARE_IMAGE_DIR})"
    echo "            Use ${RPI_EEPROM_UPDATE_CONFIG_TOOL} to change the release."
@@ -957,7 +1005,15 @@ lookupVersionInfo()
    ACTION_UPDATE_BOOTLOADER=0
    ACTION_UPDATE_VL805=0
 
-   if [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
+   # Never offer an update if the running version is unknown. Anything else
+   # risks downgrading the bootloader e.g. if device-tree and vcgencmd are
+   # unavailable in a chroot.
+   if [ -z "${BOOTLOADER_CURRENT_VERSION}" ]; then
+      warn "Unable to determine the current bootloader version. Skipping bootloader update."
+      warn "Use rpi-eeprom-update -f to install a specific image."
+      warn
+      BOOTLOADER_UPDATE_IMAGE=""
+   elif [ "${BOOTLOADER_UPDATE_VERSION}" -gt "${BOOTLOADER_CURRENT_VERSION}" ]; then
       ACTION_UPDATE_BOOTLOADER=1
    else
       BOOTLOADER_UPDATE_IMAGE=""
@@ -1162,7 +1218,7 @@ if [ ! -d "${PACKAGE_INFO_DIR}" ]; then
 fi
 
 
-while getopts A:abdhilf:m:ju:rs option; do
+while getopts A:abdhilf:m:ju:rsy option; do
    case "${option}" in
    A)
       if [ "${OPTARG}" = "bootloader" ]; then
@@ -1210,6 +1266,8 @@ while getopts A:abdhilf:m:ju:rs option; do
    s) SILENT_UPDATE=1
       ;;
    u) VL805_UPDATE_IMAGE="${OPTARG}"
+      ;;
+   y) RPI_EEPROM_ALLOW_DOWNGRADE=1
       ;;
    *) echo "Unknown argument \"${option}\""
       usage
