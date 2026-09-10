@@ -1,3 +1,26 @@
+rpi-eeprom (28.31-1) trixie; urgency=medium
+
+  [ Mathew Blowers ]
+  * rpi-eeprom-update: Flashrom never use unknown flash
+  * rpi-eeprom-update: flashrom print chip name and capacity
+
+  [ Andrew Scheller ]
+  * Tiny typo in rpi-eeprom-update
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Skip updates if the current bootloader version is
+    unknown
+  * rpi-eeprom-update: Require confirmation before downgrading the
+    bootloader
+  * rpi-eeprom-update: Make the MFG_VER check fatal by default
+  * rpi-eeprom-config: Kill rpi-eeprom-update on timeout
+  * rpi-eeprom-config: Pass through rpi-eeprom-update output in echo mode
+  * rpi-eeprom-config: Exit quietly on Ctrl-C
+  * pieeprom-2026-09-10: 2712: Move rpi-fw-crypto functions to secure RAM
+    (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Thu, 10 Sep 2026 09:18:11 +0100
+
 rpi-eeprom (28.30-1) trixie; urgency=medium
 
   [ Serge Schneider ]
