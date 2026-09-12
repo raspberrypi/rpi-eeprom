@@ -1,5 +1,19 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-09-12: Cache the EEPROM config for start.elf (latest)
+
+* 2711: Cache the EEPROM config for start.elf
+  Update bootsys to cache a copy of the EEPROM config text in normal as
+  well as secure-boot mode.
+* Fix TFTP signed booting
+  When TFTP booting with signed boot, resolving the prefix should
+  be done using the existance of boot.img rather than config.txt.
+  See: #857
+* Print SFDP EEPROM capacity
+  Print the capacity of the SPI flash chip from the SFDP table when available.
+  The firmware does not rely on any SFDP data, but it can be helpful to see it
+  when attempting to identify the SPI flash chip.
+
 ## 2026-08-04: arm_mbox: Avoid slow calls every mbox message (latest)
 
 * Use UTC for BUILD_DATE and BUILD_TIME
