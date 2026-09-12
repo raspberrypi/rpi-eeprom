@@ -1,5 +1,17 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-09-12: css: Move imx500 down the detection table (latest)
+
+* css: Move imx500 down the detection table
+  With the increased 300ms delay, this needs to go lower to reduce the
+  average detection time.
+* css: Fix delay missing when we go through the IMX500 detection path
+  Also increase the IMX500 delay to 300ms to match the kernel's overlay
+  value.
+* arm_loader: Allow other PHY addresses for Pi 5
+  Alternative Ethernet PHYs may have a different PHY address and may
+  require an explicit post-reset delay.
+
 ## 2026-09-10: arm_loader: Reapply call to get_turbo_clocks when querying min clock (latest)
 
 * arm_loader: Reapply call to get_turbo_clocks when querying min clock
