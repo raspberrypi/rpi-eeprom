@@ -49,6 +49,12 @@ DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-t
 DT_MIN_BOOT_VER=${DT_MIN_BOOT_VER:-/proc/device-tree/chosen/rpi-min-boot-ver}
 STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-1}
 
+# Marker on tmpfs (cleared by reboot) recording that a bootloader update has
+# been written or staged during this boot. Whilst it exists the system must not
+# suspend: on resume the ROM reloads bootsys from SPI and it must match the
+# bootmain still in RAM.
+UPDATE_PENDING_FLAG=${UPDATE_PENDING_FLAG:-/run/rpi-eeprom-update-pending}
+
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
 EXIT_FAILED=2
@@ -125,6 +131,11 @@ die() {
 
 warn() {
    echo "$@" >&2
+}
+
+markUpdatePending() {
+   echo "$1 $(date -u +%s)" > "${UPDATE_PENDING_FLAG}" \
+      || warn "WARNING: Failed to write ${UPDATE_PENDING_FLAG}"
 }
 
 readDtInt() {
@@ -368,6 +379,7 @@ applyRecoveryUpdate()
       echo "UPDATING bootloader. This could take up to a minute. Please wait"
       echo
       IMMEDIATE_UPDATE_LOG="$(mktemp)"
+      markUpdatePending immediate
       if [ "${AB_EEPROM}" = 1 ]; then
          if runABUpdate; then
             # Success - remove update files from the boot partition
@@ -402,6 +414,7 @@ applyRecoveryUpdate()
       cp -f "${RECOVERY_BIN}" "${BOOTFS}/recovery.bin" || die "Failed to copy ${RECOVERY_BIN} to ${BOOTFS}"
    fi
 
+   markUpdatePending recovery
    echo ""
    echo "EEPROM updates pending. Please reboot to apply the update."
 
@@ -1261,6 +1274,11 @@ while getopts A:abdhilf:m:ju:rsy option; do
       echo "Removing temporary files from previous EEPROM update"
       checkDependencies
       removePreviousUpdates
+      # A staged update is cancelled but an immediate update has already
+      # modified the SPI flash so its marker must persist until reboot.
+      if [ -f "${UPDATE_PENDING_FLAG}" ] && grep -q "^recovery" "${UPDATE_PENDING_FLAG}"; then
+         rm -f "${UPDATE_PENDING_FLAG}"
+      fi
       exit 0
       ;;
    s) SILENT_UPDATE=1
