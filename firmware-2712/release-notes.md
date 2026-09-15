@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-09-15: Promote pieeprom-2026-09-12 to the default release (default)
+
 ## 2026-09-12: css: Move imx500 down the detection table (latest)
 
 * css: Move imx500 down the detection table
