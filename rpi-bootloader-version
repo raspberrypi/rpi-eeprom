@@ -1,11 +1,14 @@
 #!/bin/sh
 
-# Display the running Raspberry Pi bootloader version.
+# Display the Raspberry Pi bootloader version.
 #
-# Reads the version information from device-tree to avoid adding a dependency on
-# vcgencmd for bootloader updates.
+# With no arguments the version of the running bootloader is read from
+# device-tree to avoid adding a dependency on vcgencmd for bootloader updates.
+#
+# Given an EEPROM image, or a dump of the EEPROM contents, the version is read
+# from the image instead.
 
-set -e
+set -ef
 
 EXIT_SUCCESS=0
 EXIT_FAILED=2
@@ -18,39 +21,296 @@ die() {
    exit ${EXIT_FAILED}
 }
 
+usage() {
+   cat <<EOF
+Usage: rpi-bootloader-version [OPTION]... [EEPROM-IMAGE]
+
+Displays the version of the running bootloader or if EEPROM-IMAGE is given then
+the version is read from that image.
+
+When provided an A/B EEPROM-IMAGE, the primary version in the partition is reported
+as well as the bootsys-ab version in the read-only section.
+
+  -p, --partitions  report only the primary bootloader partition version(s)
+                    of EEPROM-IMAGE
+  -r, --read-only   report only the read-only section version of EEPROM-IMAGE
+  -h, --help        show this message
+EOF
+}
+
 # Read a big-endian device-tree integer property as a decimal number.
 readDtInt() {
    printf "%d" "0x$(od "$1" -v -An -t x1 | tr -d ' \n')"
 }
 
-if [ ! -d "${DT_BOOTLOADER}" ]; then
-   die "Bootloader version not available via device-tree (${DT_BOOTLOADER} not found)."
+showRunningVersion() {
+   if [ ! -d "${DT_BOOTLOADER}" ]; then
+      die "Bootloader version not available via device-tree (${DT_BOOTLOADER} not found)."
+   fi
+
+   build_ts_file="${DT_BOOTLOADER}/build-timestamp"
+   [ -f "${build_ts_file}" ] || die "${build_ts_file} not found."
+   build_ts=$(readDtInt "${build_ts_file}")
+
+   # First line is the build date in UTC.
+   date -u -d "@${build_ts}" "+%Y/%m/%d %H:%M:%S"
+
+   # The version property is the bootloader git hash. The build variant (e.g.
+   # "release") is not exported via device-tree; released images are always
+   # "release" builds.
+   if [ -f "${DT_BOOTLOADER}/version" ]; then
+      echo "version $(strings "${DT_BOOTLOADER}/version") (release)"
+   fi
+
+   echo "timestamp ${build_ts}"
+
+   if [ -f "${DT_BOOTLOADER}/update-timestamp" ]; then
+      echo "update-time $(readDtInt "${DT_BOOTLOADER}/update-timestamp")"
+   fi
+
+   if [ -f "${DT_BOOTLOADER}/capabilities" ]; then
+      printf "capabilities 0x%08x\n" "$(readDtInt "${DT_BOOTLOADER}/capabilities")"
+   fi
+
+   echo ""
+}
+
+# Print "YYYY/MM/DD HH:MM:SS <git-hash> <variant> <chip> <field>..." for each
+# occurrence of the given version marker
+findVersionMarkers() {
+   strings "$1" | sed -n "s|^$2 \([0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]\) \([0-9][0-9]:[0-9][0-9]:[0-9][0-9]\) \([0-9a-f][0-9a-f]*\) \([A-Z]\) \([0-9][0-9]*\)\(.*\)$|\1 \2 \3 \4 \5\6|p"
+}
+
+imageSize() {
+   wc -c < "$1" | tr -d '[:space:]'
+}
+
+startsWithBootsys() {
+   local section_hdr_len=8
+   local section_name_len=12
+   local bootsys_section="bootsys"
+   image="$1"
+   offset="$2"
+
+   name=$(dd if="${image}" bs=1 skip=$((offset + section_hdr_len)) \
+      count="${section_name_len}" status=none | tr -d '\0')
+   [ "${name}" = "${bootsys_section}" ]
+}
+
+# Is it an AB capable image
+isPartitionedImage() {
+   # Layout of a 2MB AB EEPROM.
+   local ab_eeprom_capacity=$((2 * 1024 * 1024))
+   local ab_eeprom_read_only_end=$((64 * 1024))
+   local ab_eeprom_partition_size=$((988 * 1024))
+   local eeprom_a_start_addr=${ab_eeprom_read_only_end}
+   local eeprom_b_start_addr=$((eeprom_a_start_addr + ab_eeprom_partition_size))
+   image="$1"
+
+   [ "$(imageSize "${image}")" -eq "${ab_eeprom_capacity}" ] || return 1
+   startsWithBootsys "${image}" "${eeprom_a_start_addr}" ||
+      startsWithBootsys "${image}" "${eeprom_b_start_addr}"
+}
+
+# Strip the prefix and leading zeros from a version field
+versionNumber() {
+   number=$(echo "$1" | sed 's/^[A-Z]*//; s/^0*//')
+   echo "${number:-0}"
+}
+
+buildVariant() {
+   case "$1" in
+      D) echo "debug" ;;
+      R) echo "release" ;;
+      *) echo "$1" ;;
+   esac
+}
+
+printVersionBlock() {
+   label="$1"
+   shift
+   build_date="$1"
+   build_time="$2"
+   git_hash="$3"
+   variant="$4"
+   chip="$5"
+   shift 5
+
+   # Whatever is left is identified by its own prefix, so an unrecognised field
+   # is reported
+   mfg=""
+   bootsys_ab=""
+   extra=""
+   for field; do
+      case "${field}" in
+         MFG*) mfg="${field}" ;;
+         BAB*) bootsys_ab="${field}" ;;
+         *)    extra="${extra} ${field}" ;;
+      esac
+   done
+
+   [ -z "${label}" ] || echo "${label}"
+   echo "${build_date} ${build_time}"
+   echo "version ${git_hash} ($(buildVariant "${variant}"))"
+   build_ts=$(date -u -d "${build_date} ${build_time}" "+%s" 2>/dev/null) ||
+      die "${build_date} ${build_time}: not a valid build date."
+   echo "timestamp ${build_ts}"
+   echo "chip ${chip}"
+   if [ -n "${mfg}" ]; then
+      echo "mfg-version $(versionNumber "${mfg}")"
+   fi
+   # Only the read-only section records the bootsys-ab version.
+   if [ -n "${bootsys_ab}" ]; then
+      echo "bootsys-ab-version $(versionNumber "${bootsys_ab}")"
+   fi
+   if [ -n "${extra}" ]; then
+      echo "extra${extra}"
+   fi
+   echo ""
+}
+
+legacyField() {
+   strings "$1" | sed -n "$2" | head -n 1
+}
+
+showLegacyVersion() {
+   image="$1"
+
+   git_hash=$(legacyField "${image}" 's/^VERSION:\([0-9a-f][0-9a-f]*\)$/\1/p')
+   build_date=$(legacyField "${image}" 's|^DATE: \([0-9][0-9][0-9][0-9]/[0-9][0-9]/[0-9][0-9]\)$|\1|p')
+   build_time=$(legacyField "${image}" 's/^TIME: \([0-9][0-9]:[0-9][0-9]:[0-9][0-9]\)$/\1/p')
+   build_ts=$(legacyField "${image}" 's/^BUILD_TIMESTAMP=\([0-9][0-9]*\)$/\1/p')
+   mfg=$(legacyField "${image}" 's/^MFG_VER:[[:space:]]*\([0-9][0-9]*\)$/\1/p')
+
+   [ -n "${git_hash}" ] || die "${image}: no bootloader version found."
+
+   echo "${build_date} ${build_time}"
+   echo "version ${git_hash} (release)"
+   if [ -n "${build_ts}" ]; then
+      echo "timestamp ${build_ts}"
+   fi
+   if [ -n "${mfg}" ]; then
+      echo "mfg-version ${mfg}"
+   fi
+   echo ""
+}
+
+showPartitionVersions() {
+   image="$1"
+
+   markers=$(findVersionMarkers "${image}" VERSIONINFO)
+   if [ -z "${markers}" ]; then
+      showLegacyVersion "${image}"
+      return
+   fi
+
+   part_a=$(echo "${markers}" | sed -n 1p)
+   part_b=$(echo "${markers}" | sed -n 2p)
+
+   if [ "${partitioned}" -eq 1 ] && [ -n "${part_b}" ]; then
+      printVersionBlock "########## PARTITION A ##########" ${part_a}
+      printVersionBlock "########## PARTITION B ##########" ${part_b}
+   else
+      # A single populated partition, or an image which is not partitioned at all
+      main_section_label="########## MAIN SECTION ##########"
+      [ "${show_read_only}" -eq 1 ] || main_section_label=""
+      [ "${partitioned}" -eq 1 ] || main_section_label=""
+      printVersionBlock "${main_section_label}" ${part_a}
+   fi
+}
+
+showReadOnlyVersion() {
+   image="$1"
+
+   # Only a partitioned image has a read-only section. Its absence is worth
+   # reporting only when the read-only version is the one thing asked for.
+   if [ "${partitioned}" -eq 0 ]; then
+      [ "${show_partitions}" -eq 1 ] || die "${image}: not an A/B image, so it has no read-only section."
+      return
+   fi
+
+   read_only=$(findVersionMarkers "${image}" READONLYVER | head -n 1)
+   if [ -z "${read_only}" ]; then
+      [ "${show_partitions}" -eq 1 ] || die "${image}: no read-only section version found."
+      return
+   fi
+
+   read_only_label="########## READ ONLY SECTION ##########"
+   [ "${show_partitions}" -eq 1 ] || read_only_label=""
+   printVersionBlock "${read_only_label}" ${read_only}
+}
+
+showImageVersion() {
+   image="$1"
+
+   [ -f "${image}" ] || die "${image}: not found."
+   [ -r "${image}" ] || die "${image}: cannot be read."
+
+   if isPartitionedImage "${image}"; then
+      partitioned=1
+   else
+      partitioned=0
+   fi
+
+   if [ "${show_partitions}" -eq 1 ]; then
+      showPartitionVersions "${image}"
+   fi
+
+   if [ "${show_read_only}" -eq 1 ]; then
+      showReadOnlyVersion "${image}"
+   fi
+}
+
+show_partitions=0
+show_read_only=0
+image=""
+
+while [ $# -gt 0 ]; do
+   case "$1" in
+      -h|--help)
+         usage
+         exit ${EXIT_SUCCESS}
+         ;;
+      -p|--partitions)
+         show_partitions=1
+         ;;
+      -r|--read-only)
+         show_read_only=1
+         ;;
+      "")
+         echo "Empty argument given in place of an EEPROM image" >&2
+         usage >&2
+         exit ${EXIT_FAILED}
+         ;;
+      -*)
+         echo "Unrecognised option \"$1\"" >&2
+         usage >&2
+         exit ${EXIT_FAILED}
+         ;;
+      *)
+         if [ -n "${image}" ]; then
+            echo "Only one EEPROM image may be given" >&2
+            usage >&2
+            exit ${EXIT_FAILED}
+         fi
+         image="$1"
+         ;;
+   esac
+   shift
+done
+
+if [ -z "${image}" ]; then
+   if [ "${show_partitions}" -eq 1 ] || [ "${show_read_only}" -eq 1 ]; then
+      die "--partitions and --read-only require an EEPROM image."
+   fi
+   showRunningVersion
+else
+   # Selecting neither reports everything the image holds.
+   if [ "${show_partitions}" -eq 0 ] && [ "${show_read_only}" -eq 0 ]; then
+      show_partitions=1
+      show_read_only=1
+   fi
+   showImageVersion "${image}"
 fi
-
-build_ts_file="${DT_BOOTLOADER}/build-timestamp"
-[ -f "${build_ts_file}" ] || die "${build_ts_file} not found."
-build_ts=$(readDtInt "${build_ts_file}")
-
-# First line is the build date in UTC.
-date -u -d "@${build_ts}" "+%Y/%m/%d %H:%M:%S"
-
-# The version property is the bootloader git hash. The build variant (e.g.
-# "release") is not exported via device-tree; released images are always
-# "release" builds.
-if [ -f "${DT_BOOTLOADER}/version" ]; then
-   echo "version $(strings "${DT_BOOTLOADER}/version") (release)"
-fi
-
-echo "timestamp ${build_ts}"
-
-if [ -f "${DT_BOOTLOADER}/update-timestamp" ]; then
-   echo "update-time $(readDtInt "${DT_BOOTLOADER}/update-timestamp")"
-fi
-
-if [ -f "${DT_BOOTLOADER}/capabilities" ]; then
-   printf "capabilities 0x%08x\n" "$(readDtInt "${DT_BOOTLOADER}/capabilities")"
-fi
-
-echo ""
 
 exit ${EXIT_SUCCESS}
