@@ -255,6 +255,17 @@ def create_2711_image(output, bootcode, private_key=None, private_keynum=0, hmac
     image.write()
     image.close()
 
+def prepare_2711_image(output, bootcode, private_keynum=0):
+    """
+    Prepare a 2711 image by appending length and keynum headers without signing.
+    """
+    image = ImageFile(output, MAX_BIN_SIZE)
+    image.append_file(bootcode)
+    image.append_length()
+    image.append_keynum(private_keynum)
+    image.write()
+    image.close()
+
 def create_2712_image(output, bootcode, private_version=0, public_key=None, private_key=None, private_keynum=0, hsm_wrapper=None, signature=None):
     """
     Create a prototype 2712 signed bootloader. The HMAC is removed and the
@@ -366,13 +377,23 @@ def extract_2712_image(input_file):
         else:
             print()
 
+def prepare_2712_image(output, bootcode, private_version=0, private_keynum=0):
+    """
+    Prepare a 2712 image by appending length, keynum and version headers without signing.
+    """
+    image = ImageFile(output, MAX_BIN_SIZE)
+    image.append_file(bootcode)
+    image.append_length()
+    image.append_keynum(private_keynum)
+    image.append_version(private_version)
+    image.write()
+    image.close()
 
 def main():
     help_text = """
     Signs a second stage bootloader image.
 
     Examples:
-
         Customer counter-signed:
           * Exactly the same as Raspberry Pi signing but the input is the Raspberry Pi signed bootcode.bin
           * The key number will probably always be 16 to indicate a customer signing
@@ -402,11 +423,21 @@ def main():
           * For 2712, the public key in PEM format MUST be specified with the -p option (or -k)
 
         rpi-sign-bootcode --debug -c 2712 -i bootcode.bin.sign2 -o bootcode.bin -p public.pem -s bootcode.sig
+
+        Prepare bootcode for signing (detached signature workflow):
+          * Adds length, version, etc. headers without signing so the file is ready to be signed
+          * The prepared file can be signed with rpi-eeprom-digest, openssl, or an HSM
+          * The resulting signature is then attached using -s / --signature
+
+        rpi-sign-bootcode -c 2712 --prepare -i bootcode.bin -o bootcode.prep -n 16 -v 2
+        rpi-eeprom-digest -k customer.pem -i bootcode.prep -o bootcode.sig
+        rpi-sign-bootcode -c 2712 -i bootcode.bin -o bootcode.bin.signed -p customer_pub.pem -s bootcode.sig -n 16 -v 2
     """
     parser = argparse.ArgumentParser(help_text)
     parser.add_argument('-o', '--output', required=False, help='Output filename. If not specified, the signed image is written to stdout in base64 format')
     parser.add_argument('-c', '--chip', required=True, type=int, help='Chip number')
     parser.add_argument('-e', '--extract', required=False, help='Extract image components as hex strings (use -c to specify the chip)')
+    parser.add_argument('-P', '--prepare', action='store_true', default=False, help='Prepare output file with header fields (length, keynum, version) ready to be signed without signing')
     parser.add_argument('-i', '--input', required=False, help='Path of the unsigned bootcode.bin file OR RPi signed bootcode file to be signed with the customer key. If NULL, the binary is read from stdin in base64 format')
     parser.add_argument('-m', '--hmac', required=False, help='Path of the HMAC key file')
     parser.add_argument('-k', '--private-key', dest='private_key', required=False, default=None, help='Path of RSA private key (PEM format)')
@@ -425,6 +456,11 @@ def main():
             extract_2712_image(args.extract)
         else:
             extract_2711_image(args.extract)
+    if args.prepare:
+        if args.chip == 2711:
+            prepare_2711_image(args.output, args.input, private_keynum=args.private_keynum)
+        elif args.chip == 2712:
+            prepare_2712_image(args.output, args.input, private_version=args.private_version, private_keynum=args.private_keynum)
         return
 
     if args.chip == 2711:
