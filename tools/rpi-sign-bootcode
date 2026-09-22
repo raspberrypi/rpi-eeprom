@@ -68,6 +68,34 @@ def load_signature(sig_file):
 
     raise Exception(f"Invalid signature in {sig_file}: expected 256-byte binary, 512-hex-char, or base64 RSA signature")
 
+def load_public_key(pub_file=None, priv_file=None):
+    """
+    Loads an RSA public key from a public PEM file (-p) or private PEM file (-k).
+    Returns an RSA key object (public key).
+    """
+    key_file = pub_file if pub_file is not None else priv_file
+    if key_file is None:
+        return None
+    if not os.path.isfile(key_file):
+        raise Exception(f"Key file not found: {key_file}")
+    key = RSA.importKey(open(key_file, 'r').read())
+    if key.size_in_bits() != 2048:
+        raise Exception("RSA key size must be 2048")
+    return key.public_key() if hasattr(key, 'public_key') else key.publickey()
+
+def read_input_data(source_file):
+    """
+    Reads image binary data from a source file or from stdin (base64).
+    """
+    if source_file is None:
+        b64 = ""
+        for l in sys.stdin.readlines():
+            b64 += l
+        return bytearray(base64.b64decode(b64))
+    if not os.path.isfile(source_file):
+        raise Exception(f"Input file not found: {source_file}")
+    return bytearray(open(source_file, 'rb').read())
+
 class ImageFile:
     """
     Signed binary image
@@ -266,6 +294,54 @@ def prepare_2711_image(output, bootcode, private_keynum=0):
     image.write()
     image.close()
 
+def verify_2711_image(input_file, public_key=None, private_key=None, hmac_keyfile=None):
+    """
+    Verifies a 2711 signed bootloader image against a public key.
+    """
+    data = read_input_data(input_file)
+    total_len = len(data)
+    trailer_size = 284
+
+    if total_len < trailer_size:
+        raise Exception(f"Invalid image size {total_len}: smaller than minimum 2711 trailer ({trailer_size} bytes)")
+
+    sig_offset = total_len - trailer_size
+    length, keynum = struct.unpack('<ii', data[sig_offset:sig_offset + 8])
+
+    if length != sig_offset:
+        raise Exception(f"Invalid 2711 image: length field {length} does not match trailer offset {sig_offset}")
+
+    if (keynum < 0 or keynum > 4) and keynum != 16:
+        raise Exception(f"Invalid 2711 image: bad keynum {keynum}")
+
+    rsa_sig = data[sig_offset + 8 : sig_offset + 264]
+    hmac_digest = data[sig_offset + 264 :]
+
+    pub_key = load_public_key(public_key, private_key)
+    if pub_key is None:
+        raise Exception("Public key (-p or -k) required for 2711 verification")
+
+    signed_data = data[:sig_offset + 8]
+    digest = SHA1.new(signed_data)
+    try:
+        pkcs1_15.new(pub_key).verify(digest, rsa_sig)
+    except (ValueError, TypeError) as ex:
+        raise Exception(f"RSA signature verification failed: {ex}")
+
+    debug(f"2711 RSA signature verified successfully (keynum: {keynum}, length: {length})")
+
+    if hmac_keyfile is not None:
+        if not os.path.isfile(hmac_keyfile):
+            raise Exception(f"HMAC key file not found: {hmac_keyfile}")
+        hmac_key = str(open(hmac_keyfile, 'r').read()).strip()
+        expected_keylen = 40
+        if len(hmac_key) != expected_keylen:
+            raise Exception("Bad key length %d expected %d" % (len(hmac_key), expected_keylen))
+        expected_hmac = HMAC.new(base64.b16decode(hmac_key, True), data[:sig_offset + 264], digestmod=SHA1).digest()
+        if expected_hmac != hmac_digest:
+            raise Exception("HMAC verification failed")
+        debug("HMAC verified successfully")
+
 def create_2712_image(output, bootcode, private_version=0, public_key=None, private_key=None, private_keynum=0, hsm_wrapper=None, signature=None):
     """
     Create a prototype 2712 signed bootloader. The HMAC is removed and the
@@ -389,6 +465,78 @@ def prepare_2712_image(output, bootcode, private_version=0, private_keynum=0):
     image.write()
     image.close()
 
+def verify_2712_image(input_file, public_key=None, private_key=None):
+    """
+    Verifies a 2712 signed bootloader image against a public key.
+    Supports single-signed or counter-signed images.
+    """
+    data = read_input_data(input_file)
+    total_len = len(data)
+    sigblock_size = 532
+
+    if total_len < sigblock_size:
+        raise Exception(f"Invalid image size {total_len}: smaller than minimum 2712 signature block ({sigblock_size} bytes)")
+
+    expected_pubkey = load_public_key(public_key, private_key)
+
+    # Parse signature blocks from outermost to innermost
+    blocks = []
+    current_end = total_len
+    while current_end >= sigblock_size:
+        sigblock_offset = current_end - sigblock_size
+        length, keynum, version = struct.unpack('<iii', data[sigblock_offset:sigblock_offset + 12])
+
+        if length != sigblock_offset:
+            break
+
+        rsa_sig = data[sigblock_offset + 12 : sigblock_offset + 268]
+        pubkey_n_bytes = data[sigblock_offset + 268 : sigblock_offset + 524]
+        pubkey_e_bytes = data[sigblock_offset + 524 : sigblock_offset + 532]
+
+        pub_n = int.from_bytes(pubkey_n_bytes, byteorder='little')
+        pub_e = int.from_bytes(pubkey_e_bytes, byteorder='little')
+        embedded_key = RSA.construct((pub_n, pub_e))
+
+        signed_data = data[:sigblock_offset + 12]
+
+        blocks.append({
+            'offset': sigblock_offset,
+            'length': length,
+            'keynum': keynum,
+            'version': version,
+            'rsa_sig': rsa_sig,
+            'embedded_key': embedded_key,
+            'signed_data': signed_data,
+        })
+
+        current_end = sigblock_offset
+
+    if not blocks:
+        raise Exception("No valid 2712 signature block found in image")
+
+    if expected_pubkey is not None:
+        matched = False
+        for idx, block in enumerate(blocks):
+            if block['embedded_key'].n == expected_pubkey.n and block['embedded_key'].e == expected_pubkey.e:
+                matched = True
+                digest = SHA256.new(block['signed_data'])
+                try:
+                    pkcs1_15.new(expected_pubkey).verify(digest, block['rsa_sig'])
+                except (ValueError, TypeError) as ex:
+                    raise Exception(f"RSA signature verification failed for block (keynum {block['keynum']}): {ex}")
+                debug(f"2712 signature block (keynum {block['keynum']}, version {block['version']}, length {block['length']}) verified successfully")
+                break
+        if not matched:
+            raise Exception("Public key does not match any embedded public key in 2712 signature blocks")
+    else:
+        for idx, block in enumerate(blocks):
+            digest = SHA256.new(block['signed_data'])
+            try:
+                pkcs1_15.new(block['embedded_key']).verify(digest, block['rsa_sig'])
+            except (ValueError, TypeError) as ex:
+                raise Exception(f"RSA signature verification failed for block (keynum {block['keynum']}): {ex}")
+            debug(f"2712 signature block (keynum {block['keynum']}, version {block['version']}, length {block['length']}) verified with embedded public key")
+
 def main():
     help_text = """
     Signs a second stage bootloader image.
@@ -432,12 +580,20 @@ def main():
         rpi-sign-bootcode -c 2712 --prepare -i bootcode.bin -o bootcode.prep -n 16 -v 2
         rpi-eeprom-digest -k customer.pem -i bootcode.prep -o bootcode.sig
         rpi-sign-bootcode -c 2712 -i bootcode.bin -o bootcode.bin.signed -p customer_pub.pem -s bootcode.sig -n 16 -v 2
+
+        Verify signed image:
+          * Verifies the RSA signature of a signed bootcode image against a public key (PEM format)
+          * For 2712, also verifies counter-signed images against the customer or Raspberry Pi public key
+
+        rpi-sign-bootcode -c 2712 -V -i bootcode.bin.signed -p customer_pub.pem
+        rpi-sign-bootcode -c 2711 -V -i bootcode.bin.signed -p public.pem [-m hmac.key]
     """
     parser = argparse.ArgumentParser(help_text)
     parser.add_argument('-o', '--output', required=False, help='Output filename. If not specified, the signed image is written to stdout in base64 format')
     parser.add_argument('-c', '--chip', required=True, type=int, help='Chip number')
     parser.add_argument('-e', '--extract', required=False, help='Extract image components as hex strings (use -c to specify the chip)')
     parser.add_argument('-P', '--prepare', action='store_true', default=False, help='Prepare output file with header fields (length, keynum, version) ready to be signed without signing')
+    parser.add_argument('-V', '--verify', action='store_true', default=False, help='Verify signed image against public key')
     parser.add_argument('-i', '--input', required=False, help='Path of the unsigned bootcode.bin file OR RPi signed bootcode file to be signed with the customer key. If NULL, the binary is read from stdin in base64 format')
     parser.add_argument('-m', '--hmac', required=False, help='Path of the HMAC key file')
     parser.add_argument('-k', '--private-key', dest='private_key', required=False, default=None, help='Path of RSA private key (PEM format)')
@@ -456,6 +612,14 @@ def main():
             extract_2712_image(args.extract)
         else:
             extract_2711_image(args.extract)
+
+    if args.verify:
+        if args.chip == 2711:
+            verify_2711_image(args.input, public_key=args.public_key, private_key=args.private_key, hmac_keyfile=args.hmac)
+        elif args.chip == 2712:
+            verify_2712_image(args.input, public_key=args.public_key, private_key=args.private_key)
+        return
+
     if args.prepare:
         if args.chip == 2711:
             prepare_2711_image(args.output, args.input, private_keynum=args.private_keynum)
