@@ -4,14 +4,16 @@ body:
 - type: markdown
   attributes:
     value: |
-      **Is this the right place for my bug report?**
+      **Is this the right place for my bug report?**      
       
-      * This repository contains the Raspberry Pi 5, Raspberry Pi 4, Pi400, CM4 and CM4-S bootloader EEPROM images and installation scripts.      
+      * This repository contains the Raspberry Pi 5, CM5, Pi 500 , Pi 500+, Raspberry Pi 4, Pi 400, CM4 and CM4-S bootloader EEPROM images and installation scripts.      
       * Please report boot issues for the earlier models at the GPU firmware repo [github.com/raspberrypi/firmware](https://github.com/raspberrypi/firmware).
-      * Please report USB issues which occur after the OS has started at the Linux repo [github.com/raspberrypi/linux/](https://github.com/raspberrypi/linux/).
-      * If you simply have a question, then [the Raspberry Pi forums](https://www.raspberrypi.org/forums) are the best place to ask it. 
-         * The ["Is your Pi not booting?"](https://forums.raspberrypi.com/viewtopic.php?f=28&t=58151) post has lots of useful advice.
-
+      * Please follow the following guidelines to help maintain this as a useful technical resource for bootloader issues. 
+         * Be clear, concise and answer the questions in the bug template.
+         * Always specify the full hardware and software configuration.
+         * AI generated bug reports will be automatically closed. Nobody has time to read large amounts of AI generated text.
+         * Please use [the Raspberry Pi forums](https://www.raspberrypi.org/forums) for general questions, hardware issues or customer suppport.
+         
 - type: textarea
   id: description
   attributes:
@@ -41,6 +43,7 @@ body:
     options:
       - Raspberry Pi 5
       - Raspberry Pi 500
+      - Raspberry Pi 500+
       - Raspberry Pi 4 Mod. B
       - Raspberry Pi 400
       - Raspberry Pi CM5
