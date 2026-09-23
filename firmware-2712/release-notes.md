@@ -1,5 +1,36 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-09-23: Check MFG version when updating (latest)
+
+* Remove trailing nulls in rpi-eeprom-config
+  Fix a regression in the previous bootloader where trailing nulls
+  characters could appear in rpi-eeprom-config.
+* Check target-soc in pieeprom.sig during updates
+  Recent versions of rpi-eeprom-digest add a "target-soc" tag to the
+  pieeprom.sig file containing either 2711 or 2712.
+  If this tag is present, then the bootloader will check that the
+  target-soc matches before updating SPI flash. This avoids using
+  the image size as the sole check for compatibility during bootloader
+  self-updates.
+* recovery: Check MFG version when updating
+  If the MFG version of the image to update is less than MFG version in OTP
+  then recovery.bin and self update will both fail to write the eeprom update.
+  bootloader_allow_mfg_downgrade=1 in config.txt will bypass the checks
+* 2712: Increment the manufacture version to v2
+  Update the manufacture version to v2 to indicate support for
+  alternate ethernet PHYs on Pi5.
+* usb-pd: Set USB Comms Capable and No USB Suspend for USB device mode
+  Set the USB comms capable and no USB suspend attributes for rpiboot
+  and Linux dwc gadgets.
+  See: https://github.com/raspberrypi/linux/issues/6569
+* update rp1c0fw.bin
+  Pull in RP1 firmware at 558c96910ac1231e107734ebe9babd7d29360218
+* Version stamp file in eeprom
+  EEPROM contains a version file for build date, git hash, mfgver etc.
+  Partitioned images contain the main version file in the partition,
+  and a bootsys-ab version file in the read only section.
+  rpi-bootloader-version is the recommended way to get version details.
+
 ## 2026-09-15: Promote pieeprom-2026-09-12 to the default release (default)
 
 ## 2026-09-12: css: Move imx500 down the detection table (latest)
