@@ -309,6 +309,10 @@ applyRecoveryUpdate()
          if [ "${STRICT_MIN_VER_CHECK}" = 1 ]; then
             die "ERROR: Update image is not supported by this device. Set STRICT_MIN_VER_CHECK=0 to force the install."
          fi
+         if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" != 1 ]; then
+            warn "         Add bootloader_allow_mfg_downgrade=1 to config.txt, otherwise the bootloader will reject this image."
+            warn
+         fi
       fi
    fi
 
@@ -812,6 +816,10 @@ Images with an MFG_VER older than the board manufacture version are
 rejected. Set to 0 to warn and install anyway. The -y option does not
 override this check e.g. to force the install run:
    sudo STRICT_MIN_VER_CHECK=0 rpi-eeprom-update -d -f pieeprom.bin -y
+
+The bootloader repeats this check, so self-update and recovery.bin updates
+also require bootloader_allow_mfg_downgrade=1 in config.txt. flashrom and
+AB EEPROM updates are not affected.
 
 Before selecting a firmware release directory this script checks whether there
 is a board revision specific variant e.g. default-c03111. If present then the
