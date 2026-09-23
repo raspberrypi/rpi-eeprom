@@ -67,7 +67,7 @@ EEPROM_SIZE=524288
 # BOOT_VER is checked against the manufacturing version in OTP to verify
 # that this script is new enough to correctly update the bootloader on this board.
 BOOT_VER_2711=1
-BOOT_VER_2712=1
+BOOT_VER_2712=2
 MIN_BOOT_VER=0
 BOARD_INFO=
 BOARD_REVISION=
