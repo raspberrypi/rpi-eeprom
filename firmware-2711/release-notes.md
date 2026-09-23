@@ -1,5 +1,24 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-09-23: Check MFG version when updating (latest)
+
+* Check target-soc in pieeprom.sig during updates
+  Recent versions of rpi-eeprom-digest add a "target-soc" tag to the
+  pieeprom.sig file containing either 2711 or 2712.
+  If this tag is present, then the bootloader will check that the
+  target-soc matches before updating SPI flash. This avoids using
+  the image size as the sole check for compatibility during bootloader
+  self-updates.
+* recovery: Check MFG version when updating
+  If the MFG version of the image to update is less than MFG version in OTP
+  then recovery.bin and self update will both fail to write the eeprom update.
+  bootloader_allow_mfg_downgrade=1 in config.txt will bypass the checks
+* Version stamp file in eeprom
+  EEPROM contains a version file for build date, git hash, mfgver etc.
+  Partitioned images contain the main version file in the partition,
+  and a bootsys-ab version file in the read only section.
+  rpi-bootloader-version is the recommended way to get version details.
+
 ## 2026-09-12: Cache the EEPROM config for start.elf (latest)
 
 * 2711: Cache the EEPROM config for start.elf
