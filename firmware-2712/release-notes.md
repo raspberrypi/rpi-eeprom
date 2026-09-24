@@ -1,5 +1,14 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-09-24: 2712: Initialise SDRAM with safe/high-temeprature refresh settings (latest)
+
+* 2712: Initialise SDRAM with safe/high-temeprature refresh settings
+  Update the SDRAM controller initialisation to start with the worst case
+  refresh rate (for high temperatures). Later on, the SDRAM temeprature
+  monitor will adjust the rate based on the temperature reported via the
+  mode register.
+* Set the MXL PHY LEDs in netboot mode
+
 ## 2026-09-23: Check MFG version when updating (latest)
 
 * Remove trailing nulls in rpi-eeprom-config
