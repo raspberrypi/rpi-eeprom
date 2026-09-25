@@ -1,3 +1,25 @@
+rpi-eeprom (28.32-1) trixie; urgency=medium
+
+  [ Tim Gover ]
+  * pieeprom-2026-09-12: 2711: Cache the EEPROM config for start.elf
+    (latest)
+  * pieeprom-2026-09-12: 2712: Move imx500 down the detection table
+    (latest)
+  * rpi-eeprom-update: Track whether there is a pending firmware update
+  * pieeprom-2026-09-12: 2712: Promote to the (default) release
+  * test: install: Install rpi-bootloader-version
+  * Revise bug report template for Raspberry Pi models
+  * pieeprom-2026-09-23: 2711: Check MFG version when updating (latest)
+  * pieeprom-2026-09-23: 2712: Check MFG version when updating (latest)
+  * pieeprom-2026-09-24: 2712: Initialise SDRAM with safe/high-temperature
+    refresh settings (latest)
+
+  [ Mathew Blowers ]
+  * rpi-bootloader-version: Get version of EEPROM image
+  * rpi-eeprom-update: bootloader_allow_mfg_downgrade warning
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 25 Sep 2026 08:16:41 +0100
+
 rpi-eeprom (28.31-1) trixie; urgency=medium
 
   [ Mathew Blowers ]
