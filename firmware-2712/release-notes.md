@@ -1,5 +1,11 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-09-25: Promote pieeprom-2026-09-25 to the default release (default)
+
+## 2026-09-25: 2712: Fix memory corruption with vclog messages (latest)
+
+* Fix memory corruption with vclog messages
+
 ## 2026-09-24: 2712: Initialise SDRAM with safe/high-temeprature refresh settings (latest)
 
 * 2712: Initialise SDRAM with safe/high-temeprature refresh settings

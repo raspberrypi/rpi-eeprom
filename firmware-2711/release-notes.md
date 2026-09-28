@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-09-27: Promote 2026-09-23 to the default release (default)
+
 ## 2026-09-23: Check MFG version when updating (latest)
 
 * Check target-soc in pieeprom.sig during updates
