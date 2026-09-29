@@ -54,6 +54,7 @@ STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-1}
 # suspend: on resume the ROM reloads bootsys from SPI and it must match the
 # bootmain still in RAM.
 UPDATE_PENDING_FLAG=${UPDATE_PENDING_FLAG:-/run/rpi-eeprom-update-pending}
+SUSPEND_DROPIN=/run/systemd/sleep.conf.d/40-rpi-eeprom-update-pending.conf
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -136,6 +137,13 @@ warn() {
 markUpdatePending() {
    echo "$1 $(date -u +%s)" > "${UPDATE_PENDING_FLAG}" \
       || warn "WARNING: Failed to write ${UPDATE_PENDING_FLAG}"
+   # Resuming with a pending EEPROM update is unsafe; disable suspend until reboot
+   if [ -d /run/systemd/system ]; then
+      mkdir -p "$(dirname "${SUSPEND_DROPIN}")" \
+         && printf '[Sleep]\nAllowSuspend=no\n' > "${SUSPEND_DROPIN}" \
+         || warn "WARNING: Failed to write ${SUSPEND_DROPIN}
+Reboot before attempting to suspend"
+   fi
 }
 
 readDtInt() {
@@ -1286,6 +1294,7 @@ while getopts A:abdhilf:m:ju:rsy option; do
       # modified the SPI flash so its marker must persist until reboot.
       if [ -f "${UPDATE_PENDING_FLAG}" ] && grep -q "^recovery" "${UPDATE_PENDING_FLAG}"; then
          rm -f "${UPDATE_PENDING_FLAG}"
+         rm -f "${SUSPEND_DROPIN}"
       fi
       exit 0
       ;;
