@@ -23,6 +23,51 @@ def debug(msg):
     if _CONFIG['DEBUG']:
         sys.stderr.write(str(msg) + '\n')
 
+def load_signature(sig_file):
+    """
+    Loads an RSA signature from a file. Supports 256-byte raw binary,
+    hex string (including .sig format with 'rsa2048: <hex>'), or base64.
+    """
+    if not os.path.isfile(sig_file):
+        raise Exception(f"Signature file not found: {sig_file}")
+
+    data = open(sig_file, 'rb').read()
+    if len(data) == 256:
+        return data
+
+    try:
+        text = data.decode('utf-8').strip()
+    except UnicodeDecodeError:
+        raise Exception(f"Invalid signature file {sig_file}: expected 256 bytes, got {len(data)}")
+
+    # Check for rpi-eeprom-digest / .sig format: "rsa2048: <hex>"
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith('rsa2048:'):
+            text = line.split(':', 1)[1].strip()
+            break
+
+    # Try hex
+    hex_str = "".join(text.split())
+    if hex_str.startswith('0x') or hex_str.startswith('0X'):
+        hex_str = hex_str[2:]
+    try:
+        sig_bytes = bytes.fromhex(hex_str)
+        if len(sig_bytes) == 256:
+            return sig_bytes
+    except ValueError:
+        pass
+
+    # Try base64
+    try:
+        sig_bytes = base64.b64decode(text)
+        if len(sig_bytes) == 256:
+            return sig_bytes
+    except Exception:
+        pass
+
+    raise Exception(f"Invalid signature in {sig_file}: expected 256-byte binary, 512-hex-char, or base64 RSA signature")
+
 class ImageFile:
     """
     Signed binary image
@@ -132,6 +177,14 @@ class ImageFile:
         self.append(bytearray.fromhex(signature))
         debug("PKCS11 %08x %20s: [%6d] signature %s" % (self.pos(), 'RSA2048 - SHA256', len(signature), signature))
 
+    def append_detached_signature(self, sig_file):
+        """
+        Appends a detached RSA 2048 signature from a file (raw binary, hex string, or base64)
+        """
+        signature = load_signature(sig_file)
+        self.append(signature)
+        debug("%08x %20s: [%6d] signature from %s" % (self.pos(), 'RSA2048', len(signature), sig_file))
+
     def append_rsa_signature(self, digest_alg, private_pem):
         """
         Append a RSA 2048 signature of the SHA256 of the data so far
@@ -182,7 +235,7 @@ class ImageFile:
     def close(self):
         self._of.close()
 
-def create_2711_image(output, bootcode, private_key=None, private_keynum=0, hmac=None, hsm_wrapper=None):
+def create_2711_image(output, bootcode, private_key=None, private_keynum=0, hmac=None, hsm_wrapper=None, signature=None):
     """
     Create a 2711 C0 secure-boot compatible seconds stage signed binary.
     """
@@ -190,15 +243,19 @@ def create_2711_image(output, bootcode, private_key=None, private_keynum=0, hmac
     image.append_file(bootcode)
     image.append_length()
     image.append_keynum(private_keynum)
-    if hsm_wrapper:
+    if signature is not None:
+        image.append_detached_signature(signature)
+    elif hsm_wrapper:
         image.append_rsa_signature_pkcs11(hsm_wrapper)
-    else:
+    elif private_key:
         image.append_rsa_signature('sha1', private_key)
+    else:
+        raise Exception("Private key, HSM wrapper, or detached signature required")
     image.append_digest('hmac-sha1', hmac)
     image.write()
     image.close()
 
-def create_2712_image(output, bootcode, private_version=0, public_key=None, private_key=None, private_keynum=0, hsm_wrapper=None):
+def create_2712_image(output, bootcode, private_version=0, public_key=None, private_key=None, private_keynum=0, hsm_wrapper=None, signature=None):
     """
     Create a prototype 2712 signed bootloader. The HMAC is removed and the
     full public key is appended.
@@ -208,13 +265,23 @@ def create_2712_image(output, bootcode, private_version=0, public_key=None, priv
     image.append_length()
     image.append_keynum(private_keynum)
     image.append_version(private_version)
-    if hsm_wrapper is not None:
+    if signature is not None:
+        if public_key is None and private_key is None:
+            raise Exception("Public key (or private key) required when using detached signature")
+        debug(f"Append detached signature {signature}")
+        image.append_detached_signature(signature)
+        image.append_public_key(public_key if public_key else private_key)
+    elif hsm_wrapper is not None:
+        if public_key is None:
+            raise Exception("Public key required when using HSM wrapper")
         debug(f"Call HSM wrapper {hsm_wrapper}")
         image.append_rsa_signature_pkcs11(hsm_wrapper)
         image.append_public_key(public_key)
-    else:
+    elif private_key is not None:
         image.append_rsa_signature('sha256', private_key)
         image.append_public_key(private_key)
+    else:
+        raise Exception("Private key, HSM wrapper, or detached signature required")
     image.write()
     image.close()
 
@@ -329,6 +396,12 @@ def main():
         rpi-eeprom-config -x pieeprom.bin
         rpi-sign-bootcode -c 2712 -e bootcode.bin
 
+        Detached signature:
+          * Adds a pre-computed RSA PKCS#1 v1.5 signature from a file
+          * Signature file can be 256-byte raw binary, 512 hex characters (or .sig format), or base64
+          * For 2712, the public key in PEM format MUST be specified with the -p option (or -k)
+
+        rpi-sign-bootcode --debug -c 2712 -i bootcode.bin.sign2 -o bootcode.bin -p public.pem -s bootcode.sig
     """
     parser = argparse.ArgumentParser(help_text)
     parser.add_argument('-o', '--output', required=False, help='Output filename. If not specified, the signed image is written to stdout in base64 format')
@@ -338,6 +411,7 @@ def main():
     parser.add_argument('-m', '--hmac', required=False, help='Path of the HMAC key file')
     parser.add_argument('-k', '--private-key', dest='private_key', required=False, default=None, help='Path of RSA private key (PEM format)')
     parser.add_argument('-p', '--public-key', dest='public_key', required=False, default=None, help='Path of RSA public key (PEM format)')
+    parser.add_argument('-s', '--signature', '--detached-signature', dest='signature', required=False, default=None, help='Path of detached RSA signature file (raw binary, hex, .sig format, or base64)')
     parser.add_argument('-n', '--private-keynum', dest='private_keynum', required=False, default=0, type=int, help='ROM key index for RPi signing stage')
     parser.add_argument('-H', '--hsm-wrapper', default=None, required=False, help='Filename of HSM wrapper script which generates a PKCSv1.1 signature as hex')
     parser.add_argument('-d', '--debug', action='store_true')
@@ -356,9 +430,9 @@ def main():
     if args.chip == 2711:
         if args.hmac is None:
             raise Exception("HMAC key requried for 2711")
-        create_2711_image(args.output, args.input, private_key=args.private_key, private_keynum=args.private_keynum, hmac=args.hmac, hsm_wrapper=args.hsm_wrapper)
+        create_2711_image(args.output, args.input, private_key=args.private_key, private_keynum=args.private_keynum, hmac=args.hmac, hsm_wrapper=args.hsm_wrapper, signature=args.signature)
     elif args.chip == 2712:
-        create_2712_image(args.output, args.input, private_version=args.private_version, public_key=args.public_key, private_key=args.private_key, private_keynum=args.private_keynum, hsm_wrapper=args.hsm_wrapper)
+        create_2712_image(args.output, args.input, private_version=args.private_version, public_key=args.public_key, private_key=args.private_key, private_keynum=args.private_keynum, hsm_wrapper=args.hsm_wrapper, signature=args.signature)
 
 if __name__ == '__main__':
     main()
