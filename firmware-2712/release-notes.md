@@ -1,14 +1,12 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
-## 2026-10-04: Hide the HDMI bootloader diagnostics screen by default (default + latest)
+## 2026-09-25: 2712: Hide the HDMI diagnostics screen by default (default + latest)
 
-* Set `DISABLE_HDMI=1` in the Pi 5 default EEPROM configuration.
-  The bootloader no longer draws the HDMI diagnostics screen or boot-mode
-  lines (for example "Boot mode: SD" and "M.2 PCIe HAT not detected")
-  before the OS starts. Set `DISABLE_HDMI=0` to show that screen again.
-  Network install uses the same HDMI output, so it stays hidden while
-  this option is set.
-  See https://forums.raspberrypi.com/viewtopic.php?p=2389369#p2389369
+* Set DISABLE_HDMI=1 in the Pi 5 EEPROM configuration.
+  The diagnostics display is drawn before Linux starts, so boot-mode
+  lines shown while SD and NVMe are probed stay on HDMI.
+  Set DISABLE_HDMI=0 to show the diagnostics screen again.
+  See: https://forums.raspberrypi.com/viewtopic.php?p=2389369#p2389369
 
 ## 2026-09-25: Promote pieeprom-2026-09-25 to the default release (default)
 
