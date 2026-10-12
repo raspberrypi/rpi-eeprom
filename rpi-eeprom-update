@@ -701,10 +701,6 @@ checkDependencies() {
       die "rpi-eeprom-digest not found. Try re-installing the rpi-eeprom package"
    fi
 
-   if ! command -v lspci > /dev/null; then
-      die "lspci not found. Try installing the pciutils package."
-   fi
-
    if ! command -v strings > /dev/null; then
       die "strings not found. Try installing the binutils package."
    fi
@@ -938,12 +934,16 @@ printVersions()
       fi
       if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
          echo "   VL805: update available"
-      else
-         if [ "$(id -u)" = "0" ]; then
-            echo "     VL805: up to date"
+      elif ! command -v lspci > /dev/null; then
+         if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
+            echo "     VL805: version unknown. Try installing the pciutils package."
          else
-            echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
+            echo "     VL805: version unknown (lspci not found)"
          fi
+      elif [ "$(id -u)" = "0" ]; then
+         echo "     VL805: up to date"
+      else
+         echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
       fi
 
       echo "   CURRENT: ${VL805_CURRENT_VERSION}"
@@ -996,7 +996,7 @@ getVL805CurrentVersion()
    # root then treat the version as unknown and skip VLI updates.
    VL805_CURRENT_VERSION=""
 
-   if [ "${BCM_CHIP}" = 2711 ]; then
+   if [ "${BCM_CHIP}" = 2711 ] && command -v lspci > /dev/null; then
       if [ "$(id -u)" = "0" ]; then
             vlver="$(lspci -d 1106:3483 -xxx | awk '/^50:/ { print "VL805 FW version: " $5 $4 $3 $2 }')"
          if [ -n "${vlver}" ]; then
