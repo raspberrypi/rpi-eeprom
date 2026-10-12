@@ -701,7 +701,7 @@ checkDependencies() {
       die "rpi-eeprom-digest not found. Try re-installing the rpi-eeprom package"
    fi
 
-   if ! command -v lspci > /dev/null; then
+   if [ "${BCM_CHIP}" = 2711 ] && ! command -v lspci > /dev/null; then
       die "lspci not found. Try installing the pciutils package."
    fi
 

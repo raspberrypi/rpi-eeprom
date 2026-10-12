@@ -1,0 +1,86 @@
+#!/bin/sh
+
+set -eu
+
+script_dir=$(cd "$(dirname "$0")" && pwd)
+updater="${script_dir}/../rpi-eeprom-update"
+scratch=$(mktemp -d)
+trap 'rm -rf "$scratch"' EXIT
+mkdir "$scratch/bin" "$scratch/firmware-2711" "$scratch/firmware-2712"
+mkdir "$scratch/firmware-2711/default" "$scratch/firmware-2712/default"
+touch "$scratch/firmware-2711/default/recovery.bin"
+
+# Isolate PATH so an installed pciutils package cannot hide the missing-lspci case.
+for utility in dirname grep sed strings sha256sum sort head; do
+   ln -s "$(command -v "$utility")" "$scratch/bin/$utility"
+done
+ln -s "${script_dir}/../rpi-eeprom-digest" "$scratch/bin/rpi-eeprom-digest"
+
+cat > "$scratch/bin/vcgencmd" <<'EOF'
+#!/bin/sh
+case "$1" in
+   otp_dump) echo "30:${TEST_BOARD_REVISION}" ;;
+   bootloader_config) echo "[all]" ;;
+   *) exit 1 ;;
+esac
+EOF
+chmod +x "$scratch/bin/vcgencmd"
+
+# Board discovery must use the fixture even when this test runs on a real Pi.
+rm "$scratch/bin/grep"
+cat > "$scratch/bin/grep" <<EOF
+#!/bin/sh
+case "\$*" in
+   *'/proc/cpuinfo'*) exit 1 ;;
+esac
+exec "$(command -v grep)" "\$@"
+EOF
+chmod +x "$scratch/bin/grep"
+
+# Device-tree discovery precedes vcgencmd on real hardware. Make its revision
+# reader return the same fixture; the other device-tree paths are unused here.
+cat > "$scratch/bin/od" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$TEST_BOARD_REVISION" | sed 's/../& /g'
+EOF
+chmod +x "$scratch/bin/od"
+ln -s "$(command -v tr)" "$scratch/bin/tr"
+
+# Keep bootloader configuration reads on the mocked vcgencmd path as well.
+cat > "$scratch/bin/find" <<EOF
+#!/bin/sh
+case "\$*" in
+   *'/sys/bus/nvmem'*) exit 0 ;;
+esac
+exec "$(command -v find)" "\$@"
+EOF
+chmod +x "$scratch/bin/find"
+
+check_board() {
+   revision=$1
+   expected=$2
+   status=0
+   # -l only lists the selected image; these empty fixture directories prevent
+   # updates, and no root-only installation or physical EEPROM access is used.
+   TEST_BOARD_REVISION="$revision" FIRMWARE_ROOT="$scratch/firmware" \
+      PATH="$scratch/bin" DT_MIN_BOOT_VER="$scratch/missing-min-version" \
+      DT_BOOTLOADER_TS="$scratch/missing-timestamp" \
+      /bin/sh "$updater" -l > "$scratch/output" 2>&1 || status=$?
+   if [ "$status" -ne "$expected" ]; then
+      cat "$scratch/output" >&2
+      echo "Unexpected exit $status for board $revision; expected $expected" >&2
+      exit 1
+   fi
+   if [ "$expected" -eq 2 ]; then
+      grep -q 'lspci not found' "$scratch/output"
+   fi
+}
+
+check_board c04170 0 # Pi 5 does not use lspci.
+check_board a03111 2 # Pi 4 must still report the missing dependency.
+
+printf '#!/bin/sh\nexit 0\n' > "$scratch/bin/lspci"
+chmod +x "$scratch/bin/lspci"
+check_board c04170 0
+check_board a03111 0
+echo 'rpi-eeprom-update dependency tests passed'

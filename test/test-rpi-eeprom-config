@@ -192,3 +192,6 @@ cleanup
 
 check_conf_size_too_large "../firmware-2711/old/beta/pieeprom-2019-07-15.bin"
 cleanup
+
+echo "Check EEPROM updater dependencies"
+sh "${script_dir}/test-rpi-eeprom-update"
