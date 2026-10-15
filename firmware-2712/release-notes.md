@@ -1,5 +1,20 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-10-15: Support peripheral access mailbox for axi perf monitoring (latest)
+
+* Support peripheral access mailbox for axi perf monitoring
+  We support GET_PERIPH_REG and SET_PERIPH_REG on Pi0-4 to allow access to some,
+  whitelisted, peripheral registers that the arm cannot acccess.
+  See: https://github.com/raspberrypi/linux/pull/7671
+* splash_screen: Added rp1 support
+  Previously ignored rp1 support due to no spi driver
+  Now I've written a driver, I have tied the rp1 i2c and spi
+  drivers into the splash screen. Requires a minor backwards
+  compatible change to the splash binaries
+* 2712: mailbox for direct spi eeprom operations
+  The rpi-spi-eeprom tool can use the mailbox to read, write and
+  erase spi eeprom directly. Requires nospi10 in config.txt.
+
 ## 2026-09-25: Promote pieeprom-2026-09-25 to the default release (default)
 
 ## 2026-09-25: 2712: Fix memory corruption with vclog messages (latest)
