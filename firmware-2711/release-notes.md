@@ -1,5 +1,10 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-10-15: 2711: recovery.bin: SDRAM init robustness improvements (latest)
+
+Add some robustness improvements (so far theoretical) to the low-speed memory
+init code used in recovery.bin.
+
 ## 2026-09-27: Promote 2026-09-23 to the default release (default)
 
 ## 2026-09-23: Check MFG version when updating (latest)
