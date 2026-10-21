@@ -1,5 +1,46 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-10-21: platform_config: Use Taijie key for IMX662 (latest)
+
+* Disable HTTP redirects
+  For safety disable HTTP redirects.
+  If you change HTTP_HOST you can re-enable redirects with
+  HTTP_ALLOW_REDIRECTS=1 in the eeprom config.
+* board_info: Upstream DT uses bcm2712-d on D0
+  Downstream DT loads a bcm2712d0 overlay on D0 devices to make the
+  necessary changes. Upstream DT uses separate files, currently just
+  bcm2712-d-rpi-5-b. Extrapolate this to other devices by creating a new
+  processor name in board_info - bcm2712-d - for use when
+  upstream_kernel=1.
+* recovery: Add option to disable ROM SD/eMMC boot on 2712
+  Setting the disable_sd_emmc_boot=1 recovery.bin config key permanently sets
+  bit in boot-mode OTP rows during rpiboot provisioning. This cannot be undone.
+* Reduce logging, skip absent MIPI ports
+  Save time and reduce clutter while booting by reducing the severity of
+  some I2C logging, and by not probing for cameras and displays on Pi 500
+  which doesn't have ports for them.
+* pi5: Fix usb_max_current_enable config setting
+  The addition of the bootloader_allow_mfg_downgrade key in the 2026/09/23
+  release conflicted with usb_max_current_enable key.
+  Fixes: https://github.com/raspberrypi/rpi-eeprom/issues/899
+* Fix platform_error_msg timestamps
+  platform_error_msg bypasses the usual logging infrastructure, and has
+  its own copy of the old ms -> cs bug. Fix that bug.
+* Add I2C stuck bus recovery
+  AQM0802A-FL-YBH display modules are prone to failure when the command to
+  turn on the display is sent (possibly too little capacitance). When it
+  fails it holds SDA low. The RP1 I2C control has a bus clear feature that
+  ignores the apparently busy bus and churns out a few SCL cycles to
+  unstick everything. Add code to detect that condition and activate the
+  recovery mode.
+* arm_loader: Reduce HAT probe I2C retries
+  The various low-level I2C drivers include a number of retries; there
+  is no need to repeat that process multiple times for each address,
+  most (if not all) of which are likely to be absent.
+* arm_loader: Splash screen before camera/display
+  Move the point of the splash screen handling so it precedes any camera
+  and MIPI display auto-probing.
+
 ## 2026-10-15: Support peripheral access mailbox for axi perf monitoring (latest)
 
 * Support peripheral access mailbox for axi perf monitoring
