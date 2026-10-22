@@ -1,5 +1,25 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-10-22: Disable HTTP redirects (latest)
+
+* Improve HTTP status handling
+  The code currently only handles specific responses and doesn't treat
+  an unexpected response as an error. An unexpected response will be
+  treated as the file contents and fail the signature check.
+* Disable HTTP redirects
+  For safety disable HTTP redirects.
+  If you change HTTP_HOST you can re-enable redirects with
+  HTTP_ALLOW_REDIRECTS=1 in the eeprom config.
+* sd_host: Fix the capacity calculation for pre-SDHC cards
+  s->capacity was copied before the READ_BL_LEN adjustment. Only relevant
+  for 1024, 2048 byte block cards.
+* sd_host: Fix potential infinite loop with CMD1 poll
+  A card that keeps answering busy stalled boot indefinitely instead of
+  failing over to the next boot mode.
+* Fix platform_error_msg timestamps
+  platform_error_msg bypasses the usual logging infrastructure, and has
+  its own copy of the old ms -> cs bug. Fix that bug.
+
 ## 2026-10-15: 2711: recovery.bin: SDRAM init robustness improvements (latest)
 
 Add some robustness improvements (so far theoretical) to the low-speed memory
