@@ -1,6 +1,15 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
-## 2026-10-21: platform_config: Use Taijie key for IMX662 (latest)
+2026-10-22: HTTP: Improve HTTP status handling (latest)
+
+* The code currently only handles specific responses and doesn't treat
+  an unexpected response as an error. An unexpected response will be
+  treated as the file contents and fail the signature check.
+* PCIe - Replace 'all-memory' inbound window with a small PCIe window per
+  root complex.
+
+
+## 2026-10-21: platform_config: Disable HTTP redirects (latest)
 
 * Disable HTTP redirects
   For safety disable HTTP redirects.
