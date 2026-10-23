@@ -7,6 +7,7 @@ rpi-eeprom-config
 import argparse
 import atexit
 import os
+import shlex
 import subprocess
 import string
 import struct
@@ -221,10 +222,14 @@ def edit_config(eeprom=None):
     out = open(tmp_conf, 'w')
     out.write(current_config)
     out.close()
-    cmd = "\'%s\' \'%s\'" % (editor, tmp_conf)
-    result = os.system(cmd)
+    # Like git and crontab, allow $EDITOR to carry arguments, e.g. 'code --wait'.
+    cmd = shlex.split(editor) + [tmp_conf]
+    try:
+        result = subprocess.call(cmd)
+    except OSError as e:
+        exit_error("Aborting update because \'%s\' could not be started: %s" % (editor, e.strerror))
     if result != 0:
-        exit_error("Aborting update because \'%s\' exited with code %d." % (cmd, result))
+        exit_error("Aborting update because \'%s\' exited with code %d." % (" ".join(shlex.quote(c) for c in cmd), result))
 
     new_config = open(tmp_conf, 'r').read()
     if len(new_config.splitlines()) < 2:
