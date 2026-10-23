@@ -1,5 +1,15 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-10-23: 2711: Bump the MFG version to 2 (latest)
+
+* TFTP: Explicitly mark truncated downloads as corrupt
+* recovery: Preliminary support for setting bootrom ARB version in OTP to the value embedded in recovery.bin
+  program_arb=1 (boolean)
+* FAT: Fix potential infinite loop with FAT12
+* 2711: Bump the MFG version to 2
+* recovery: Preliminary support for setting the ARB OTP version on 2711.
+            This is implemented in software in bootsys rather than the bootrom.
+
 ## 2026-10-22: Disable HTTP redirects (latest)
 
 * Improve HTTP status handling
