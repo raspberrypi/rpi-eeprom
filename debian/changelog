@@ -1,3 +1,22 @@
+rpi-eeprom (28.34-1) trixie; urgency=medium
+
+  [ Peter Bailey ]
+  * rpi-eeprom-update: Prevent suspend when an update is pending
+
+  [ Tim Gover ]
+  * rpi-eeprom-update: Skip VL805 updates if lspci is not available
+  * pieeprom-2026-10-15: 2712: Support peripheral access mailbox for axi
+    perf monitoring (latest)
+  * pieeprom-2026-10-15: 2711: recovery.bin: SDRAM init robustness
+    improvements (latest)
+  * pieeprom-2026-10-21: 2712: Disable HTTP redirects (latest)
+  * 2026-10-22: HTTP: Improve HTTP status handling (latest)
+  * pieeprom-2026-10-22: 2711: Improve HTTP status handling (latest)
+  * pieeprom-2026-10-23: 2712: Bump the MFG version to 3 (latest)
+  * pieeprom-2026-10-23: 2711: Bump the MFG version to 2 (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Fri, 23 Oct 2026 15:46:55 +0100
+
 rpi-eeprom (28.33-1) trixie; urgency=medium
 
   * pieeprom-2026-09-25: 2712: Fix corruption with vclog messages (latest)
