@@ -1,5 +1,78 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-10-23: 2712: Bump the MFG version to 3 (latest)
+
+* 2712: Bump the MFG version to 3
+* TFTP: Explicitly mark truncated downloads as corrupt
+* recovery: Preliminary support for setting bootrom ARB version in OTP to the value embedded in recovery.bin
+  program_arb=1 (boolean)
+* FAT: Fix potential infinite loop with FAT12
+
+2026-10-22: HTTP: Improve HTTP status handling (latest)
+
+* The code currently only handles specific responses and doesn't treat
+  an unexpected response as an error. An unexpected response will be
+  treated as the file contents and fail the signature check.
+* PCIe - Replace 'all-memory' inbound window with a small PCIe window per
+  root complex.
+
+
+## 2026-10-21: platform_config: Disable HTTP redirects (latest)
+
+* Disable HTTP redirects
+  For safety disable HTTP redirects.
+  If you change HTTP_HOST you can re-enable redirects with
+  HTTP_ALLOW_REDIRECTS=1 in the eeprom config.
+* board_info: Upstream DT uses bcm2712-d on D0
+  Downstream DT loads a bcm2712d0 overlay on D0 devices to make the
+  necessary changes. Upstream DT uses separate files, currently just
+  bcm2712-d-rpi-5-b. Extrapolate this to other devices by creating a new
+  processor name in board_info - bcm2712-d - for use when
+  upstream_kernel=1.
+* recovery: Add option to disable ROM SD/eMMC boot on 2712
+  Setting the disable_sd_emmc_boot=1 recovery.bin config key permanently sets
+  bit in boot-mode OTP rows during rpiboot provisioning. This cannot be undone.
+* Reduce logging, skip absent MIPI ports
+  Save time and reduce clutter while booting by reducing the severity of
+  some I2C logging, and by not probing for cameras and displays on Pi 500
+  which doesn't have ports for them.
+* pi5: Fix usb_max_current_enable config setting
+  The addition of the bootloader_allow_mfg_downgrade key in the 2026/09/23
+  release conflicted with usb_max_current_enable key.
+  Fixes: https://github.com/raspberrypi/rpi-eeprom/issues/899
+* Fix platform_error_msg timestamps
+  platform_error_msg bypasses the usual logging infrastructure, and has
+  its own copy of the old ms -> cs bug. Fix that bug.
+* Add I2C stuck bus recovery
+  AQM0802A-FL-YBH display modules are prone to failure when the command to
+  turn on the display is sent (possibly too little capacitance). When it
+  fails it holds SDA low. The RP1 I2C control has a bus clear feature that
+  ignores the apparently busy bus and churns out a few SCL cycles to
+  unstick everything. Add code to detect that condition and activate the
+  recovery mode.
+* arm_loader: Reduce HAT probe I2C retries
+  The various low-level I2C drivers include a number of retries; there
+  is no need to repeat that process multiple times for each address,
+  most (if not all) of which are likely to be absent.
+* arm_loader: Splash screen before camera/display
+  Move the point of the splash screen handling so it precedes any camera
+  and MIPI display auto-probing.
+
+## 2026-10-15: Support peripheral access mailbox for axi perf monitoring (latest)
+
+* Support peripheral access mailbox for axi perf monitoring
+  We support GET_PERIPH_REG and SET_PERIPH_REG on Pi0-4 to allow access to some,
+  whitelisted, peripheral registers that the arm cannot acccess.
+  See: https://github.com/raspberrypi/linux/pull/7671
+* splash_screen: Added rp1 support
+  Previously ignored rp1 support due to no spi driver
+  Now I've written a driver, I have tied the rp1 i2c and spi
+  drivers into the splash screen. Requires a minor backwards
+  compatible change to the splash binaries
+* 2712: mailbox for direct spi eeprom operations
+  The rpi-spi-eeprom tool can use the mailbox to read, write and
+  erase spi eeprom directly. Requires nospi10 in config.txt.
+
 ## 2026-09-25: Promote pieeprom-2026-09-25 to the default release (default)
 
 ## 2026-09-25: 2712: Fix memory corruption with vclog messages (latest)

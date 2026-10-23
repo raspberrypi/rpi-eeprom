@@ -54,6 +54,7 @@ STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-1}
 # suspend: on resume the ROM reloads bootsys from SPI and it must match the
 # bootmain still in RAM.
 UPDATE_PENDING_FLAG=${UPDATE_PENDING_FLAG:-/run/rpi-eeprom-update-pending}
+SUSPEND_DROPIN=/run/systemd/sleep.conf.d/40-rpi-eeprom-update-pending.conf
 
 EXIT_SUCCESS=0
 EXIT_UPDATE_REQUIRED=1
@@ -136,6 +137,13 @@ warn() {
 markUpdatePending() {
    echo "$1 $(date -u +%s)" > "${UPDATE_PENDING_FLAG}" \
       || warn "WARNING: Failed to write ${UPDATE_PENDING_FLAG}"
+   # Resuming with a pending EEPROM update is unsafe; disable suspend until reboot
+   if [ -d /run/systemd/system ]; then
+      mkdir -p "$(dirname "${SUSPEND_DROPIN}")" \
+         && printf '[Sleep]\nAllowSuspend=no\n' > "${SUSPEND_DROPIN}" \
+         || warn "WARNING: Failed to write ${SUSPEND_DROPIN}
+Reboot before attempting to suspend"
+   fi
 }
 
 readDtInt() {
@@ -693,10 +701,6 @@ checkDependencies() {
       die "rpi-eeprom-digest not found. Try re-installing the rpi-eeprom package"
    fi
 
-   if ! command -v lspci > /dev/null; then
-      die "lspci not found. Try installing the pciutils package."
-   fi
-
    if ! command -v strings > /dev/null; then
       die "strings not found. Try installing the binutils package."
    fi
@@ -930,12 +934,16 @@ printVersions()
       fi
       if [ "${ACTION_UPDATE_VL805}" = 1 ]; then
          echo "   VL805: update available"
-      else
-         if [ "$(id -u)" = "0" ]; then
-            echo "     VL805: up to date"
+      elif ! command -v lspci > /dev/null; then
+         if [ "${HAVE_VL805_EEPROM}" = 1 ]; then
+            echo "     VL805: version unknown. Try installing the pciutils package."
          else
-            echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
+            echo "     VL805: version unknown (lspci not found)"
          fi
+      elif [ "$(id -u)" = "0" ]; then
+         echo "     VL805: up to date"
+      else
+         echo "     VL805: version unknown. Try sudo rpi-eeprom-update"
       fi
 
       echo "   CURRENT: ${VL805_CURRENT_VERSION}"
@@ -988,7 +996,7 @@ getVL805CurrentVersion()
    # root then treat the version as unknown and skip VLI updates.
    VL805_CURRENT_VERSION=""
 
-   if [ "${BCM_CHIP}" = 2711 ]; then
+   if [ "${BCM_CHIP}" = 2711 ] && command -v lspci > /dev/null; then
       if [ "$(id -u)" = "0" ]; then
             vlver="$(lspci -d 1106:3483 -xxx | awk '/^50:/ { print "VL805 FW version: " $5 $4 $3 $2 }')"
          if [ -n "${vlver}" ]; then
@@ -1286,6 +1294,7 @@ while getopts A:abdhilf:m:ju:rsy option; do
       # modified the SPI flash so its marker must persist until reboot.
       if [ -f "${UPDATE_PENDING_FLAG}" ] && grep -q "^recovery" "${UPDATE_PENDING_FLAG}"; then
          rm -f "${UPDATE_PENDING_FLAG}"
+         rm -f "${SUSPEND_DROPIN}"
       fi
       exit 0
       ;;
