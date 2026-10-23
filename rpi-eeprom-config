@@ -7,6 +7,8 @@ rpi-eeprom-config
 import argparse
 import atexit
 import os
+import shlex
+import signal
 import subprocess
 import string
 import struct
@@ -221,10 +223,28 @@ def edit_config(eeprom=None):
     out = open(tmp_conf, 'w')
     out.write(current_config)
     out.close()
-    cmd = "\'%s\' \'%s\'" % (editor, tmp_conf)
-    result = os.system(cmd)
+    # Like git and crontab, allow $EDITOR to carry arguments, e.g. 'code --wait'.
+    try:
+        cmd = shlex.split(editor) + [tmp_conf]
+    except ValueError as e:
+        exit_error("Aborting update because EDITOR \'%s\' cannot be parsed: %s" % (editor, e))
+    cmd_str = " ".join(shlex.quote(c) for c in cmd)
+    try:
+        proc = subprocess.Popen(cmd)
+    except OSError as e:
+        exit_error("Aborting update because \'%s\' could not be started: %s" % (cmd[0], e.strerror))
+    # Like system(3) and git's launch_editor, ignore SIGINT and SIGQUIT while the
+    # editor runs so that Ctrl-C reaches only the editor. They are ignored after
+    # the editor has started so that it does not inherit SIG_IGN.
+    old_int = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    old_quit = signal.signal(signal.SIGQUIT, signal.SIG_IGN)
+    try:
+        result = proc.wait()
+    finally:
+        signal.signal(signal.SIGINT, old_int)
+        signal.signal(signal.SIGQUIT, old_quit)
     if result != 0:
-        exit_error("Aborting update because \'%s\' exited with code %d." % (cmd, result))
+        exit_error("Aborting update because \'%s\' exited with code %d." % (cmd_str, result))
 
     new_config = open(tmp_conf, 'r').read()
     if len(new_config.splitlines()) < 2:
@@ -554,6 +574,8 @@ Operating modes:
 
    The default text editor is nano and may be overridden by setting the 'EDITOR'
    environment variable and passing '-E' to 'sudo' to preserve the environment.
+   EDITOR may include arguments (e.g. EDITOR='code --wait'), so a path that
+   contains spaces must be quoted inside it (e.g. EDITOR='"/opt/My Editor/ed"').
 
 6. Signing the bootloader config file.
    Updates an EEPROM binary with a signed config file (created by rpi-eeprom-digest) plus
