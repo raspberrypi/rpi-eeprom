@@ -1,5 +1,13 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-10-23: 2712: Bump the MFG version to 3 (latest)
+
+* 2712: Bump the MFG version to 3
+* TFTP: Explicitly mark truncated downloads as corrupt
+* recovery: Preliminary support for setting bootrom ARB version in OTP to the value embedded in recovery.bin
+  program_arb=1 (boolean)
+* FAT: Fix potential infinite loop with FAT12
+
 2026-10-22: HTTP: Improve HTTP status handling (latest)
 
 * The code currently only handles specific responses and doesn't treat
