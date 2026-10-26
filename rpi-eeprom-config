@@ -349,15 +349,23 @@ class BootloaderImage(object):
         """
         if bootcode:
             hdr_offset, length, is_last, next_offset = self.find_file(dst_filename, partition_start=0, partition_end=READ_ONLY_SIZE)
+            is_last = False
+            debug("bootcode padded to %d" % next_offset);
+
+            # The new bootcode plus its section header must fit in the space
+            # before the next non-padding section
+            if next_offset <= hdr_offset:
+                raise Exception("update-bootcode: Failed to find next section")
+            if not self._is_ab_image and next_offset < 128 * 1024:
+                raise Exception("update-bootcode: Can't update image - 128K must be reserved for bootcode")
+            max_len = next_offset - hdr_offset - 8
+            if len(src_bytes) > max_len:
+                raise Exception("update-bootcode: %s is too large (%d bytes). The maximum size for this image is %d bytes."
+                                % (dst_filename, len(src_bytes), max_len))
+
             struct.pack_into('>L', self._bytes, hdr_offset + 4, len(src_bytes))
             struct.pack_into(("%ds" % len(src_bytes)), self._bytes, hdr_offset + 8, src_bytes)
             pad_start = hdr_offset + len(src_bytes) + 8
-            is_last = False
-            debug("bootcode padded to %d" % next_offset);
-            if not self._is_ab_image and next_offset < 128 * 1024:
-                raise Exception("update-bootcode: Can't update image - 128K must be reserved for bootcode")
-            if next_offset < 0:
-                raise Exception("update-bootcode: Failed to find next section")
 
         else:
             hdr_offset, length, is_last, next_offset = self.find_file(dst_filename, partition_start=READ_ONLY_SIZE, partition_end=READ_ONLY_SIZE + PARTITION_SIZE)
