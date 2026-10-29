@@ -1,5 +1,35 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-10-29: Add GET_PMIC_ADC mailbox tag (latest)
+
+* HTTP_BOOT Support for http server busy
+* Display http response in error message
+* Improve program_arb error reporting
+  On Pi 4, if the program_arb=1 OTP watermark revokes the bootloader, stop with LED error code 2 long 5 short instead of 3 long 1 short (SPI EEPROM error). The watermark is now only enforced if secure-boot is enabled. On Pi 5, recovery.bin now logs that program_arb is not implemented instead of silently ignoring it.
+* arm_mbox: Add GET_PMIC_ADC mailbox tag
+  Reads a range of PMIC ADC channels, like vcgencmd pmic_read_adc, without needing gencmd.
+* ldconfig: Reset the [HDMI:n] selection with the other section filters
+* recovery: Add HARDWARE_INFO to the rpiboot metadata
+* arm_dt: Allow remapping an overlay to "none"
+  Current HAT EEPROM support allows an overlay name of "none" to indicate
+  that no overlay is required, with or without parameters. Adding the
+  ability to interpret a remap to "none" in the same way makes it possible
+  to launch a product with an overlay name but no supporting overlay,
+  which leaves options open for the future without wasting time or
+  cluttering up log output until then.
+* Refresh the boot watchdog while hashing boot.img
+  The boot watchdog is only refreshed from the poll state machine so the
+  SHA-256 of a large boot.img runs without a heartbeat. PM_WDOG counts at
+  most 16.8s so a signed image above about 154 MiB (~9.6 MB/s on 2711)
+  resets the board after "Verifying" regardless of BOOT_WATCHDOG_TIMEOUT.
+  Fixes: https://github.com/raspberrypi/rpi-eeprom/issues/914
+* rpiboot: Only allow USB device boot when the ROM booted from USB device boot.
+* Load customer public key over rpiboot
+  For rpiboot, load the customer key over rpiboot instead of looking
+  for it within the SPI flash. This enables rpiboot to load the 
+  mass-storage-gadget on devices with blank / corrupted SPI flash or for 
+  older images which did not support A/B boot.
+
 ## 2026-10-23: 2712: Bump the MFG version to 3 (latest)
 
 * 2712: Bump the MFG version to 3
