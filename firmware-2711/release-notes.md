@@ -1,5 +1,25 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-10-30: Support for http server busy (latest)
+
+* Support for http server busy
+  Handle http responses 429 / 503 with "retry-after" header.
+  Limit of 30s retry and 3 retry attempts.
+* Display http response in error message
+* recovery: Add HARDWARE_INFO to the rpiboot metadata
+* Refresh the boot watchdog while hashing boot.img
+  The boot watchdog is only refreshed from the poll state machine so the
+  SHA-256 of a large boot.img runs without a heartbeat. PM_WDOG counts at
+  most 16.8s so a signed image above about 154 MiB (~9.6 MB/s on 2711)
+  resets the board after "Verifying" regardless of BOOT_WATCHDOG_TIMEOUT.
+  Fixes: https://github.com/raspberrypi/rpi-eeprom/issues/914
+* rpiboot: Only allow USB device boot when the ROM booted from USB
+* Load the customer public key via platform_load_eeprom_file
+  In rpiboot mode the key used to verify boot.img is read from the host
+  (pubkey.bin) instead of SPI flash so secure-boot rpiboot works with a blank
+  or legacy layout EEPROM.
+* Update embedded MBED TLS.
+
 ## 2026-10-23: 2711: Bump the MFG version to 2 (latest)
 
 * TFTP: Explicitly mark truncated downloads as corrupt
