@@ -1,5 +1,6 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+
 ## 2026-10-30: Support for http server busy (latest)
 
 * Support for http server busy
@@ -19,6 +20,8 @@
   (pubkey.bin) instead of SPI flash so secure-boot rpiboot works with a blank
   or legacy layout EEPROM.
 * Update embedded MBED TLS.
+* Fix boot.img ramdisk check in earlier release. The check was too strict
+  and would only pass verification on BCM2712.
 
 ## 2026-10-23: 2711: Bump the MFG version to 2 (latest)
 
