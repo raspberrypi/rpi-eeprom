@@ -1,5 +1,13 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-10-30: 2712: Fix empty EEPROM public key in the ARM device tree (latest)
+
+* 2712: Fix empty EEPROM public key in the ARM device tree
+  The ARM device tree requests the public key after the OTP read lock is
+  set so re-reading and re-validating it against OTP failed and the key
+  was left empty. Return the copy verified earlier in the boot instead.
+* Update embedded MBED TLS release.
+
 ## 2026-10-29: Add GET_PMIC_ADC mailbox tag (latest)
 
 * HTTP_BOOT Support for http server busy
