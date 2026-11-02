@@ -1,6 +1,8 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
 
+## 2026-11-02: Promote pieeprom-2026-10-30 to the default release (default)
+
 ## 2026-10-30: Support for http server busy (latest)
 
 * Support for http server busy
