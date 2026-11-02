@@ -1,3 +1,10 @@
+rpi-eeprom (28.36-1) trixie; urgency=medium
+
+  * pieeprom-2026-10-30: 2712: Promote to the default release
+  * pieeprom-2026-10-30: 2711: Promote to the default release
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 02 Nov 2026 16:24:15 +0000
+
 rpi-eeprom (28.35-1) trixie; urgency=medium
 
   [ Mathew Blowers ]
