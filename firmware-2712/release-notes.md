@@ -1,5 +1,7 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-11-02: Promote pieeprom-2026-10-30 to the default release (default)
+
 ## 2026-10-30: 2712: Fix empty EEPROM public key in the ARM device tree (latest)
 
 * 2712: Fix empty EEPROM public key in the ARM device tree
