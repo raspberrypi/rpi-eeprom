@@ -1,3 +1,20 @@
+rpi-eeprom (28.35-1) trixie; urgency=medium
+
+  [ Mathew Blowers ]
+  * rpi-eeprom-config: Reject oversized bootcode updates
+
+  [ Roy ]
+  * rpi-eeprom-config: Allow arguments in EDITOR for --edit
+
+  [ Tim Gover ]
+  * pieeprom-2026-10-29: 2712: Add PMIC_GET_ADC mailbox tag (latest)
+  * pieeprom-2026-10-30: 2712: Fix empty EEPROM public key in the ARM
+    device tree (latest)
+  * pieeprom-2026-10-30: 2711: Support for http server busy (latest)
+  * pieeprom-2026-10-30: 2711: Fix boot.img verification failure (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 02 Nov 2026 08:14:20 +0000
+
 rpi-eeprom (28.34-1) trixie; urgency=medium
 
   [ Peter Bailey ]
