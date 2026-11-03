@@ -28,4 +28,20 @@ jobs:
         run: |
           cd test
           chmod +x test-rpi-eeprom-config
-          ./test-rpi-eeprom-config 
+          ./test-rpi-eeprom-config
+
+  test-recovery-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends util-linux dosfstools mtools zip unzip
+
+      - name: Run make-recovery-images tests
+        run: |
+          cd test
+          chmod +x test-make-recovery-images
+          ./test-make-recovery-images 
