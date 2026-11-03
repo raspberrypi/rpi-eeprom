@@ -15,7 +15,7 @@ image_date=$(ls -lr $base_dir/firmware-2712/default/ | grep pieeprom | sed 's/.*
 ${script_dir}/make-release critical ${image_date} "" "${script_dir}/2712-config" release-2712 rpi-boot-eeprom-recovery 2712
 
 # Convert to disk image for RPi Imager downloads
-sudo ${script_dir}/make-recovery-images
+${script_dir}/make-recovery-images
 
 # Delete the plain .zip files. These should not be uploaded as releases.
 rm -rf release-2711
