@@ -1,0 +1,277 @@
+#!/bin/sh
+
+# Unit test for imager/make-recovery-images.
+#
+# Builds the rpi-boot-eeprom-recovery release zips for 2711 and 2712 from
+# the 'default' firmware with imager/make-release, converts them to Raspberry
+# Pi Imager disk images with imager/make-recovery-images and then verifies:
+#
+# * The disk image size and MBR partition table (start / size / type / id).
+# * The FAT32 BPB: 512 byte sectors, 1 sector per cluster and FAT32 type.
+# * Every file in the FAT filesystem is byte-identical to the source zip
+#   (loopback comparison) and no files are missing or added.
+# * recovery.bin is identical to the firmware in the repository.
+# * pieeprom.bin / vl805.bin match their .sig digests and the EEPROM image
+#   can be parsed by rpi-eeprom-config with the expected BOOT_ORDER.
+#
+# No root privileges are required. Dependencies: sfdisk, mkfs.fat, mtools,
+# zip, unzip, python3 (for rpi-eeprom-config).
+
+set -e
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+base_dir="$(cd "${script_dir}/.." && pwd)"
+imager_dir="${base_dir}/imager"
+
+# Partition and filesystem geometry expected in the generated images.
+EXPECTED_IMAGE_SIZE=$((258 * 1024 * 1024))
+EXPECTED_LABEL_ID="0x0a7b5ac5"
+EXPECTED_PART_START=2048
+EXPECTED_PART_SIZE=524288
+EXPECTED_PART_TYPE="c"
+EXPECTED_BYTES_PER_SECTOR=512
+EXPECTED_SECTORS_PER_CLUSTER=1
+FAT_OFFSET=$((EXPECTED_PART_START * 512))
+
+TMP_DIR=""
+
+die() {
+   echo "ERROR"
+   echo "$@" >&2
+   exit 1
+}
+
+cleanup() {
+   if [ -n "${TMP_DIR}" ]; then
+      rm -rf "${TMP_DIR}"
+   fi
+   TMP_DIR=""
+}
+
+trap cleanup EXIT
+
+for tool in sfdisk mkfs.fat mcopy mdir zip unzip python3 sha256sum od; do
+   command -v "${tool}" > /dev/null || die "${tool} not found"
+done
+
+# Read N bytes at OFFSET as an unsigned little-endian integer.
+read_le()
+{
+   file="$1"
+   offset="$2"
+   count="$3"
+   od -An -tu1 -j "${offset}" -N "${count}" -v "${file}" | awk '{ v = 0; for (i = NF; i >= 1; i--) v = v * 256 + $i; print v }'
+}
+
+# Read N bytes at OFFSET as a string.
+read_str()
+{
+   file="$1"
+   offset="$2"
+   count="$3"
+   dd if="${file}" bs=1 skip="${offset}" count="${count}" 2> /dev/null
+}
+
+check_equal()
+{
+   [ "$2" = "$3" ] || die "$1: expected \"$3\" got \"$2\""
+}
+
+# Expected BOOT_ORDER for a boot priority variant, taken from the config
+# that make-release applies to the EEPROM image.
+expected_boot_order()
+{
+   chip="$1"
+   variant="$2"
+   grep '^BOOT_ORDER=' "${imager_dir}/${chip}-config/boot-conf-${variant}.txt" | cut -d= -f2
+}
+
+check_partition_table()
+{
+   img="$1"
+
+   actual_size=$(stat -c %s "${img}")
+   check_equal "image size" "${actual_size}" "${EXPECTED_IMAGE_SIZE}"
+
+   dump="$(sfdisk -d "${img}")"
+   check_equal "partition table label" "$(echo "${dump}" | sed -n 's/^label: //p')" "dos"
+   check_equal "partition table label-id" "$(echo "${dump}" | sed -n 's/^label-id: //p')" "${EXPECTED_LABEL_ID}"
+
+   partitions="$(echo "${dump}" | grep -c '^.* : start=' || true)"
+   check_equal "partition count" "${partitions}" "1"
+
+   part="$(echo "${dump}" | grep '^.* : start=')"
+   check_equal "partition start" "$(echo "${part}" | sed 's/.*start= *\([0-9]*\),.*/\1/')" "${EXPECTED_PART_START}"
+   check_equal "partition size" "$(echo "${part}" | sed 's/.*size= *\([0-9]*\),.*/\1/')" "${EXPECTED_PART_SIZE}"
+   check_equal "partition type" "$(echo "${part}" | sed 's/.*type=\([0-9a-fA-F]*\).*/\1/')" "${EXPECTED_PART_TYPE}"
+}
+
+check_fat_bpb()
+{
+   img="$1"
+
+   # BIOS parameter block layout (offsets relative to the start of the partition)
+   #  11: bytes per sector (u16)
+   #  13: sectors per cluster (u8)
+   #  22: sectors per FAT for FAT12/16 (u16) - must be zero for FAT32
+   #  32: total sectors (u32)
+   #  82: filesystem type string "FAT32   "
+   # 510: boot signature 0xaa55
+   check_equal "bytes per sector" "$(read_le "${img}" $((FAT_OFFSET + 11)) 2)" "${EXPECTED_BYTES_PER_SECTOR}"
+   check_equal "sectors per cluster" "$(read_le "${img}" $((FAT_OFFSET + 13)) 1)" "${EXPECTED_SECTORS_PER_CLUSTER}"
+   check_equal "FAT16 sectors per FAT" "$(read_le "${img}" $((FAT_OFFSET + 22)) 2)" "0"
+   check_equal "total sectors" "$(read_le "${img}" $((FAT_OFFSET + 32)) 4)" "${EXPECTED_PART_SIZE}"
+   check_equal "filesystem type" "$(read_str "${img}" $((FAT_OFFSET + 82)) 8)" "FAT32   "
+   check_equal "boot signature" "$(read_le "${img}" $((FAT_OFFSET + 510)) 2)" "43605"
+
+   # Cross check with mtools' view of the filesystem.
+   minfo_out="$(minfo -i "${img}@@${FAT_OFFSET}" ::)"
+   check_equal "minfo cluster size" "$(echo "${minfo_out}" | sed -n 's/^cluster size: \([0-9]*\) sectors$/\1/p')" "${EXPECTED_SECTORS_PER_CLUSTER}"
+   check_equal "minfo sector size" "$(echo "${minfo_out}" | sed -n 's/^sector size: \([0-9]*\) bytes$/\1/p')" "${EXPECTED_BYTES_PER_SECTOR}"
+   check_equal "minfo disk type" "$(echo "${minfo_out}" | sed -n 's/^disk type="\(.*\)"$/\1/p')" "FAT32   "
+}
+
+# Compare every file in the FAT filesystem against the files in the source
+# release zip in both directions.
+check_fat_contents()
+{
+   img="$1"
+   src_dir="$2"
+   out_dir="$3"
+
+   mkdir -p "${out_dir}"
+   mcopy -i "${img}@@${FAT_OFFSET}" -n '::*' "${out_dir}/"
+
+   # The images must contain only regular files in the root directory.
+   subdirs="$(mdir -i "${img}@@${FAT_OFFSET}" -b '::' | grep -c '/$' || true)"
+   check_equal "subdirectory count" "${subdirs}" "0"
+
+   (cd "${src_dir}" && ls -1 | LC_ALL=C sort) > "${TMP_DIR}/expected-files.txt"
+   (cd "${out_dir}" && ls -1 | LC_ALL=C sort) > "${TMP_DIR}/actual-files.txt"
+   diff -u "${TMP_DIR}/expected-files.txt" "${TMP_DIR}/actual-files.txt" || die "File list in ${img} does not match source zip"
+
+   for f in $(cat "${TMP_DIR}/expected-files.txt"); do
+      cmp "${src_dir}/${f}" "${out_dir}/${f}" || die "${f} in ${img} does not match source zip"
+   done
+}
+
+check_digest()
+{
+   name="$1"
+   image="$2"
+   sig="$3"
+
+   [ -f "${image}" ] || die "${name}: ${image} missing"
+   [ -f "${sig}" ] || die "${name}: ${sig} missing"
+   expected="$(sha256sum "${image}" | awk '{print $1}')"
+   actual="$(head -n1 "${sig}")"
+   check_equal "${name} sha256 digest" "${actual}" "${expected}"
+}
+
+check_firmware()
+{
+   chip="$1"
+   variant="$2"
+   out_dir="$3"
+   firmware_dir="${base_dir}/firmware-${chip}/default"
+
+   # recovery.bin must be the unmodified firmware from the repository.
+   cmp "${firmware_dir}/recovery.bin" "${out_dir}/recovery.bin" || die "recovery.bin does not match firmware-${chip}/default/recovery.bin"
+
+   # EEPROM image: digest matches the signature file, image is the same size
+   # as the source EEPROM and the embedded boot.conf is readable with the
+   # expected boot priority for this variant.
+   check_digest "pieeprom" "${out_dir}/pieeprom.bin" "${out_dir}/pieeprom.sig"
+   grep -q "^target-soc: ${chip}$" "${out_dir}/pieeprom.sig" || die "pieeprom.sig target-soc does not match ${chip}"
+
+   src_eeprom="${firmware_dir}/pieeprom-${pieeprom_version}.bin"
+   check_equal "pieeprom.bin size" "$(stat -c %s "${out_dir}/pieeprom.bin")" "$(stat -c %s "${src_eeprom}")"
+
+   bootconf="${out_dir}/bootconf.txt"
+   python3 "${base_dir}/rpi-eeprom-config" "${out_dir}/pieeprom.bin" > "${bootconf}" || die "rpi-eeprom-config failed to read pieeprom.bin"
+   actual_boot_order="$(grep '^BOOT_ORDER=' "${bootconf}" | cut -d= -f2)"
+   check_equal "BOOT_ORDER (${chip} ${variant})" "${actual_boot_order}" "$(expected_boot_order "${chip}" "${variant}")"
+
+   # The config applied must match the one in the repository (ignoring blank lines).
+   diff -u -B "${imager_dir}/${chip}-config/boot-conf-${variant}.txt" "${bootconf}" || die "bootconf in pieeprom.bin does not match boot-conf-${variant}.txt"
+   rm -f "${bootconf}"
+
+   if [ "${chip}" = 2711 ]; then
+      check_digest "vl805" "${out_dir}/vl805.bin" "${out_dir}/vl805.sig"
+      cmp "${firmware_dir}/vl805-${vl805_version}.bin" "${out_dir}/vl805.bin" || die "vl805.bin does not match firmware-2711/default/vl805-${vl805_version}.bin"
+   else
+      [ ! -f "${out_dir}/vl805.bin" ] || die "Unexpected vl805.bin in ${chip} image"
+   fi
+}
+
+check_images()
+{
+   chip="$1"
+   release_dir="${TMP_DIR}/release-${chip}"
+   image_dir="${TMP_DIR}/images-${chip}"
+   count=0
+
+   [ -d "${image_dir}" ] || die "${image_dir} was not created"
+
+   for src_zip in "${release_dir}"/*.zip; do
+      name="$(basename "${src_zip}" .zip)"
+      variant="${name##*-}"
+      out_zip="${image_dir}/${name}.zip"
+      echo "check ${chip} ${variant}: ${name}"
+
+      [ -f "${out_zip}" ] || die "${out_zip} was not created"
+
+      work="${TMP_DIR}/check-${chip}-${variant}"
+      mkdir -p "${work}/src" "${work}/img"
+      unzip -q "${src_zip}" -d "${work}/src"
+      unzip -q "${out_zip}" -d "${work}/img"
+
+      # The output zip must contain exactly one .img file with the same basename.
+      check_equal "zip contents" "$(ls -1 "${work}/img")" "${name}.img"
+      img="${work}/img/${name}.img"
+
+      check_partition_table "${img}"
+      check_fat_bpb "${img}"
+      check_fat_contents "${img}" "${work}/src" "${work}/fat"
+      check_firmware "${chip}" "${variant}" "${work}/fat"
+      count=$((count + 1))
+   done
+
+   # sd, usb and network variants
+   check_equal "number of ${chip} images" "${count}" "3"
+
+   # No stray files should be left in the image directory.
+   check_equal "number of files in images-${chip}" "$(ls -1 "${image_dir}" | wc -l)" "3"
+}
+
+TMP_DIR="$(mktemp -d)"
+
+# Build the release zips in the same way as make-imager-release.
+pieeprom_version=$(ls -lr "${base_dir}/firmware-2711/default/" | grep pieeprom | sed 's/.*pieeprom-//g' | sed 's/.bin//g' | head -n1)
+vl805_version=$(ls "${base_dir}/firmware-2711/default/" | sed -n 's/^vl805-\(.*\)\.bin$/\1/p' | head -n1)
+[ -n "${pieeprom_version}" ] || die "No 2711 pieeprom image found"
+[ -n "${vl805_version}" ] || die "No vl805 image found"
+echo "Building 2711 release zips (pieeprom ${pieeprom_version} vl805 ${vl805_version})"
+"${imager_dir}/make-release" default "${pieeprom_version}" "${vl805_version}" "${imager_dir}/2711-config" "${TMP_DIR}/release-2711" rpi-boot-eeprom-recovery 2711 > /dev/null
+# Remember the 2711 version so check_firmware can locate the source EEPROM.
+pieeprom_version_2711="${pieeprom_version}"
+
+pieeprom_version=$(ls -lr "${base_dir}/firmware-2712/default/" | grep pieeprom | sed 's/.*pieeprom-//g' | sed 's/.bin//g' | head -n1)
+[ -n "${pieeprom_version}" ] || die "No 2712 pieeprom image found"
+echo "Building 2712 release zips (pieeprom ${pieeprom_version})"
+"${imager_dir}/make-release" default "${pieeprom_version}" "" "${imager_dir}/2712-config" "${TMP_DIR}/release-2712" rpi-boot-eeprom-recovery 2712 > /dev/null
+pieeprom_version_2712="${pieeprom_version}"
+
+# make-recovery-images operates on release-* directories in the current directory.
+echo "Running make-recovery-images"
+(cd "${TMP_DIR}" && "${imager_dir}/make-recovery-images" > "${TMP_DIR}/make-recovery-images.log" 2>&1) || {
+   cat "${TMP_DIR}/make-recovery-images.log"
+   die "make-recovery-images failed"
+}
+
+pieeprom_version="${pieeprom_version_2711}"
+check_images 2711
+pieeprom_version="${pieeprom_version_2712}"
+check_images 2712
+
+echo "PASS"
