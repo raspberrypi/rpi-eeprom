@@ -1,6 +1,13 @@
 #!/bin/sh
 
+# Converts the rpi-boot-eeprom-recovery zip files in release-2711 and
+# release-2712 into Raspberry Pi Imager compatible disk images. The image
+# is built entirely in user space with sfdisk, mkfs.fat and mtools, so no
+# root privileges or loopback devices are required.
+
 set -e
+
+TMP_DIR=""
 
 die() {
    echo "$@" >&2
@@ -15,61 +22,72 @@ cleanup() {
 
 trap cleanup EXIT
 
-[ "$(id -u)" = "0" ] || die "$(basename $0) must be run as root"
-[ -n "${SUDO_UID}" ] || die "SUDO_UID not defined"
-[ -n "${SUDO_GID}" ] || die "SUDO_GID not defined"
-
 build_images()
 {
    chip="$1"
+   partition_start=2048
+   partition_size=524288
+   temp_disk_img="temp.img"
+   temp_partition_img="fat.img"
+
    for src in release-${chip}/*.zip; do
-	   src=$(basename "${src}")
-	   img=$(echo "${src}" | sed 's/\.zip/.img/')
-	   TMP_DIR=$(mktemp -d)
-	   (
-	   cp "release-${chip}/${src}" "${TMP_DIR}"
-	   mkdir "${TMP_DIR}/files"
-	   cd "${TMP_DIR}/files"
-	   unzip "../${src}"
-	   cd "${TMP_DIR}"
-	   dd if=/dev/zero bs=1M count=258 of=temp.img
-	   /sbin/sfdisk temp.img <<EOF
+      [ -f "${src}" ] || die "No release zip files found in release-${chip}"
+      src=$(basename "${src}")
+      img=$(echo "${src}" | sed 's/\.zip/.img/')
+      TMP_DIR=$(mktemp -d)
+      (
+         cp "release-${chip}/${src}" "${TMP_DIR}"
+         mkdir "${TMP_DIR}/files"
+         cd "${TMP_DIR}/files"
+         "${UNZIP}" "../${src}"
+         cd "${TMP_DIR}"
+         dd if=/dev/zero bs=1M count=258 of="${temp_disk_img}" > /dev/null 2>&1
+         "${SFDISK}" "${temp_disk_img}" <<EOF
 label: dos
 label-id: 0x0a7b5ac5
-device: temp.img
+device: ${temp_disk_img}
 unit: sectors
 
-./test.img1 : start=        2048, size=       524288, type=c
+./test.img1 : start=        ${partition_start}, size=       ${partition_size}, type=c
 EOF
-   file temp.img
-   kpartx -lv temp.img | head -n1 | awk '{print $1}'
-   LOOP="/dev/mapper/$(kpartx -lv temp.img | head -n1 | awk '{print $1}')"
-   kpartx -av temp.img
-   /sbin/mkfs.fat -F 32 -s 1 "${LOOP}"
-   mkdir fs
-   mount "${LOOP}" fs
-   cp -v files/* fs
-   sync
-   sleep 5
-   umount fs
-   # Delay before calling kpartx otherwise it's sometimes possible to get orphaned loopback devices
-   sleep 5
-   kpartx -dv temp.img
-)
-   image_dir="images-${chip}"
-   mkdir -p "${image_dir}"
-   chown "${SUDO_UID}:${SUDO_GID}" "${image_dir}"
-   mv "${TMP_DIR}/temp.img" "${image_dir}/${img}"
-   file "${image_dir}/${img}"
-   cd "${image_dir}"
-   zip "${src}" "${img}"
-   cd ..
-   rm "${image_dir}/${img}"
-   chown "${SUDO_UID}:${SUDO_GID}" "${image_dir}/${src}"
+         file "${temp_disk_img}"
+         dd if=/dev/zero bs=512 count="${partition_size}" of="${temp_partition_img}" > /dev/null 2>&1
+         "${MKFS_FAT}" -F 32 -s 1 "${temp_partition_img}" > /dev/null
+         "${MCOPY}" -i "${temp_partition_img}" -v files/* ::
+         dd if="${temp_partition_img}" of="${temp_disk_img}" bs=512 seek="${partition_start}" conv=notrunc > /dev/null 2>&1
+      )
+      image_dir="images-${chip}"
+      mkdir -p "${image_dir}"
+      mv "${TMP_DIR}/${temp_disk_img}" "${image_dir}/${img}"
+      rm -rf "${TMP_DIR}"
+      file "${image_dir}/${img}"
+      cd "${image_dir}"
+      "${ZIP}" "${src}" "${img}"
+      cd ..
+      rm "${image_dir}/${img}"
    done
    echo "Wrote images for rpi-imager to $(pwd)/${image_dir}/${src}"
 }
 
+if ! SFDISK=$(command -v sfdisk); then
+   die "sfdisk not found: Try installing the util-linux package"
+fi
+
+if ! MKFS_FAT=$(command -v mkfs.fat); then
+   die "mkfs.fat not found: Try installing the dosfstools package"
+fi
+
+if ! MCOPY=$(command -v mcopy); then
+   die "mcopy not found: Try installing the mtools package"
+fi
+
+if ! UNZIP=$(command -v unzip); then
+   die "unzip not found: Try installing the unzip package"
+fi
+
+if ! ZIP=$(command -v zip); then
+   die "zip not found: Try installing the zip package"
+fi
+
 build_images 2711
 build_images 2712
-
