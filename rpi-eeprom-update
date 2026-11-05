@@ -49,6 +49,9 @@ DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-t
 DT_MIN_BOOT_VER=${DT_MIN_BOOT_VER:-/proc/device-tree/chosen/rpi-min-boot-ver}
 STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-1}
 
+# Set when AB EEPROM updates cannot be used
+AB_EEPROM_UNAVAILABLE_REASON=
+
 # Marker on tmpfs (cleared by reboot) recording that a bootloader update has
 # been written or staged during this boot. Whilst it exists the system must not
 # suspend: on resume the ROM reloads bootsys from SPI and it must match the
@@ -460,6 +463,10 @@ printFlashromChipDetails() {
 applyUpdate() {
    [ "$(id -u)" = "0" ] || die "* Must be run as root - try 'sudo rpi-eeprom-update'"
 
+   if [ "${AB_EEPROM}" -eq 1 ] && [ -n "${AB_EEPROM_UNAVAILABLE_REASON}" ]; then
+      die "AB_EEPROM=1 is set but ${AB_EEPROM_UNAVAILABLE_REASON}"
+   fi
+
    if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ]; then
       (
          package_checksums_file="${PACKAGE_INFO_DIR}/rpi-eeprom.md5sums"
@@ -499,6 +506,9 @@ applyUpdate() {
          flashrom_probe_ok=1
       fi
       if [ "${flashrom_probe_ok}" != 1 ]; then
+         if [ -n "${AB_EEPROM_UNAVAILABLE_REASON}" ]; then
+            warn "WARNING: AB EEPROM update not available: ${AB_EEPROM_UNAVAILABLE_REASON}"
+         fi
          echo "Setting RPI_EEPROM_IMMEDIATE_UPDATE to 0"
          echo
          export RPI_EEPROM_IMMEDIATE_UPDATE=0
@@ -614,17 +624,22 @@ checkDependencies() {
       SPIDEV=/dev/spidev10.0
       # Default is to use immediate update if available on BCM2712
       RPI_EEPROM_IMMEDIATE_UPDATE=${RPI_EEPROM_IMMEDIATE_UPDATE:-1}
-      if command -v rpi-eeprom-ab > /dev/null && rpi-eeprom-ab spi-check > /dev/null 2>&1; then
+      # update-status only fails if the firmware does not implement AB
+      # spi-check additionally fails if the firmware cannot access the SPI EEPROM
+      if ! command -v rpi-eeprom-ab > /dev/null; then
+         AB_EEPROM_UNAVAILABLE_REASON="rpi-eeprom-ab is not installed"
+      elif ! rpi-eeprom-ab update-status > /dev/null 2>&1; then
+         AB_EEPROM_UNAVAILABLE_REASON="the current bootloader does not support AB EEPROM updates"
+      elif ! rpi-eeprom-ab spi-check > /dev/null 2>&1; then
+         AB_EEPROM_UNAVAILABLE_REASON="the firmware cannot access the SPI EEPROM. Enable AB firmware in raspi-config"
+      fi
+      if [ -z "${AB_EEPROM_UNAVAILABLE_REASON}" ]; then
          # If AB commands are available and immediate update is enabled then default is to use AB EEPROM
          if [ "${RPI_EEPROM_IMMEDIATE_UPDATE}" -eq 1 ]; then
             AB_EEPROM=${AB_EEPROM:-1}
          fi
          # Default is to force commit the update when using AB updates
          AB_EEPROM_FORCE_COMMIT=${AB_EEPROM_FORCE_COMMIT:-1}
-      else
-         if [ -n "${AB_EEPROM}" ] && [ "${AB_EEPROM}" -eq 1 ]; then
-            die "AB_EEPROM=1 is set but AB EEPROM updates are not supported"
-         fi
       fi
    else
       chipNotSupported
