@@ -87,6 +87,9 @@ HAVE_VL805_EEPROM=0
 
 TMP_EEPROM_IMAGE=""
 TMP_BOOTFS_MNT=""
+FLASHROM_LAYOUT=""
+# SPI flash capacity in bytes from the flashrom probe. Empty if unknown.
+FLASHROM_CHIP_SIZE=
 
 VL805_CURRENT_VERSION=
 VL805_UPDATE_VERSION=
@@ -119,12 +122,16 @@ cleanup() {
    if [ -f "${FLASHROM_LOG}" ]; then
       rm -f "${FLASHROM_LOG}"
    fi
+   if [ -f "${FLASHROM_LAYOUT}" ]; then
+      rm -f "${FLASHROM_LAYOUT}"
+   fi
    TMP_BOOTFS_MNT=
    TMP_EEPROM_IMAGE=
    TMP_EEPROM_CONFIG=
    NEW_EEPROM_CONFIG=
    IMMEDIATE_UPDATE_LOG=
    FLASHROM_LOG=
+   FLASHROM_LAYOUT=
 }
 trap cleanup EXIT
 
@@ -276,13 +283,31 @@ runFlashromUpdate()
 {
    attempts=5
    freq=16000
+   image="${BOOTFS}/pieeprom.upd"
+
+   if ! [ -f "${image}" ]; then
+      echo "${image} not found" >> "${IMMEDIATE_UPDATE_LOG}"
+      return 1
+   fi
+
+   # The image is written to the start of flash and any spare space above it is erased to 0xFF
+   # flashrom < 1.6 requires a chip-sized -w/-v base image; stdin (-) bypasses the
+   # size check and a stream of 0xFF doubles as the unused region content
+   FLASHROM_LAYOUT="$(mktemp)"
+   image_size=$(wc -c < "${image}" | tr -d ' ')
+   printf '00000000:%08x bootloader\n' "$((image_size - 1))" > "${FLASHROM_LAYOUT}"
+   unused_region=""
+   if [ -n "${FLASHROM_CHIP_SIZE}" ] && [ "${FLASHROM_CHIP_SIZE}" -gt "${image_size}" ]; then
+      printf '%08x:%08x unused\n' "${image_size}" "$((FLASHROM_CHIP_SIZE - 1))" >> "${FLASHROM_LAYOUT}"
+      unused_region="-i unused"
+   fi
 
    # If flashrom fails then retry at a lower speed.
    while [ ${attempts} -gt 0 ]; do
-      echo "flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -w ${BOOTFS}/pieeprom.upd"
-      if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -w "${BOOTFS}/pieeprom.upd" >> "${IMMEDIATE_UPDATE_LOG}"; then
+      echo "flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -l ${FLASHROM_LAYOUT} -i bootloader:${image} -w - ${unused_region}"
+      if tr '\0' '\377' < /dev/zero | flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -l "${FLASHROM_LAYOUT}" -i "bootloader:${image}" -w - ${unused_region} >> "${IMMEDIATE_UPDATE_LOG}"; then
          echo "Verifying update"
-         if flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -v "${BOOTFS}/pieeprom.upd" >> "${IMMEDIATE_UPDATE_LOG}"; then
+         if tr '\0' '\377' < /dev/zero | flashrom -p linux_spi:dev=${SPIDEV},spispeed=${freq} -l "${FLASHROM_LAYOUT}" -i "bootloader:${image}" -v - ${unused_region} >> "${IMMEDIATE_UPDATE_LOG}"; then
             echo "VERIFY: SUCCESS"
             return 0
          else
@@ -446,6 +471,9 @@ printFlashromChipDetails() {
    flashrom_chip_line=$(grep -m1 -E '^(Found|Assuming) .+ flash chip "' "${flashrom_log}") || return 0
    flashrom_vendor=$(echo "${flashrom_chip_line}" | sed -n 's/^\(Found\|Assuming\) \(.*\) flash chip ".*/\2/p')
    flashrom_capacity=$(echo "${flashrom_chip_line}" | sed -n 's/.*(\([0-9][0-9]*\) kB,.*/\1/p')
+   if [ -n "${flashrom_capacity}" ]; then
+      FLASHROM_CHIP_SIZE=$((flashrom_capacity * 1024))
+   fi
 
    if [ "${flashrom_vendor}" = "Unknown" ]; then
       flashrom_jedec_id=$(grep -m1 -E 'id1 0x[0-9a-fA-F]+, id2 0x[0-9a-fA-F]+' "${flashrom_log}" | sed -n 's/.*\(id1 0x[0-9a-fA-F]*, id2 0x[0-9a-fA-F]*\).*/\1/p')
@@ -503,6 +531,12 @@ applyUpdate() {
          warn "WARNING: Flashrom probe of ${SPIDEV} reported Unknown flash chip"
       else
          printFlashromChipDetails "${FLASHROM_LOG}"
+         # Use the actual image size so that -f images are covered.
+         if [ -f "${BOOTLOADER_UPDATE_IMAGE}" ] && [ -n "${FLASHROM_CHIP_SIZE}" ]; then
+            update_image_size=$(wc -c < "${BOOTLOADER_UPDATE_IMAGE}" | tr -d ' ')
+            [ "${FLASHROM_CHIP_SIZE}" -ge "${update_image_size}" ] \
+               || die "ERROR: SPI flash capacity (${FLASHROM_CHIP_SIZE} bytes) is smaller than the EEPROM image (${update_image_size} bytes)"
+         fi
          flashrom_probe_ok=1
       fi
       if [ "${flashrom_probe_ok}" != 1 ]; then
@@ -913,6 +947,10 @@ than installing the recovery.bin plus pieeprom.upd files. rpi-eeprom-ab is
 used on BCM2712 boards with AB EEPROM already enabled. When using flashrom, the
 power must not be disconnected during this update otherwise the EEPROM will need to be
 re-flashed using the Rasberry Pi Imager bootloader restore feature.
+
+flashrom is run with a layout so that flash chips larger than the EEPROM image can
+be updated. The image is written to the start of the flash and any spare flash
+above it is erased.
 
 On Raspberry Pi 4, CM4, CM4-S and Pi400 flashrom updates are not enabled by default
 because the SPI GPIOs are shared with analog audio. To enable this add the following
