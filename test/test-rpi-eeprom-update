@@ -1,0 +1,403 @@
+#!/usr/bin/env python3
+"""Exercise the real updater with isolated boot files and mocked hardware."""
+
+import json
+import os
+from pathlib import Path
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+import unittest
+
+
+ROOT = Path(__file__).resolve().parent.parent
+ARCHIVE = ROOT / "firmware-2712/old/latest"
+OLD = ARCHIVE / "pieeprom-2024-09-10.bin"
+BOUNDARY = ARCHIVE / "pieeprom-2024-09-23.bin"
+NEW = ARCHIVE / "pieeprom-2024-10-10.bin"
+OLD_TS = 1725975630
+BOUNDARY_TS = 1727096576
+NEW_TS = 1728517007
+
+
+MOCK_COMMAND = '''
+import os
+from pathlib import Path
+import sys
+
+name = Path(sys.argv[0]).name
+args = sys.argv[1:]
+if name == 'id':
+    print('0')
+elif name == 'vcgencmd':
+    if args == ['otp_dump']:
+        print(os.environ.get('TEST_OTP', '32:00b04170'))
+        sys.exit(int(os.environ.get('TEST_OTP_EXIT', '0')))
+    elif args == ['bootloader_config']:
+        print('[all]\\nBOOT_UART=1\\nBOOT_ORDER=0xf461')
+    elif args == ['bootloader_version']:
+        print('timestamp ' + os.environ['TEST_CURRENT'])
+elif name == 'blkid':
+    sys.exit(2)
+elif name == 'lspci':
+    pass
+elif name == 'rpi-eeprom-ab' and args in (['update-status'], ['spi-check']):
+    sys.exit(0 if os.environ.get('TEST_AB') == '1' else 1)
+elif name == 'rpi-eeprom-digest':
+    Path(args[args.index('-o') + 1]).write_text('mock digest\\n')
+    with open(os.environ['TEST_COMMAND_LOG'], 'a') as log:
+        log.write(name + '\\n')
+else:
+    with open(os.environ['TEST_COMMAND_LOG'], 'a') as log:
+        log.write(name + ' ' + ' '.join(args) + '\\n')
+    sys.exit(99)  # No hardware write should ever reach these mocks.
+'''
+
+
+class UpdateTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="eeprom-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name)
+        self.bin = self.base / "bin"
+        self.bin.mkdir()
+        self.boot = self.base / "boot"
+        self.boot.mkdir()
+        (self.boot / "config.txt").write_text("")
+        self.release = self.base / "firmware-2712/default"
+        self.release.mkdir(parents=True)
+        (self.release / "recovery.bin").write_bytes(b"mock recovery")
+        self.rev = self.base / "revision"
+        self.rev.write_bytes(struct.pack(">I", 0xd04170))
+        self.timestamp = self.base / "timestamp"
+        self.timestamp.write_bytes(struct.pack(">I", OLD_TS))
+        self.log = self.base / "commands"
+
+        # Isolate /etc/default as well as all mutable paths. The executable's
+        # option parsing, dependency checks and update paths remain intact.
+        source = (ROOT / "rpi-eeprom-update").read_text()
+        source = source.replace(". /etc/default/rpi-eeprom-update", ": # isolated test defaults")
+        source = source.replace("/sys/firmware/devicetree/base/system/linux,revision", str(self.rev))
+        source = source.replace("/run/systemd/sleep.conf.d/40-rpi-eeprom-update-pending.conf",
+                                str(self.base / "sleep.conf"))
+        source = source.replace("#!/bin/sh", "#!" + os.environ.get("EEPROM_TEST_SHELL", "/bin/sh"), 1)
+        self.updater = self.bin / "rpi-eeprom-update"
+        self.updater.write_text(source)
+        self.updater.chmod(0o755)
+        (self.bin / "rpi-eeprom-config").symlink_to(ROOT / "rpi-eeprom-config")
+        (self.bin / "rpi-bootloader-version").symlink_to(ROOT / "rpi-bootloader-version")
+        for name in ("id", "vcgencmd", "blkid", "lspci", "rpi-eeprom-ab", "flashrom", "rpi-eeprom-digest"):
+            cmd = self.bin / name
+            cmd.write_text("#!" + sys.executable + "\n" + MOCK_COMMAND)
+            cmd.chmod(0o755)
+        self.env = {
+            "PATH": str(self.bin) + os.pathsep + os.environ["PATH"],
+            "LC_ALL": "C",
+            "TMPDIR": str(self.base),
+            "FIRMWARE_ROOT": str(self.base / "firmware"),
+            "FIRMWARE_BACKUP_DIR": str(self.base / "backup"),
+            "BOOTFS": str(self.boot),
+            "DT_BOOTLOADER_TS": str(self.timestamp),
+            "DT_MIN_BOOT_VER": str(self.base / "min-version"),
+            "DT_SDRAM_SIZE": str(self.base / "sdram-size"),
+            "UPDATE_PENDING_FLAG": str(self.base / "pending"),
+            "RPI_EEPROM_IMMEDIATE_UPDATE": "0",
+            "TEST_CURRENT": str(OLD_TS),
+            "TEST_COMMAND_LOG": str(self.log),
+        }
+
+    def run_update(self, *args, **kwargs):
+        env = dict(self.env)
+        env.update(kwargs.get("env", {}))
+        result = subprocess.run([str(self.updater), *map(str, args)], env=env,
+                                text=True, capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, kwargs.get("code", 0),
+                         result.stdout + result.stderr)
+        return result
+
+    def install_image(self, image, name=None):
+        target = self.release / (name or image.name)
+        shutil.copyfile(image, target)
+        return target
+
+    def assert_no_write(self):
+        self.assertFalse(self.log.exists(), self.log.read_text() if self.log.exists() else "")
+        self.assertFalse((self.base / "pending").exists())
+        self.assertFalse((self.boot / "pieeprom.upd").exists())
+
+    def test_stock_ram_accepts_newest(self):
+        for revision in (0xb04170, 0xc04170, 0xd04170, 0xe04170):
+            with self.subTest(revision=hex(revision)):
+                self.rev.write_bytes(struct.pack(">I", revision))
+                result = self.run_update("-f", NEW, env={"TEST_OTP": f"32:{revision:08x}"})
+                self.assertTrue((self.boot / "pieeprom.upd").exists())
+                self.assertNotIn("RAM differs", result.stderr)
+
+    def test_automatic_update_is_rejected_without_fallback(self):
+        self.timestamp.write_bytes(struct.pack(">I", OLD_TS - 86400))
+        self.install_image(OLD)
+        self.install_image(NEW)
+        for options in (("-a",), ("-a", "-s"), ("-A", "bootloader")):
+            with self.subTest(options=options):
+                result = self.run_update(*options, code=2)
+                self.assertIn("RAM was replaced after manufacture", result.stderr)
+                self.assertIn("Factory RAM: 2048 MiB; running revision: 8192 MiB", result.stderr)
+                self.assertIn("EEPROM update blocked: RAM mismatch", result.stderr)
+                self.assertIn("Use -f with an older compatible image", result.stderr)
+                self.assert_no_write()
+
+    def test_status_still_reports_latest_image(self):
+        self.install_image(NEW)
+        status = self.base / "status.json"
+        result = self.run_update("-j", "-m", status, code=1)
+        data = json.loads(status.read_text())
+        self.assertEqual(data["BOOTLOADER_LATEST"], NEW_TS)
+        self.assertEqual(data["EXITCODE"], "EXIT_UPDATE_REQUIRED")
+        self.assertIn("UPDATE AVAILABLE", result.stdout)
+        self.assert_no_write()
+
+    def test_explicit_install_cannot_bypass_guard(self):
+        for immediate, ab in (("0", "0"), ("1", "0"), ("1", "1")):
+            with self.subTest(immediate=immediate, ab=ab):
+                result = self.run_update("-d", "-i", "-y", "-f", NEW, code=2,
+                                         env={"RPI_EEPROM_IMMEDIATE_UPDATE": immediate, "TEST_AB": ab})
+                self.assertIn("EEPROM update blocked: RAM mismatch", result.stderr)
+                self.assert_no_write()
+
+    def test_first_checked_release_is_blocked(self):
+        self.run_update("-f", BOUNDARY, code=2)
+        self.assert_no_write()
+
+    def test_last_pre_check_release_is_allowed(self):
+        self.run_update("-f", OLD)
+        self.assertTrue((self.boot / "pieeprom.upd").exists())
+
+    def test_running_checked_release_can_be_reinstalled(self):
+        self.timestamp.write_bytes(struct.pack(">I", BOUNDARY_TS))
+        self.run_update("-f", BOUNDARY)
+        self.assertTrue((self.boot / "pieeprom.upd").exists())
+
+    def test_running_checked_release_does_not_skip_guard(self):
+        self.timestamp.write_bytes(struct.pack(">I", BOUNDARY_TS))
+        self.run_update("-f", NEW, code=2, env={"TEST_OTP": "32:00b04170\n34:00000000"})
+        self.assert_no_write()
+
+    def test_explicit_downgrade_is_allowed(self):
+        self.timestamp.write_bytes(struct.pack(">I", NEW_TS))
+        self.run_update("-y", "-f", OLD)
+        self.assertTrue((self.boot / "pieeprom.upd").exists())
+
+    def test_downgrade_with_different_checks_is_blocked(self):
+        # November 5 removed the D0 capacity comparison present in October 10.
+        self.timestamp.write_bytes(struct.pack(">I", 1730810292))
+        self.run_update("-y", "-f", NEW, code=2)
+        self.assert_no_write()
+
+    def test_selection_still_returns_latest_image(self):
+        self.install_image(OLD)
+        self.install_image(BOUNDARY)
+        latest = self.install_image(NEW)
+        result = self.run_update("-l")
+        self.assertEqual(result.stdout.strip(), str(latest))
+        self.assert_no_write()
+
+    def test_automatic_update_installs_permitted_upgrade(self):
+        self.timestamp.write_bytes(struct.pack(">I", OLD_TS - 86400))
+        self.install_image(OLD)
+        result = self.run_update("-a")
+        self.assertIn(f"({OLD_TS})", result.stdout)
+        staged = self.boot / "pieeprom.upd"
+        self.assertTrue(staged.exists())
+        self.assertIn(f"BUILD_TIMESTAMP={OLD_TS}".encode(), staged.read_bytes())
+
+    def test_selection_does_not_automatically_downgrade(self):
+        self.timestamp.write_bytes(struct.pack(">I", BOUNDARY_TS))
+        self.install_image(OLD)
+        self.run_update("-a")
+        self.assert_no_write()
+
+    def test_embedded_timestamp_controls_policy(self):
+        renamed = self.install_image(NEW, "pieeprom-2020-01-01.bin")
+        self.run_update("-f", renamed, code=2)
+        self.run_update("-a", code=2)
+        self.assert_no_write()
+
+    def test_invalid_timestamps_are_rejected(self):
+        original = OLD.read_bytes()
+        for replacement in (b"BUILD_TIMESTAMP=xxxxxxxxxx", b"BUILD_TIMESTAMP=99999999999",
+                            b"BUILD_TIMESTAMP=0", b"BUILD_TIMESTAMP="):
+            with self.subTest(replacement=replacement):
+                invalid = self.base / "bad.bin"
+                invalid.write_bytes(original.replace(b"BUILD_TIMESTAMP=1725975630", replacement))
+                result = self.run_update("-f", invalid, code=2)
+                self.assertIn("Unable to read the bootloader image version", result.stderr)
+                self.assert_no_write()
+
+    def test_modern_partition_version_takes_precedence(self):
+        image = ROOT / "firmware-2712/latest/pieeprom-2026-09-25.bin"
+        modified = self.base / "old-read-only.bin"
+        # A legacy timestamp must not override the modern VERSIONINFO record.
+        modified.write_bytes(image.read_bytes().replace(b"BUILD_TIMESTAMP=1790351949",
+                                                       b"BUILD_TIMESTAMP=1725975630"))
+        result = self.run_update("-f", modified, code=2)
+        self.assertIn("EEPROM update blocked: RAM mismatch", result.stderr)
+        self.assertIn("Image build 1790351949", result.stderr)
+        self.assert_no_write()
+
+    def test_both_populated_partitions_are_checked(self):
+        image = ROOT / "firmware-2712/latest/pieeprom-2026-09-25.bin"
+        contents = bytearray(image.read_bytes())
+        partition_start = 64 * 1024
+        partition_size = 988 * 1024
+        second = partition_start + partition_size
+        contents[second:second + partition_size] = contents[partition_start:second]
+        first_partition = contents[partition_start:second]
+        first_partition = first_partition.replace(b"VERSIONINFO 2026/09/25 15:59:09",
+                                                  b"VERSIONINFO 2024/09/10 14:00:30")
+        contents[partition_start:second] = first_partition
+        modified = self.base / "two-partitions.bin"
+        modified.write_bytes(contents)
+        result = self.run_update("-f", modified, code=2)
+        self.assertIn("Image build 1790351949", result.stderr)
+        self.assert_no_write()
+
+        # A partition matching the running build must not hide an older,
+        # potentially incompatible build in the other partition.
+        self.timestamp.write_bytes(struct.pack(">I", 1790351949))
+        contents[partition_start:second] = first_partition.replace(
+            b"VERSIONINFO 2024/09/10 14:00:30", b"VERSIONINFO 2024/10/09 23:36:47")
+        modified.write_bytes(contents)
+        result = self.run_update("-f", modified, code=2)
+        self.assertIn(f"Image build {NEW_TS}", result.stderr)
+        self.assert_no_write()
+
+    def test_read_only_version_does_not_set_partition_limit(self):
+        image = ROOT / "firmware-2712/latest/pieeprom-2026-09-25.bin"
+        self.timestamp.write_bytes(struct.pack(">I", 1790351949))
+        modified = self.release / "pieeprom-2026-09-25.bin"
+        modified.write_bytes(image.read_bytes().replace(b"READONLYVER 2026/09/25 15:59:09",
+                                                       b"READONLYVER 2026/10/25 15:59:09"))
+        status = self.base / "status.json"
+        self.run_update("-j", "-m", status)
+        self.assertEqual(json.loads(status.read_text())["BOOTLOADER_LATEST"], 1790351949)
+        self.assert_no_write()
+
+    def test_missing_or_malformed_factory_revision_is_not_a_mismatch(self):
+        for otp in ("", "32:not-hex!", "32:00000000", "32:00f04170", "132:00b04170",
+                    "32:00b04170\n32:00b04170", "30:00b04170"):
+            with self.subTest(otp=otp):
+                result = self.run_update("-f", NEW, env={"TEST_OTP": otp})
+                self.assertIn("RAM mismatch check unavailable", result.stderr)
+                self.assertNotIn("RAM was replaced", result.stderr)
+
+    def test_failed_otp_command_is_not_a_mismatch(self):
+        result = self.run_update("-f", NEW, env={"TEST_OTP_EXIT": "1"})
+        self.assertIn("RAM mismatch check unavailable", result.stderr)
+        self.assertNotIn("RAM was replaced", result.stderr)
+
+    def test_non_memory_flags_do_not_trigger_mismatch(self):
+        self.rev.write_bytes(struct.pack(">I", 0x10d04170))
+        result = self.run_update("-f", NEW, env={"TEST_OTP": "32:00d04170"})
+        self.assertNotIn("RAM differs", result.stderr)
+
+    def test_other_ram_code_is_not_assumed_to_be_32_gib(self):
+        self.rev.write_bytes(struct.pack(">I", 0xf04170))
+        Path(self.env["DT_SDRAM_SIZE"]).write_bytes(struct.pack(">I", 24))
+        result = self.run_update("-f", NEW)
+        self.assertNotIn("RAM differs", result.stderr)
+
+    def test_device_tree_factory_capacity_is_preferred(self):
+        Path(self.env["DT_SDRAM_SIZE"]).write_bytes(struct.pack(">I", 64))
+        result = self.run_update("-f", NEW)
+        self.assertNotIn("RAM differs", result.stderr)
+        Path(self.env["DT_SDRAM_SIZE"]).write_bytes(struct.pack(">I", 16))
+        result = self.run_update("-f", NEW, code=2, env={"TEST_OTP": "32:00d04170"})
+        self.assertIn("RAM differs", result.stderr)
+
+    def test_invalid_device_tree_capacity_falls_back_to_otp(self):
+        for value in (b"bad", b"", struct.pack(">I", 0), struct.pack(">I", 0xffffffff)):
+            with self.subTest(value=value):
+                Path(self.env["DT_SDRAM_SIZE"]).write_bytes(value)
+                self.run_update("-f", NEW, code=2)
+
+    def test_rejected_updates_preserve_pending_files(self):
+        pending = self.boot / "pieeprom.upd"
+        pending.write_text("previous update")
+        self.install_image(NEW)
+        for options in (("-f", NEW), ("-a",)):
+            with self.subTest(options=options):
+                self.run_update(*options, code=2)
+                self.assertEqual(pending.read_text(), "previous update")
+                self.assertFalse(self.log.exists())
+
+    def test_manufacturing_minimum_still_applies(self):
+        Path(self.env["DT_MIN_BOOT_VER"]).write_bytes(struct.pack(">I", 1))
+        result = self.run_update("-f", OLD, code=2)
+        self.assertIn("Update image is not supported by this device", result.stderr)
+        self.assert_no_write()
+
+    def test_bcm2711_update_is_unaffected(self):
+        self.rev.write_bytes(struct.pack(">I", 0xd03114))
+        release = self.base / "firmware-2711/default"
+        release.mkdir(parents=True)
+        (release / "recovery.bin").write_text("mock recovery")
+        image = ROOT / "firmware-2711/old/stable/pieeprom-2024-10-10.bin"
+        result = self.run_update("-f", image)
+        self.assertNotIn("RAM differs", result.stderr)
+        self.assertTrue((self.boot / "pieeprom.upd").exists())
+
+    def test_vl805_only_update_needs_no_bootloader_timestamp(self):
+        self.rev.write_bytes(struct.pack(">I", 0xd03114))
+        release = self.base / "firmware-2711/default"
+        release.mkdir(parents=True)
+        (release / "recovery.bin").write_text("mock recovery")
+        image = self.base / "vl805.bin"
+        image.write_text("mock VL805 firmware")
+        self.run_update("-u", image)
+        self.assertTrue((self.boot / "vl805.bin").exists())
+        self.assertFalse((self.boot / "pieeprom.upd").exists())
+
+    def test_running_version_can_come_from_vcgencmd(self):
+        self.timestamp.unlink()
+        self.run_update("-f", BOUNDARY, env={"TEST_CURRENT": str(BOUNDARY_TS)})
+        self.assertTrue((self.boot / "pieeprom.upd").exists())
+
+    def test_configuration_apply_uses_same_guard(self):
+        self.install_image(NEW)
+        config = self.base / "boot.conf"
+        config.write_text("[all]\nBOOT_UART=1\nBOOT_ORDER=0xf461\n")
+        # Invoke the production config helper without the CLI's root/Pi-only
+        # checks, then let it invoke the real updater through PATH.
+        for image in (None, str(NEW)):
+            with self.subTest(image=image):
+                code = ("import runpy; ns = runpy.run_path(" + repr(str(ROOT / "rpi-eeprom-config")) + "); "
+                        "ns['apply_update'](" + repr(str(config)) + ", " + repr(image) + ")")
+                result = subprocess.run([sys.executable, "-c", code], env=self.env,
+                                        text=True, capture_output=True, timeout=20)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("RAM mismatch", result.stdout + result.stderr)
+                self.assert_no_write()
+
+    def test_configuration_apply_can_reuse_working_version(self):
+        self.timestamp.write_bytes(struct.pack(">I", BOUNDARY_TS))
+        self.install_image(NEW)
+        config = self.base / "boot.conf"
+        config.write_text("[all]\nBOOT_UART=1\nBOOT_ORDER=0xf461\n")
+        code = ("import runpy; ns = runpy.run_path(" + repr(str(ROOT / "rpi-eeprom-config")) + "); "
+                "ns['apply_update'](" + repr(str(config)) + ", " + repr(str(BOUNDARY)) + ")")
+        result = subprocess.run([sys.executable, "-c", code], env=self.env,
+                                text=True, capture_output=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.boot / "pieeprom.upd").exists())
+
+    def test_unknown_running_version_does_not_raise_limit(self):
+        # A missing DT timestamp and an empty mailbox response are represented
+        # by an empty integer property here, which readDtInt treats as unknown.
+        self.timestamp.write_bytes(b"")
+        self.run_update("-f", BOUNDARY, code=2)
+        self.assert_no_write()
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

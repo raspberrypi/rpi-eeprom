@@ -100,6 +100,30 @@ WARNING: Bootloader image version MFG_VER: <image> is older than the board manuf
 
 By default the update is refused. Set `STRICT_MIN_VER_CHECK=0` in `/etc/default/rpi-eeprom-update` to downgrade the error to a warning and proceed anyway. The bootloader repeats this check when the image is programmed, so a self-update or `recovery.bin` update also requires `bootloader_allow_mfg_downgrade=1` in `config.txt`. `flashrom` and AB EEPROM updates write the EEPROM directly and are not affected. A similar check is also applied against the installed `rpi-eeprom` package version: if the package is too old for the board, `rpi-eeprom-update` prompts the user to `apt upgrade rpi-eeprom`.
 
+# RAM mismatch protection (BCM2712)
+
+`rpi-eeprom-update` warns when the running RAM capacity differs from the
+factory configuration, indicating a possible RAM replacement. It permits
+images built before 2024-09-23 or matching the running bootloader.
+This conservative cutoff is the first archived build with a fatal OTP SDRAM
+configuration check. That check skips zero OTP configurations, and other
+capacity checks have changed between releases, so a later running version
+does not establish compatibility with other images, including older ones.
+See [#761](https://github.com/raspberrypi/rpi-eeprom/issues/761) and
+[#797](https://github.com/raspberrypi/rpi-eeprom/issues/797).
+
+The latest image is selected as usual. If it fails this check, the update
+is rejected before staging or flashing. Select a compatible local image with
+`rpi-eeprom-update -f /path/to/pieeprom.bin`, or pass it to
+`rpi-eeprom-config --edit` for configuration changes. The same timestamp
+check applies to every bootable partition in manually selected images, using
+`rpi-bootloader-version --partitions`. There is no force override; `-d` and
+`-y` do not bypass this check. Existing minimum-version and downgrade checks
+also apply.
+
+Only capacity differences are detected. If factory capacity cannot be read
+from device tree or OTP, the updater warns and retains its existing behaviour.
+
 # Support
 Please check the Raspberry Pi [general discussion forum](https://forums.raspberrypi.com/viewforum.php?f=63) if you have a support question.
 

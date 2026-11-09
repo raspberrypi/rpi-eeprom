@@ -46,11 +46,16 @@ RPI_EEPROM_SELF_UPDATE="${RPI_EEPROM_SELF_UPDATE:-0}"
 RPI_EEPROM_SELF_UPDATE_MIN_VER=1650968668
 
 DT_BOOTLOADER_TS=${DT_BOOTLOADER_TS:-/proc/device-tree/chosen/bootloader/build-timestamp}
+DT_SDRAM_SIZE=${DT_SDRAM_SIZE:-/proc/device-tree/chosen/rpi-sdram-size-gbit}
 DT_MIN_BOOT_VER=${DT_MIN_BOOT_VER:-/proc/device-tree/chosen/rpi-min-boot-ver}
 STRICT_MIN_VER_CHECK=${STRICT_MIN_VER_CHECK:-1}
 
 # Set when AB EEPROM updates cannot be used
 AB_EEPROM_UNAVAILABLE_REASON=
+
+# BCM2712 SDRAM configuration checks first appear in the 2024-09-23 image.
+# See the RAM mismatch policy in README.md.
+SDRAM_CHECK_FIRST_VERSION=1727096576
 
 # Marker on tmpfs (cleared by reboot) recording that a bootloader update has
 # been written or staged during this boot. Whilst it exists the system must not
@@ -152,6 +157,75 @@ Reboot before attempting to suspend"
 readDtInt() {
    hex="$(od "$1" -v -An -t x1 | tr -d ' ')"
    [ -z "${hex}" ] || printf "%d" "0x${hex}"
+}
+
+checkBootloaderRamCompatibility() {
+   [ "${BCM_CHIP}" = 2712 ] || return 0
+
+   local running_code factory_code factory_mib factory_gbit otp_dump otp_revision version
+   running_code=$(((0x${BOARD_INFO} >> 20) & 7))
+   # Code 7 means "Other", not 32 GiB. It cannot be compared this way.
+   [ "${running_code}" -lt 7 ] || return 0
+   factory_mib=
+
+   # Recent firmware exposes the factory SDRAM capacity independently of the
+   # effective revision. Old firmware (including 2024 releases) needs otp_dump.
+   if [ -r "${DT_SDRAM_SIZE}" ] && [ "$(wc -c < "${DT_SDRAM_SIZE}")" -eq 4 ]; then
+      if factory_gbit=$(readDtInt "${DT_SDRAM_SIZE}" 2>/dev/null) &&
+         [ "${factory_gbit:-0}" -gt 0 ] && [ "${factory_gbit}" -le 1024 ]; then
+         factory_mib=$((factory_gbit * 128))
+      fi
+   fi
+   if [ -z "${factory_mib}" ] && command -v vcgencmd > /dev/null; then
+      if otp_dump=$(vcgencmd otp_dump 2>/dev/null); then
+         # Row 32 is the BCM2712 factory revision; BCM2711 uses row 30.
+         otp_revision=$(printf '%s\n' "${otp_dump}" | sed -n 's/^32:\([0-9a-fA-F]\{8\}\)$/\1/p')
+         if [ "${#otp_revision}" -eq 8 ] &&
+            [ $(((0x${otp_revision} >> 23) & 1)) -eq 1 ] &&
+            [ $(((0x${otp_revision} >> 12) & 15)) -eq 4 ]; then
+            factory_code=$(((0x${otp_revision} >> 20) & 7))
+            if [ "${factory_code}" -lt 7 ]; then
+               factory_mib=$((256 << factory_code))
+            fi
+         fi
+      fi
+   fi
+   if [ -z "${factory_mib}" ]; then
+      warn "WARNING: Unable to read factory RAM capacity; RAM mismatch check unavailable."
+      return 0
+   fi
+   [ "${factory_mib}" -ne "$((256 << running_code))" ] || return 0
+
+   warn "WARNING: RAM differs from the factory configuration."
+   warn "         Factory RAM: ${factory_mib} MiB; running revision: $((256 << running_code)) MiB."
+   warn "         This suggests the RAM was replaced after manufacture."
+   warn "         EEPROM firmware may reject this modified configuration."
+   warn "         If this modification was not disclosed, contact the seller to arrange a return."
+
+   # A later running build may skip checks that another build enforces.
+   # Allow that build for config edits, but check every bootable partition.
+   for version in ${BOOTLOADER_UPDATE_VERSIONS}; do
+      if [ "${version}" -ge "${SDRAM_CHECK_FIRST_VERSION}" ] &&
+         [ "${version}" -ne "${BOOTLOADER_CURRENT_VERSION:-0}" ]; then
+         die "EEPROM update blocked: RAM mismatch. Image build ${version} must predate ${SDRAM_CHECK_FIRST_VERSION} or match the running build ${BOOTLOADER_CURRENT_VERSION:-0}. Use -f with an older compatible image."
+      fi
+   done
+}
+
+getBootloaderImageVersion() {
+   local version_info
+   # Either partition may boot after a whole-image flash. Keep both versions,
+   # excluding the independent read-only loader, and display the newer build.
+   version_info=$("${script_dir}/rpi-bootloader-version" --partitions "$1") || return 1
+   BOOTLOADER_UPDATE_VERSIONS=$(printf '%s\n' "${version_info}" | awk '
+      $1 == "timestamp" {
+         if (NF != 2 || $2 !~ /^[0-9]+$/ || length($2) > 10 || $2 <= 0) exit 1
+         print $2
+         found = 1
+      }
+      END { if (!found) exit 1 }
+   ') || return 1
+   BOOTLOADER_UPDATE_VERSION=$(printf '%s\n' "${BOOTLOADER_UPDATE_VERSIONS}" | sort -nr | head -n1)
 }
 
 getBootloaderConfig() {
@@ -302,13 +376,11 @@ applyRecoveryUpdate()
 {
    [ -n "${BOOTLOADER_UPDATE_IMAGE}" ] || [ -n "${VL805_UPDATE_IMAGE}" ] || die "No update images specified"
 
-   getBootloaderCurrentVersion
-   BOOTLOADER_UPDATE_VERSION=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
-   printBootloaderCurrentVersion
-   echo "    UPDATE: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
-
-   # Check the minimum version programmed during board manufacture
    if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      printBootloaderCurrentVersion
+      echo "    UPDATE: $(date -u "-d@${BOOTLOADER_UPDATE_VERSION}") (${BOOTLOADER_UPDATE_VERSION})"
+
+      # Check the minimum version programmed during board manufacture
       image_boot_ver=$(strings "${BOOTLOADER_UPDATE_IMAGE}" | sed -n 's/^MFG_VER: //p' | head -n 1)
       if [ -z "${image_boot_ver}" ]; then
           image_boot_ver=0
@@ -467,6 +539,14 @@ applyUpdate() {
       die "AB_EEPROM=1 is set but ${AB_EEPROM_UNAVAILABLE_REASON}"
    fi
 
+   getBootloaderCurrentVersion
+   if [ -n "${BOOTLOADER_UPDATE_IMAGE}" ]; then
+      getBootloaderImageVersion "${BOOTLOADER_UPDATE_IMAGE}" ||
+         die "Unable to read the bootloader image version from ${BOOTLOADER_UPDATE_IMAGE}"
+      checkBootloaderRamCompatibility
+   fi
+   removePreviousUpdates
+
    if [ "${IGNORE_DPKG_CHECKSUMS}" = 0 ]; then
       (
          package_checksums_file="${PACKAGE_INFO_DIR}/rpi-eeprom.md5sums"
@@ -584,7 +664,7 @@ getBootloaderUpdateVersion() {
    match=".*/pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin"
    latest="$(find "${FIRMWARE_IMAGE_DIR}/" -maxdepth 1 -type f -follow -size "${EEPROM_SIZE}c" -regex "${match}" | sort -r | head -n1)"
    if [ -f "${latest}" ]; then
-      BOOTLOADER_UPDATE_VERSION=$(strings "${latest}" | grep BUILD_TIMESTAMP | sed 's/.*=//g')
+      getBootloaderImageVersion "${latest}" || die "Unable to read the bootloader image version from ${latest}"
       BOOTLOADER_UPDATE_IMAGE="${latest}"
    fi
 }
@@ -1096,7 +1176,6 @@ lookupVersionInfo()
 checkAndApply()
 {
    lookupVersionInfo
-   removePreviousUpdates
 
    # Restrict the automatic updates to the EEPROM types selected by the -A option.
    if [ "${AUTO_UPDATE_VL805}" != 1 ]; then
@@ -1115,13 +1194,13 @@ checkAndApply()
       printVersions
       applyUpdate
    else
+      removePreviousUpdates
       printVersions
    fi
 }
 
 fileUpdate()
 {
-   removePreviousUpdates
    echo "*** CREATED UPDATE ${BOOTLOADER_UPDATE_IMAGE} ${VL805_UPDATE_IMAGE} ***"
    echo
 

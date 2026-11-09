@@ -24,6 +24,9 @@ jobs:
         run: |
           pip install pycryptodomex
       
+      - name: Run EEPROM Update Tests
+        run: python test/test-rpi-eeprom-update
+
       - name: Run EEPROM Config Tests
         run: |
           cd test
