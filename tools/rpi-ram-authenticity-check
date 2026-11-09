@@ -1,0 +1,76 @@
+#!/bin/sh
+
+# Compare BCM2712's reported RAM capacity with its factory revision in OTP.
+set -ef
+
+usage() {
+   cat <<EOF
+Usage: rpi-ram-authenticity-check [-h | --help]
+
+Compare the RAM capacity in the running board revision with the factory
+capacity in BCM2712 OTP row 32. Requires vcgencmd and access to /dev/vcio.
+This is a read-only capacity check; it cannot prove that the RAM is original
+or detect a replacement with the same capacity.
+
+Exit status: 0 = capacity matches, 1 = capacity differs, 2 = unable to check.
+EOF
+}
+
+die() {
+   echo "Unable to check RAM: $*" >&2
+   exit 2
+}
+
+ramSizeFromRevision() {
+   case "$1" in
+      ''|*[!0-9a-fA-F]*) return 1 ;;
+   esac
+   [ "${#1}" -le 8 ] || return 1
+   # Require a new-style BCM2712 revision before interpreting its RAM field.
+   [ $(((0x$1 >> 23) & 1)) -eq 1 ] &&
+      [ $(((0x$1 >> 12) & 15)) -eq 4 ] || return 1
+   ram_code=$(((0x$1 >> 20) & 7))
+   # Code 7 means "Other", not 32 GiB.
+   [ "${ram_code}" -lt 7 ] || return 1
+   echo "$((256 << ram_code))"
+}
+
+if [ "$#" -ne 0 ]; then
+   if [ "$#" -eq 1 ] && { [ "$1" = -h ] || [ "$1" = --help ]; }; then
+      usage
+      exit 0
+   fi
+   usage >&2
+   exit 2
+fi
+
+# Use the same running revision sources as rpi-eeprom-update. Do not fall
+# back to OTP here: comparing the factory value with itself would miss changes.
+dt_revision=/sys/firmware/devicetree/base/system/linux,revision
+if [ -r "${dt_revision}" ]; then
+   [ "$(wc -c < "${dt_revision}")" -eq 4 ] || die "Invalid device-tree board revision."
+   board_revision=$(od -v -An -t x1 "${dt_revision}" | tr -d ' \n')
+elif [ -r /proc/cpuinfo ]; then
+   board_revision=$(sed -n '/^Revision/s/^.*: \(.*\)/\1/p' /proc/cpuinfo)
+else
+   die "No running board revision found."
+fi
+reported_mib=$(ramSizeFromRevision "${board_revision}") ||
+   die "The running board revision must describe a BCM2712 device with a known RAM capacity."
+
+command -v vcgencmd > /dev/null || die "vcgencmd is required to read the factory RAM capacity."
+otp_dump=$(vcgencmd otp_dump) || die "Failed to read OTP; check access to /dev/vcio."
+# Row 32 is the BCM2712 factory revision; BCM2711 uses row 30.
+factory_revision=$(printf '%s\n' "${otp_dump}" | sed -n 's/^32:\([0-9a-fA-F]\{8\}\)$/\1/p')
+factory_mib=$(ramSizeFromRevision "${factory_revision}") ||
+   die "OTP row 32 does not contain a valid BCM2712 revision with a known RAM capacity."
+
+echo "Factory RAM: ${factory_mib} MiB; reported RAM: ${reported_mib} MiB."
+if [ "${factory_mib}" -eq "${reported_mib}" ]; then
+   echo "RAM appears authentic: capacity matches the factory configuration."
+   exit 0
+fi
+
+echo "WARNING: RAM capacity mismatch detected: possible RAM tampering or replacement." >&2
+echo "Contact the seller to arrange a return." >&2
+exit 1
