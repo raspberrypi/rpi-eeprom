@@ -1,5 +1,94 @@
 # Raspberry Pi5 bootloader EEPROM release notes
 
+## 2026-11-16: gencmd: Disable get_config 'set' if secure-boot is enabled (latest)
+
+* gencmd: Restrict set_logging message to plain text
+  The message was passed to logging_message as the format string, so the ARM
+  could inject arbitrary text and format specifiers into the firmware log.
+  Log it as a plain string of at most 62 printable characters and refuse it
+  in secure-boot mode so that the ARM cannot write to the firmware log.
+* gencmd: Disable get_config set if secure-boot is enabled
+  Overriding config.txt values at runtime bypasses the signed config.txt,
+  including thermal and voltage limits, so reject it in secure-boot mode.
+  N.B. In secure-boot mode access to vcgencmd via /dev/vcio should be
+  disabled or limited to to restricted user ids.
+* nvme: Wait for CSTS.RDY to clear before enable
+  The NVMe spec requires the controller to be disabled (CSTS.RDY == 0)
+  before the admin queue registers are written and CC.EN is set.
+  If the controller reports a fatal status during enable it will never
+  set CSTS.RDY, so report an error instead of waiting for the full
+  CAP.TO timeout.
+* config: Default lock_device_private_key to 1 if secure boot is enabled
+  lock_device_private_key is now a tristate which defaults to -1. If it
+  is not set in config.txt then the device private key is read locked
+  before the OS starts when secure boot is enabled in OTP, and left
+  readable otherwise. Set lock_device_private_key=0 to keep the key
+  readable with secure boot.
+* arm_loader: Fix an occasional hang when stopping the boot watchdog
+  With BOOT_WATCHDOG_TIMEOUT set, the firmware could hang just before
+  starting the OS, so the boot watchdog reset the board and booting took
+  about 25 seconds longer.
+* resetctrl: Clear the reset flags after a reboot with BOOT_WATCHDOG_TIMEOUT
+  With BOOT_WATCHDOG_TIMEOUT set, the reset flags reported by
+  /proc/device-tree/chosen/bootloader/rsts were never cleared, so the
+  power-on reset flag stayed set until the next power-on. They are now
+  cleared after a watchdog reset, as they are without the boot watchdog.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/926
+* ldconfig: Don't apply [gpioN=x] sections when the pin can't be read
+  If the pin could not be read, for example an invalid pin number, the
+  [gpioN=x] filter was skipped and the previous GPIO selection, normally
+  the match-all state from [all], was kept. Settings under both
+  [gpio99=0] and [gpio99=1] were then applied. Treat an unreadable pin
+  as not matching, as the bootloader config parser does.
+* resetctrl: Fix the rsts device tree property with BOOT_WATCHDOG_TIMEOUT
+  With BOOT_WATCHDOG_TIMEOUT set, /proc/device-tree/chosen/bootloader/rsts
+  and vcgencmd get_rsts always read 0. They now report PM_RSTS at boot.
+  See: https://github.com/raspberrypi/rpi-eeprom/issues/926
+* Ignore gpio commands in autoboot.txt
+  autoboot.txt is read from the boot media before boot.img is verified
+  and is deliberately not signed, yet a gpio= line in it could set RP1
+  pin function, level and pulls on a secure-boot device.
+* arm_loader: Use vclib_memcpy in memmove_fast
+  vclib_memmove copies backwards 16 bytes at a time when dst > src, making
+  the initramfs and GZIP kernel moves ~15x slower.
+* Fix vcgencmd on Pi 5
+  vcgencmd stopped working with the recent bootloader mailbox hardening
+  and reported ioctl_set_msg failed.
+* 2712: Don't initialise RP1 in bootsys-ab
+  bootsys resets RP1 and switches off the power LED itself, so doing it in
+  bootsys-ab is redundant. Removing it drops the RP1 I2C boot code from
+  bootsys-ab and its dependency on the s2ram resume state, keeping it
+  minimal so that it rarely needs to be updated.
+* Verify the GPT header CRC
+  A corrupt primary GPT header which still passed the field checks was
+  used instead of the backup header at the end of the device. Add a
+  generic platform_crc32 function to util for the check.
+* Continue the partition walk if a ramdisk fails to boot
+  If a boot.img loaded from an SD / NVMe partition fails after it has been
+  mounted (e.g. a partially written A/B slot) the bootloader moved on to
+  the next boot-mode and then retried the same slot, so it never fell back
+  to the other slot. Re-open the block device and continue the partition
+  walk from the partition which provided the ramdisk, keeping the retry
+  limit of that device.
+* Don't retry the failed partition at the start of a partition walk
+  The walk started at the partition selected by the reboot argument or
+  autoboot.txt even though that partition had just failed to boot, so it
+  was tried twice before moving on.
+* display: Reduce the overhead of the HDMI diagnostics display
+  Avoid drawing both displays twice and use vclib to optmise the memset
+  calls. This can have a significant impact on download time for net-install.
+* Detect small FAT32 volumes from the BPB layout
+  FAT32 volumes with fewer than 65525 clusters, for example a 32MB
+  partition formatted with mkfs.fat -F 32, were treated as FAT16 when the
+  partition type did not identify the file-system (GPT or FAT16 MBR
+  types). The root directory was then looked up as a FAT16 root area so
+  files such as autoboot.txt were not found.
+  Fixes: https://github.com/raspberrypi/rpi-eeprom/issues/818
+* Use vector loads to copy USB MSD data from the uncached cache buffer
+  Pi 4 used scalar loads from the uncached alias and Pi 5 used DMA. Both are slower than vclib_memcpy.
+* Use vector loads to copy NVMe data from the uncached bounce buffer
+  Scalar loads from the uncached alias limited NVMe file loads to ~25 MB/s, adding ~2s to Pi 5 NVMe boot.
+
 ## 2026-11-02: Promote pieeprom-2026-10-30 to the default release (default)
 
 ## 2026-10-30: 2712: Fix empty EEPROM public key in the ARM device tree (latest)
