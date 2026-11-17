@@ -1,3 +1,18 @@
+rpi-eeprom (28.37-1) trixie; urgency=medium
+
+  [ Tim Gover ]
+  * imager: build recovery images without sudo
+  * test: Add unit test for make-recovery-images
+  * rpi-eeprom-update: Accept boards with the latest MFG versions
+  * pieeprom-2026-11-16: gencmd: Disable get_config set if secure-boot is
+    enabled (latest)
+
+  [ Mathew Blowers ]
+  * rpi-eeprom-update: Warn why AB EEPROM update is unavailable
+  * rpi-eeprom-update: Flashrom allow flash larger than the image
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Tue, 17 Nov 2026 19:50:55 +0000
+
 rpi-eeprom (28.36-1) trixie; urgency=medium
 
   * pieeprom-2026-10-30: 2712: Promote to the default release
