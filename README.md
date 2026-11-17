@@ -52,6 +52,8 @@ By default `rpi-eeprom-update` stages the new image to the boot partition and th
 
 Before performing an immediate update, `rpi-eeprom-update` probes the SPI flash via `flashrom -p linux_spi:dev=<spidev>` and aborts back to a staged update if the probe fails, or reports `Unknown flash chip`. Generic SFDP handling of unknown flash chips is not supported as SFDP data cannot always be trusted.
 
+`flashrom` is run with a layout so that a chip larger than the EEPROM image can be updated: the image is written to the start of the flash and any spare flash above it is erased to 0xFF. If the chip is smaller than the image the update fails.
+
 Raspberry Pi OS ships a patched downstream `flashrom` 1.4 with definitions for all the different chips a Raspberry Pi could be manufactured with. If you are running `rpi-eeprom-update` on another distribution, either use that patched build or a `flashrom` release new enough to contain all the chip definitions; otherwise leave `RPI_EEPROM_IMMEDIATE_UPDATE` unset and rely on the staged update path.
 
 ## Raspberry Pi 5 / 500 / 500+ / CM5 (BCM2712)
