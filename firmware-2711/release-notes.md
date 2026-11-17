@@ -1,5 +1,53 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-11-17: nvme: Wait for CSTS.RDY to clear before enable (latest)
+
+* nvme: Wait for CSTS.RDY to clear before enable
+  The NVMe spec requires the controller to be disabled (CSTS.RDY == 0)
+  before the admin queue registers are written and CC.EN is set.
+  If the controller reports a fatal status during enable it will never
+  set CSTS.RDY, so report an error instead of waiting for the full
+  CAP.TO timeout.
+* Ignore gpio commands in autoboot.txt
+  autoboot.txt is read from the boot media before boot.img is verified
+  and is deliberately not signed, yet a gpio= line in it could set RP1
+  pin function, level and pulls on a secure-boot device.
+* Verify the GPT header CRC
+  A corrupt primary GPT header which still passed the field checks was
+  used instead of the backup header at the end of the device. Add a
+  generic platform_crc32 function to util for the check.
+* Continue the partition walk if a ramdisk fails to boot
+  If a boot.img loaded from an SD / NVMe partition fails after it has been
+  mounted (e.g. a partially written A/B slot) the bootloader moved on to
+  the next boot-mode and then retried the same slot, so it never fell back
+  to the other slot. Re-open the block device and continue the partition
+  walk from the partition which provided the ramdisk, keeping the retry
+  limit of that device.
+* Don't retry the failed partition at the start of a partition walk
+  The walk started at the partition selected by the reboot argument or
+  autoboot.txt even though that partition had just failed to boot, so it
+  was tried twice before moving on.
+* display: Draw cloned displays once per update
+  With display cloning (BCM2711) both displays show the same buffer but
+  display_update drew the whole screen into it once for each started
+  display. Wait for every display, then draw the buffer once.
+* Detect small FAT32 volumes from the BPB layout
+  FAT32 volumes with fewer than 65525 clusters, for example a 32MB
+  partition formatted with mkfs.fat -F 32, were treated as FAT16 when the
+  partition type did not identify the file-system (GPT or FAT16 MBR
+  types). The root directory was then looked up as a FAT16 root area so
+  files such as autoboot.txt were not found.
+  Fixes: https://github.com/raspberrypi/rpi-eeprom/issues/818
+* display: Fill rectangles with vclib_memset4
+  draw_filled_rect used a DMA memset for each row, which runs at about
+  40MB/s because it uses 32-bit transfers without bursts. Filling the
+  1920x1080 network install screen background took 215ms on Pi 5, so
+  each redraw blocked the boot for about 0.23s per display.
+* Use vector loads to copy USB MSD data from the uncached cache buffer
+  Pi 4 used scalar loads from the uncached alias and Pi 5 used DMA. Both are slower than vclib_memcpy.
+* Use vector loads to copy NVMe data from the uncached bounce buffer
+  Scalar loads from the uncached alias limited NVMe file loads to ~25 MB/s, adding ~2s to Pi 5 NVMe boot.
+
 
 ## 2026-11-02: Promote pieeprom-2026-10-30 to the default release (default)
 
