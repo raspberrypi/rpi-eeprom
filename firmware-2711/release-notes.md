@@ -1,5 +1,7 @@
 # Raspberry Pi4 bootloader EEPROM release notes
 
+## 2026-11-23: Promote pieeprom-2026-11-17 to the default release (default)
+
 ## 2026-11-17: nvme: Wait for CSTS.RDY to clear before enable (latest)
 
 * nvme: Wait for CSTS.RDY to clear before enable
