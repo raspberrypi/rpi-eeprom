@@ -1,3 +1,10 @@
+rpi-eeprom (28.38-1) trixie; urgency=medium
+
+  * pieeprom-2026-11-17: 2711: nvme: Wait for CSTS.RDY to clear before
+    enable (latest)
+
+ -- Tim Gover <tim.gover@raspberrypi.com>  Mon, 23 Nov 2026 09:20:51 +0000
+
 rpi-eeprom (28.37-1) trixie; urgency=medium
 
   [ Tim Gover ]
